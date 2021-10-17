@@ -1,2 +1,2 @@
 # WaylandPlus
-A friendly C++ library to create Wayland Compositors.
+A friendly C++ library to create Wayland compositors directly with DRM.
