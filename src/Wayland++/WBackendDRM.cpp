@@ -1,3 +1,4 @@
+/*
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -61,9 +62,7 @@ static uint32_t find_crtc_for_encoder(const drmModeRes *resources, const drmMode
 
     for (i = 0; i < resources->count_crtcs; i++)
     {
-        /* possible_crtcs is a bitmask as described here:
-         * https://dvdhrm.wordpress.com/2012/09/13/linux-drm-mode-setting-api
-         */
+
         const uint32_t crtc_mask = 1 << i;
         const uint32_t crtc_id = resources->crtcs[i];
         if (encoder->possible_crtcs & crtc_mask)
@@ -72,7 +71,6 @@ static uint32_t find_crtc_for_encoder(const drmModeRes *resources, const drmMode
         }
     }
 
-    /* no match found */
     return -1;
 }
 
@@ -94,7 +92,6 @@ static uint32_t find_crtc_for_connector(const drmModeRes *resources,
         }
     }
 
-    /* no match found */
     return -1;
 }
 
@@ -118,11 +115,11 @@ static int init_drm(void)
         return -1;
     }
 
-    /* find a connected connector: */
+    // find a connected connector:
     for (i = 0; i < resources->count_connectors; i++) {
         connector = drmModeGetConnector(drm.fd, resources->connectors[i]);
         if (connector->connection == DRM_MODE_CONNECTED) {
-            /* it's connected, let's use this! */
+            // it's connected, let's use this!
             break;
         }
         drmModeFreeConnector(connector);
@@ -130,14 +127,12 @@ static int init_drm(void)
     }
 
     if (!connector) {
-        /* we could be fancy and listen for hotplug events and wait for
-         * a connector..
-         */
+        // we could be fancy and listen for hotplug events and wait for a connector..
         printf("no connected connector!\n");
         return -1;
     }
 
-    /* find prefered mode or the highest resolution mode: */
+    // find prefered mode or the highest resolution mode:
     for (i = 0, area = 0; i < connector->count_modes; i++) {
         drmModeModeInfo *current_mode = &connector->modes[i];
 
@@ -157,7 +152,7 @@ static int init_drm(void)
         return -1;
     }
 
-    /* find encoder: */
+    // find encoder:
     for (i = 0; i < resources->count_encoders; i++) {
         encoder = drmModeGetEncoder(drm.fd, resources->encoders[i]);
         if (encoder->encoder_id == connector->encoder_id)
@@ -261,10 +256,10 @@ static int init_gl(void)
         return -1;
     }
 
-    /* connect the context to the surface */
+    // connect the context to the surface
     eglMakeCurrent(gl.display, gl.surface, gl.surface, gl.context);
 
-    printf("GL Extensions: \"%s\"\n", glGetString(GL_EXTENSIONS));
+    //printf("GL Extensions: \"%s\"\n", glGetString(GL_EXTENSIONS));
 
     return 0;
 }
@@ -335,10 +330,9 @@ void paintDRM()
     next_bo = gbm_surface_lock_front_buffer(gbm.surface);
     fb = drm_fb_get_from_bo(next_bo);
 
-    /*
-     * Here you could also update drm plane layers if you want
-     * hw composition
-     */
+    // Here you could also update drm plane layers if you want
+    // hw composition
+
 
     ret = drmModePageFlip(drm.fd, drm.crtc_id, fb->fb_id,DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
     if (ret)
@@ -368,7 +362,7 @@ void paintDRM()
         drmHandleEvent(drm.fd, &evctx);
     }
 
-    /* release last buffer to render on again: */
+    // release last buffer to render on again:
     gbm_surface_release_buffer(gbm.surface, bo);
     bo = next_bo;
 
@@ -409,12 +403,12 @@ void initBackend(WCompositor *compositor)
 
     compositor->initializeGL();
 
-    /* clear the color buffer */
+    // clear the color buffer
     eglSwapBuffers(gl.display, gl.surface);
     bo = gbm_surface_lock_front_buffer(gbm.surface);
     fb = drm_fb_get_from_bo(bo);
 
-    /* set mode: */
+    // set mode:
     ret = drmModeSetCrtc(drm.fd, drm.crtc_id, fb->fb_id, 0, 0, &drm.connector_id, 1, drm.mode);
     if (ret)
     {
@@ -439,3 +433,4 @@ EGLDisplay getEGLDisplay()
 {
     return gl.display;
 }
+*/

@@ -4,7 +4,7 @@ A friendly C++ library to create Wayland compositors that runs directly on top o
 Wayland++ uses **libinput** and **evdev** for input listening and **OpenGL ES 2.0** for drawing.
 
 ## Libraries
-`sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libinput-dev libegl-dev mesa-common-dev `
+`sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libinput-dev libegl-dev mesa-common-dev libgles2-mesa-dev`
 
 ## Example
 

@@ -4,5 +4,6 @@
 class WCompositor;
 
 void initWayland(WCompositor *comp);
+void terminateDisplay();
 
 #endif // WWAYLAND_H

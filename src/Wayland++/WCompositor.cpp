@@ -1,16 +1,19 @@
 #include "WCompositor.h"
 #include <stdio.h>
 #include <WInput.h>
-#include <WBackendDRM.h>
+#include <WBackendX11.h>
 #include <WWayland.h>
+
 
 WCompositor::WCompositor()
 {
 
 }
 
+
 void WCompositor::start()
 {
+
     // Bind the libinput events
     initInput(this);
 
@@ -21,6 +24,7 @@ void WCompositor::start()
     initWayland(this);
 
     readyToDraw = true;
+
     updateGL();
 }
 

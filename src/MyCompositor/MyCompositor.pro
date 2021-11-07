@@ -3,12 +3,14 @@ CONFIG += console c++17
 CONFIG -= app_bundle
 CONFIG -= qt
 
-LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread
+LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11
 INCLUDEPATH += /usr/include/drm
 INCLUDEPATH += ../Wayland++/
+INCLUDEPATH += /usr/share/
 
 SOURCES += \
         ../Wayland++/WBackendDRM.cpp \
+        ../Wayland++/WBackendX11.cpp \
         ../Wayland++/WClient.cpp \
         ../Wayland++/WCompositor.cpp \
         ../Wayland++/WInput.cpp \
@@ -18,11 +20,13 @@ SOURCES += \
         ../Wayland++/WTexture.cpp \
         ../Wayland++/WView.cpp \
         ../Wayland++/WWayland.cpp \
+        ../Wayland++/protocols/xdg-shell.c \
         MyCompositor.cpp \
         main.cpp
 
 HEADERS += \
     ../Wayland++/WBackendDRM.h \
+    ../Wayland++/WBackendX11.h \
     ../Wayland++/WClient.h \
     ../Wayland++/WCompositor.h \
     ../Wayland++/WInput.h \
@@ -32,6 +36,7 @@ HEADERS += \
     ../Wayland++/WTexture.h \
     ../Wayland++/WView.h \
     ../Wayland++/WWayland.h \
+    ../Wayland++/protocols/xdg-shell.h \
     MyCompositor.h
 
 DISTFILES += \
