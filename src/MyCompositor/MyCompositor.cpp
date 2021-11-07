@@ -1,5 +1,6 @@
 #include <MyCompositor.h>
 #include <math.h>
+#include <WOpenGL.h>
 
 MyCompositor::MyCompositor(){}
 
@@ -15,7 +16,7 @@ GLuint LoadShader(GLenum type, const char *shaderSrc)
         return 0;
 
     // Load the shader source
-    glShaderSource(shader, 1, &shaderSrc, NULL);
+    glShaderSource(shader, 1, &shaderSrc, nullptr);
 
     // Compile the shader
     glCompileShader(shader);
@@ -49,19 +50,9 @@ void MyCompositor::initializeGL()
     // Set clear screen color
     glClearColor(0.0f, 0.3f, 0.5f, 1.0f);
 
-    GLchar vShaderStr[] =
-        "attribute vec4 vPosition;    \n"
-        "void main()                  \n"
-        "{                            \n"
-        "   gl_Position = vPosition;  \n"
-        "}                            \n";
+    GLchar *vShaderStr = openShader("../MyCompositor/shaders/Vertex.glsl");
 
-    GLchar fShaderStr[] =
-        "precision mediump float;\n"
-        "void main()                                  \n"
-        "{                                            \n"
-        "  gl_FragColor = vec4 ( 1.0, 0.0, 0.0, 1.0 );\n"
-        "}                                            \n";
+    GLchar *fShaderStr = openShader("../MyCompositor/shaders/Fragment.glsl");
 
     GLuint vertexShader;
     GLuint fragmentShader;
@@ -72,8 +63,12 @@ void MyCompositor::initializeGL()
     vertexShader = LoadShader(GL_VERTEX_SHADER, vShaderStr);
     fragmentShader = LoadShader(GL_FRAGMENT_SHADER, fShaderStr);
 
+    delete [] vShaderStr;
+    delete [] fShaderStr;
+
     // Create the program object
     programObject = glCreateProgram();
+
 
     if (programObject == 0)
         exit(0);
@@ -113,7 +108,7 @@ void MyCompositor::paintGL()
     { 0.0f, sinf(phase), 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f };
 
     // Set the viewport
-    glViewport(0, 0, 1366, 768);
+    glViewport(0, 0, screenWidth(), screenHeight());
 
     // Clear the color buffer
     glClear(GL_COLOR_BUFFER_BIT);

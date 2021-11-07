@@ -14,14 +14,17 @@
 #define GL_GLEXT_PROTOTYPES 1
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
+
 
 #include <assert.h>
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
+#include <WBackendDRM.h>
 #include <WCompositor.h>
+
+int drmWidth = 0;
+int drmHeight = 0;
 
 static struct {
     EGLDisplay display;
@@ -291,6 +294,9 @@ static struct drm_fb * drm_fb_get_from_bo(struct gbm_bo *bo)
 
     width = gbm_bo_get_width(bo);
     height = gbm_bo_get_height(bo);
+    drmWidth = width;
+    drmHeight = height;
+
     stride = gbm_bo_get_stride(bo);
     handle = gbm_bo_get_handle(bo).u32;
 
@@ -299,7 +305,7 @@ static struct drm_fb * drm_fb_get_from_bo(struct gbm_bo *bo)
     {
         printf("failed to create fb: %s\n", strerror(errno));
         free(fb);
-        return NULL;
+        return nullptr;
     }
 
     gbm_bo_set_user_data(bo, fb, drm_fb_destroy_callback);
@@ -418,4 +424,18 @@ void initBackend(WCompositor *compositor)
 
 
     return;
+}
+
+int backendWidth()
+{
+    return drmWidth;
+}
+int backendHeight()
+{
+    return drmHeight;
+}
+
+EGLDisplay getEGLDisplay()
+{
+    return gl.display;
 }
