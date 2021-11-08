@@ -25,8 +25,7 @@ SOURCES += \
         main.cpp
 
 HEADERS += \
-    ../Wayland++/WBackendDRM.h \
-    ../Wayland++/WBackendX11.h \
+    ../Wayland++/WBackend.h \
     ../Wayland++/WClient.h \
     ../Wayland++/WCompositor.h \
     ../Wayland++/WInput.h \

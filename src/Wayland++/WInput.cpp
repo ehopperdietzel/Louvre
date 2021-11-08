@@ -3,31 +3,29 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libudev.h>
 #include <libinput.h>
-#include <poll.h>
-#include <pthread.h>
 
 
-struct pollfd pfd = {};
+WCompositor *comp;
+libinput *li;
+libinput_event *ev;
+udev *udev;
 
 static int open_restricted(const char *path, int flags, void *user_data)
 {
-  int fd = open(path, flags);
-  pfd.fd = fd;
-  pfd.events = -1;
-  pfd.revents = -1;
-  return fd < 0 ? -errno : fd;
+    (void)user_data;
+    int fd = open(path, flags);
+    return fd;
 }
 
 static void close_restricted(int fd, void *user_data)
 {
-  close(fd);
+    (void)user_data;
+    close(fd);
 }
 
 const static struct libinput_interface interface = {
@@ -35,18 +33,8 @@ const static struct libinput_interface interface = {
         .close_restricted = close_restricted,
 };
 
-void *inputLoop(void*data)
+void processInput()
 {
-    WCompositor *compositor = (WCompositor*)data;
-    struct libinput *li;
-    struct libinput_event *ev;
-    struct udev *udev = udev_new();
-
-    li = libinput_udev_create_context(&interface, NULL, udev);
-
-    libinput_udev_assign_seat(li, "seat0");
-    libinput_dispatch(li);
-
     while(1)
     {
       ev = libinput_get_event(li);
@@ -54,22 +42,29 @@ void *inputLoop(void*data)
       if(ev == NULL)
       {
           libinput_dispatch(li);
-          continue;
+          return;
       }
 
       // Sends event to the compositor
-      compositor->libinputEvent(ev);
+      comp->libinputEvent(ev);
       libinput_event_destroy(ev);
       libinput_dispatch(li);
-      poll(&pfd,1,-1);
     }
 
-    libinput_unref(li);
+    //libinput_unref(li);
 }
 
-void initInput(WCompositor *compositor)
+
+
+int initInput(WCompositor *compositor)
 {
-    pthread_t inputThread;
-    pthread_create(&inputThread, NULL, inputLoop, compositor);
-    return;
+    comp = compositor;
+    udev = udev_new();
+    li = libinput_udev_create_context(&interface, NULL, udev);
+
+    libinput_udev_assign_seat(li, "seat0");
+    libinput_dispatch(li);
+
+    printf("Libinput initialized.\n");
+    return libinput_get_fd(li);
 }

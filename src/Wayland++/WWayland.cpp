@@ -1,11 +1,11 @@
 #include "WWayland.h"
 #include <WCompositor.h>
-#include <WBackendDRM.h>
+#include <WBackend.h>
 #include <WTexture.h>
 #include <pthread.h>
 #include <protocols/xdg-shell.h>
 
-//static PFNEGLBINDWAYLANDDISPLAYWL eglBindWaylandDisplayWL = NULL;
+static PFNEGLBINDWAYLANDDISPLAYWL eglBindWaylandDisplayWL = NULL;
 static PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL = NULL;
 
 using namespace std;
@@ -13,6 +13,8 @@ using namespace std;
 WCompositor *compositor;
 
 static struct wl_display *display;
+struct wl_event_loop *event_loop;
+int wayland_fd;
 
 
 static void delete_surface(struct wl_resource *resource)
@@ -39,8 +41,7 @@ static void delete_surface(struct wl_resource *resource)
 // SURFACE
 static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y)
 {
-    printf("SURFACE ATTACH.\n");
-
+    //printf("SURFACE ATTACH.\n");
     (void)client;(void)x;(void)y;
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
     surface->buffer = buffer;
@@ -48,7 +49,7 @@ static void surface_attach(struct wl_client *client, struct wl_resource *resourc
 
 static void surface_frame(wl_client *client, wl_resource *resource, uint32_t callback)
 {
-    printf("SURFACE FRAME.\n");
+    //printf("SURFACE FRAME.\n");
 
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
@@ -62,7 +63,7 @@ static void surface_set_input_region (struct wl_client *client, struct wl_resour
 
 static void surface_commit(wl_client *client, struct wl_resource *resource)
 {
-    printf("SURFACE COMMIT.\n");
+    //printf("SURFACE COMMIT.\n");
 
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
@@ -73,9 +74,6 @@ static void surface_commit(wl_client *client, struct wl_resource *resource)
         xdg_surface_send_configure(surface->xdg_shell, 0);
         return;
     }
-
-    /*
-
 
     EGLint texture_format;
     if(eglQueryWaylandBufferWL(getEGLDisplay(), surface->buffer, EGL_TEXTURE_FORMAT, &texture_format))
@@ -91,26 +89,17 @@ static void surface_commit(wl_client *client, struct wl_resource *resource)
     }
     else
     {
-        struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get (surface->buffer);
-        uint32_t width = wl_shm_buffer_get_width (shm_buffer);
-        uint32_t height = wl_shm_buffer_get_height (shm_buffer);
-        void *data = wl_shm_buffer_get_data (shm_buffer);
+        wl_shm_buffer *shm_buffer = wl_shm_buffer_get(surface->buffer);
+        uint32_t width = wl_shm_buffer_get_width(shm_buffer);
+        uint32_t height = wl_shm_buffer_get_height(shm_buffer);
+        void *data = wl_shm_buffer_get_data(shm_buffer);
         surface->texture->deleteTexture();
         surface->texture->setData(width, height, data);
     }
-    */
-
-    struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get (surface->buffer);
-    uint32_t width = wl_shm_buffer_get_width (shm_buffer);
-    uint32_t height = wl_shm_buffer_get_height (shm_buffer);
-    void *data = wl_shm_buffer_get_data (shm_buffer);
-    surface->texture->deleteTexture();
-    surface->texture->setData(width, height, data);
 
 
-    wl_buffer_send_release (surface->buffer);
+    wl_buffer_send_release(surface->buffer);
     compositor->repaint();
-    printf("SURFACE COMMITED.\n");
 }
 
 static void surface_set_buffer_transform (struct wl_client *client, struct wl_resource *resource, int32_t transform){}
@@ -278,18 +267,15 @@ static void xdg_wm_base_bind (wl_client *client, void *data, uint32_t version, u
     wl_resource_set_implementation (resource, &xdg_wm_base_implementation, NULL, NULL);
 }
 
-void *waylandLoop(void*)
-{
-    printf("WAYLAND COMPOSITOR STARTED.\n");
 
-    // Start the wayland event loop
-    wl_display_run(display);
-}
-
-void initWayland(WCompositor *comp)
+int initWayland(WCompositor *comp)
 {
+
     // Stores compositor reference
     compositor = comp;
+
+    eglBindWaylandDisplayWL = (PFNEGLBINDWAYLANDDISPLAYWL) eglGetProcAddress ("eglBindWaylandDisplayWL");
+    eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
 
     // Create a new Wayland display
     display = wl_display_create();
@@ -317,14 +303,27 @@ void initWayland(WCompositor *comp)
     // Create xdg shell global
     wl_global_create (display, &xdg_wm_base_interface, 1, NULL, &xdg_wm_base_bind);
 
-    pthread_t waylandThread;
+    eglBindWaylandDisplayWL(getEGLDisplay(), display);
 
-    // Start the wayland event loop
-    pthread_create(&waylandThread, NULL, waylandLoop, NULL);
+    wl_display_init_shm (display);
+
+    event_loop = wl_display_get_event_loop(display);
+    wayland_fd = wl_event_loop_get_fd(event_loop);
+
+    printf("Wayland server initialized.\n");
+
+    return wayland_fd;
+
 }
 
 void terminateDisplay()
 {
    // Ends
    wl_display_terminate(display);
+}
+
+void processWayland()
+{
+    wl_event_loop_dispatch (event_loop, 0);
+    wl_display_flush_clients (display);
 }

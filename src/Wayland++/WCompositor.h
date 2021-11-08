@@ -29,7 +29,7 @@ public:
     list<WClient*>clients;
 private:
     bool readyToDraw = false;
-    void updateGL();
+    void mainLoop();
 };
 
 #endif // WCOMPOSITOR_H

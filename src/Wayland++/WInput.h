@@ -3,6 +3,7 @@
 
 class WCompositor;
 
-void initInput(WCompositor *compositor);
+int initInput(WCompositor *compositor);
+void processInput();
 
 #endif // WINPUT_H

@@ -18,7 +18,7 @@ public:
     GLuint textureId(){return _textureId;}
 private:
     int _width,_height;
-    GLuint _textureId = 0;
+    GLuint _textureId = 10000;
 };
 
 #endif

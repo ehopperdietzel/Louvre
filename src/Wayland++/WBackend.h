@@ -1,6 +1,5 @@
-/*
-#ifndef WBACKENDDRM_H
-#define WBACKENDDRM_H
+#ifndef WBACKEND
+#define WBACKEND
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -11,8 +10,7 @@ void initBackend(WCompositor *compositor);
 void paintDRM();
 int backendWidth();
 int backendHeight();
-
 EGLDisplay getEGLDisplay();
 
-#endif // WBACKENDDRM_H
-*/
+
+#endif // WBACKEND

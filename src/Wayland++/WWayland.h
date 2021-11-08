@@ -3,7 +3,8 @@
 
 class WCompositor;
 
-void initWayland(WCompositor *comp);
+int initWayland(WCompositor *comp);
 void terminateDisplay();
+void processWayland();
 
 #endif // WWAYLAND_H

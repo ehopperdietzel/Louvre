@@ -6,6 +6,7 @@
 
 MyCompositor::MyCompositor(){}
 
+
 GLuint LoadShader(GLenum type, const char *shaderSrc)
 {
     GLuint shader;
@@ -13,29 +14,44 @@ GLuint LoadShader(GLenum type, const char *shaderSrc)
 
     // Create the shader object
     shader = glCreateShader(type);
-
-    if (shader == 0)
-        return 0;
+    checkGLError("21");
 
     // Load the shader source
     glShaderSource(shader, 1, &shaderSrc, nullptr);
+    checkGLError("22");
 
     // Compile the shader
     glCompileShader(shader);
+    checkGLError("23");
 
     // Check the compile status
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    checkGLError("24");
 
     if (!compiled)
     {
         GLint infoLen = 0;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
+        checkGLError("25");
+
+        GLchar *errorLog = new GLchar(infoLen);
+
+        glGetShaderInfoLog(shader, infoLen, &infoLen, errorLog);
+        checkGLError("26");
+
+        printf("%s",errorLog);
+
+        delete errorLog;
+
         glDeleteShader(shader);
+        checkGLError("27");
         return 0;
     }
 
     return shader;
 }
+
+
 
 void MyCompositor::initializeGL()
 {
@@ -58,61 +74,89 @@ void MyCompositor::initializeGL()
 
     // Create the program object
     programObject = glCreateProgram(); 
+    checkGLError("1");
 
     glAttachShader(programObject, vertexShader);
+    checkGLError("2");
+
     glAttachShader(programObject, fragmentShader);
+    checkGLError("3");
+
 
     // Bind vPosition to attribute 0
     glBindAttribLocation(programObject, 0, "vertexPosition");
+    checkGLError("4");
 
     // Link the program
     glLinkProgram(programObject);
+    checkGLError("5");
 
     GLint linked;
 
     // Check the link status
     glGetProgramiv(programObject, GL_LINK_STATUS, &linked);
+    checkGLError("6");
 
-    /*
     if (!linked)
     {
         GLint infoLen = 0;
         glGetProgramiv(programObject, GL_INFO_LOG_LENGTH, &infoLen);
+        checkGLError("7");
+
         glDeleteProgram(programObject);
+        checkGLError("8");
         return exit(-1);
     }
-    */
-
-    // Use the program object
-    glUseProgram(programObject);
-
-    // Set the viewport
-    glViewport(0, 0, screenWidth(), screenHeight());
-
-    // Load the vertex data
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, square);
-
-    // Enables the vertex array
-    glEnableVertexAttribArray(0);
 
     // Enable alpha blending
     glEnable(GL_BLEND);
+    checkGLError("9");
 
     // Set blend mode
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    checkGLError("10");
 
     // Set clear screen color
     glClearColor(0.0f, 0.3f, 0.5f, 1.0f);
+    checkGLError("11");
+
+    // Use the program object
+    glUseProgram(programObject);
+    checkGLError("12");
+
+    // Set the viewport
+    glViewport(0, 0, screenWidth(), screenHeight());
+    checkGLError("13");
+
+    // Load the vertex data
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, square);
+    checkGLError("14");
+
+    // Enables the vertex array
+    glEnableVertexAttribArray(0);
+    checkGLError("15");
 
     // Get Uniform Variables
     screenUniform = glGetUniformLocation(programObject, "screen"); // (width,height) Screen dimensions
+    checkGLError("16");
+
     rectUniform = glGetUniformLocation(programObject, "rect");     // (left,top,with,height) App window pos and size
+    checkGLError("17");
+
+    glUniform1i(glGetUniformLocation(programObject, "application"), 0);
+    checkGLError("18");
 
     // Set screen size
     glUniform2f(screenUniform,screenWidth(),screenHeight());
+    checkGLError("19");
+
+    glActiveTexture(GL_TEXTURE0);
+    checkGLError("20");
+
 }
 
 float phase = 0.f;
+int n = 0;
 void MyCompositor::paintGL()
 {
     /*************************************************
@@ -125,16 +169,27 @@ void MyCompositor::paintGL()
     // Clear the color buffer
     glClear(GL_COLOR_BUFFER_BIT);
 
-
     for(list<WClient*>::iterator client = clients.begin(); client != clients.end(); ++client)
     {
         for(list<WSurface*>::iterator surface = (*client)->surfaces.begin(); surface != (*client)->surfaces.end(); ++surface)
         {
-            if((*surface)->texture->textureId())
+
+            if(!(*surface)->xdg_shell) continue;
+            glBindTexture(GL_TEXTURE_2D,(*surface)->texture->textureId());
+            checkGLError("21");
+
+            glUniform4f(rectUniform,0,0,(*surface)->texture->width(),(*surface)->texture->height());
+            checkGLError("22");
+
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            checkGLError("23");
+
+            if ((*surface)->frame_callback)
             {
-                glBindTexture(GL_TEXTURE0,(*surface)->texture->textureId());
-                glUniform4i(rectUniform,0,0,(*surface)->texture->width(),(*surface)->texture->height());
-                glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+                wl_callback_send_done((*surface)->frame_callback,n);
+                n++;
+                wl_resource_destroy((*surface)->frame_callback);
+                (*surface)->frame_callback = nullptr;
             }
         }
     }

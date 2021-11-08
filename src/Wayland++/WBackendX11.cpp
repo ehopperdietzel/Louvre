@@ -1,4 +1,4 @@
-#include <WBackendX11.h>
+#include <WBackend.h>
 #include <wayland-server.h>
 #include <X11/Xlib.h>
 #include <linux/input.h>
@@ -28,13 +28,22 @@ static EGLDisplay egl_display;
 
 static void create_window ()
 {
-    // setup EGL
-    EGLint attribs[] = {
+
+    static const EGLint attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RED_SIZE, 1,
         EGL_GREEN_SIZE, 1,
         EGL_BLUE_SIZE, 1,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
-    EGL_NONE};
+        EGL_ALPHA_SIZE, 0,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+
+    static const EGLint context_attribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
     EGLConfig config;
     EGLint num_configs_returned;
     eglChooseConfig (egl_display, attribs, &config, 1, &num_configs_returned);
@@ -71,7 +80,7 @@ static void create_window ()
         exit(-1);
     }
 
-    window.context = eglCreateContext (egl_display, config, EGL_NO_CONTEXT, NULL);
+    window.context = eglCreateContext (egl_display, config, EGL_NO_CONTEXT, context_attribs);
     if(window.context == NULL)
     {
         printf("Failed to create context\n");
@@ -94,11 +103,11 @@ static void create_window ()
 
 int backendWidth()
 {
-    return 800;
+    return WINDOW_WIDTH;
 }
 int backendHeight()
 {
-    return 600;
+    return WINDOW_HEIGHT;
 }
 
 void initBackend(WCompositor *compositor)
@@ -107,6 +116,7 @@ void initBackend(WCompositor *compositor)
     egl_display = eglGetDisplay (x_display);
     eglInitialize (egl_display, NULL, NULL);
     create_window();
+    printf("X11 backend initialized.\n");
     compositor->initializeGL();
 }
 
@@ -119,5 +129,4 @@ void paintDRM()
 {
     eglSwapBuffers (egl_display, window.surface);
 }
-
 

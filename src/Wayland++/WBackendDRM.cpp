@@ -243,8 +243,7 @@ static int init_gl(void)
         return -1;
     }
 
-    gl.context = eglCreateContext(gl.display, gl.config,
-            EGL_NO_CONTEXT, context_attribs);
+    gl.context = eglCreateContext(gl.display, gl.config, EGL_NO_CONTEXT, context_attribs);
     if (gl.context == NULL) {
         printf("failed to create context\n");
         return -1;
@@ -433,4 +432,5 @@ EGLDisplay getEGLDisplay()
 {
     return gl.display;
 }
+
 */

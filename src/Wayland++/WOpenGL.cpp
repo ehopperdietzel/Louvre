@@ -1,6 +1,7 @@
 #include "WOpenGL.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <GL/gl.h>
 
 char *openShader(const char *fname)
 {
@@ -22,6 +23,19 @@ char *openShader(const char *fname)
 
     fread(data,fileSize,1,fp);
 
+    data[fileSize] = '\0';
+
     fclose(fp);
     return data;
+}
+
+void checkGLError(const char *msg)
+{
+    GLenum errCode;
+
+    if((errCode = glGetError()) != GL_NO_ERROR)
+    {
+        printf("GL ERROR: %i %s\n",errCode,msg);
+        exit(-1);
+    }
 }

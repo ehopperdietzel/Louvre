@@ -1,3 +1,17 @@
+precision mediump float;
+
+// Textura de la app a dibujar
+uniform sampler2D application;
+
+varying vec2 v_texcoord;
+
+void main()
+{
+  gl_FragColor = texture2D(application,vec2(v_texcoord.x,-v_texcoord.y));
+}
+
+
+/*
 // ORIGEN BL
 precision lowp float;
 precision lowp int;
@@ -19,3 +33,4 @@ void main()
 {
     gl_FragColor = texture2D(application,vec2(v_texcoord.x,-v_texcoord.y));
 }
+*/
