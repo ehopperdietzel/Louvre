@@ -12,8 +12,12 @@ class WClient
 {
 public:
     WClient(wl_client *cli,wl_resource *res);
-    wl_client *client;
-    wl_resource *resource;
+
+    wl_client *client = nullptr;
+
+    wl_resource *resource = nullptr;
+    wl_resource *keyboard = nullptr;
+    wl_resource *pointer = nullptr;
 
     list<WRegion*>regions;
     list<WSurface*>surfaces;

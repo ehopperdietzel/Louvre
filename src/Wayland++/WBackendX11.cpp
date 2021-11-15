@@ -99,6 +99,8 @@ static void create_window ()
     XFree (visual);
 
     XMapWindow (x_display, window.window);
+
+    XMoveWindow(x_display,window.window,0,0);
 }
 
 int backendWidth()

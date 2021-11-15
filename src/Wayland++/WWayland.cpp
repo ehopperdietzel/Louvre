@@ -39,7 +39,7 @@ static void delete_surface(struct wl_resource *resource)
 }
 
 // SURFACE
-static void surface_attach(struct wl_client *client, struct wl_resource *resource, struct wl_resource *buffer, int32_t x, int32_t y)
+static void surface_attach(wl_client *client, wl_resource *resource, wl_resource *buffer, int32_t x, int32_t y)
 {
     //printf("SURFACE ATTACH.\n");
     (void)client;(void)x;(void)y;
@@ -57,11 +57,8 @@ static void surface_frame(wl_client *client, wl_resource *resource, uint32_t cal
 }
 
 static void surface_destroy (struct wl_client *client, struct wl_resource *resource) {}
-static void surface_damage (wl_client *client, wl_resource *resource, int32_t x, int32_t y, int32_t width, int32_t height){}
-static void surface_set_opaque_region (struct wl_client *client, struct wl_resource *resource, struct wl_resource *region){}
-static void surface_set_input_region (struct wl_client *client, struct wl_resource *resource, struct wl_resource *region){}
 
-static void surface_commit(wl_client *client, struct wl_resource *resource)
+static void surface_commit(wl_client *client, wl_resource *resource)
 {
     //printf("SURFACE COMMIT.\n");
 
@@ -99,8 +96,62 @@ static void surface_commit(wl_client *client, struct wl_resource *resource)
 
 
     wl_buffer_send_release(surface->buffer);
+
+    if (surface->frame_callback)
+    {
+
+        wl_callback_send_done(surface->frame_callback,compositor->getMilliseconds());
+        wl_resource_destroy(surface->frame_callback);
+        surface->frame_callback = nullptr;
+    }
+
+    compositor->repaint();
+
+}
+
+
+static void surface_damage (wl_client *client, wl_resource *resource, int32_t x, int32_t y, int32_t width, int32_t height)
+{
+
+    //surface_commit(client,resource);
+    printf("Damage\n");
+
+    return;
+    WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
+
+
+    if (!surface->buffer)
+    {
+        xdg_surface_send_configure(surface->xdg_shell, 0);
+        return;
+    }
+
+
+    wl_shm_buffer *shm_buffer = wl_shm_buffer_get(surface->buffer);
+    void *data = wl_shm_buffer_get_data(shm_buffer);
+
+    glBindTexture(GL_TEXTURE_2D, surface->texture->textureId());
+
+    //glActiveTexture()
+
+    glTexSubImage2D(GL_TEXTURE_2D,
+        0,
+        x,
+        y,
+        width,
+        height,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        data);
+
+
+   // wl_buffer_send_release(surface->buffer);
+
     compositor->repaint();
 }
+static void surface_set_opaque_region (struct wl_client *client, struct wl_resource *resource, struct wl_resource *region){}
+static void surface_set_input_region (struct wl_client *client, struct wl_resource *resource, struct wl_resource *region){}
+
 
 static void surface_set_buffer_transform (struct wl_client *client, struct wl_resource *resource, int32_t transform){}
 static void surface_set_buffer_scale (struct wl_client *client, struct wl_resource *resource, int32_t scale){}
@@ -122,7 +173,7 @@ static void compositor_create_surface (wl_client *client, wl_resource *resource,
     (void)resource;
 
     // New surface resource
-    wl_resource *surface = wl_resource_create (client, &wl_surface_interface, 3, id);
+    wl_resource *surface = wl_resource_create (client, &wl_surface_interface, 4, id);
 
     // Create surface
     WSurface *wSurface = new WSurface(surface);
@@ -268,6 +319,50 @@ static void xdg_wm_base_bind (wl_client *client, void *data, uint32_t version, u
 }
 
 
+// POINTER
+static void pointer_set_cursor (wl_client *client, wl_resource *resource, uint32_t serial, wl_resource *_surface, int32_t hotspot_x, int32_t hotspot_y)
+{
+    //struct surface *surface = wl_resource_get_user_data(_surface);
+    //cursor = surface;
+}
+static void pointer_release(wl_client *client, wl_resource *resource){}
+static struct wl_pointer_interface pointer_implementation = {&pointer_set_cursor, &pointer_release};
+
+// KEYBOARD
+static void keyboard_release(wl_client *client, wl_resource *resource){}
+static struct wl_keyboard_interface keyboard_implementation = {&keyboard_release};
+
+// SEAT
+static void seat_get_pointer (wl_client *client, wl_resource *resource, uint32_t id)
+{
+    WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
+    wl_resource *pointer = wl_resource_create (client, &wl_pointer_interface, 7, id);
+    wl_resource_set_implementation (pointer, &pointer_implementation, NULL, NULL);
+    wClient->pointer = pointer;
+}
+
+static void seat_get_keyboard (wl_client *client, wl_resource *resource, uint32_t id)
+{
+    WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
+    wl_resource *keyboard = wl_resource_create(client, &wl_keyboard_interface, 1, id);
+    wl_resource_set_implementation(keyboard, &keyboard_implementation, NULL, NULL);
+    wClient->keyboard = keyboard;
+    wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_NO_KEYMAP, 0, 0);
+}
+static void seat_get_touch (wl_client *client, wl_resource *resource, uint32_t id){}
+static void seat_release( wl_client *client, wl_resource *resource){}
+
+static struct wl_seat_interface seat_implementation = {&seat_get_pointer, &seat_get_keyboard, &seat_get_touch,&seat_release};
+static void seat_bind(wl_client *client, void *data, uint32_t version, uint32_t id)
+{
+    (void)data;(void)version;
+    wl_resource *seat = wl_resource_create(client, &wl_seat_interface,version,id);
+    WClient *wClient = *find_if(compositor->clients.begin(),compositor->clients.end(),[client](WClient *x) { return x->client == client;});
+    wl_resource_set_implementation(seat, &seat_implementation, wClient, NULL);
+    wl_seat_send_capabilities (seat, WL_SEAT_CAPABILITY_POINTER|WL_SEAT_CAPABILITY_KEYBOARD);
+
+}
+
 int initWayland(WCompositor *comp)
 {
 
@@ -303,6 +398,9 @@ int initWayland(WCompositor *comp)
     // Create xdg shell global
     wl_global_create (display, &xdg_wm_base_interface, 1, NULL, &xdg_wm_base_bind);
 
+    // Create seat global
+    wl_global_create (display, &wl_seat_interface, 7, NULL, &seat_bind);
+
     eglBindWaylandDisplayWL(getEGLDisplay(), display);
 
     wl_display_init_shm (display);
@@ -324,6 +422,6 @@ void terminateDisplay()
 
 void processWayland()
 {
-    wl_event_loop_dispatch (event_loop, 0);
-    wl_display_flush_clients (display);
+    wl_event_loop_dispatch(event_loop,0);
+    wl_display_flush_clients(display);
 }

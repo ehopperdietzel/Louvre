@@ -3,6 +3,7 @@
 #include <WOpenGL.h>
 #include <unistd.h>
 #include <WWayland.h>
+#include <linux/input-event-codes.h>
 
 MyCompositor::MyCompositor(){}
 
@@ -153,10 +154,17 @@ void MyCompositor::initializeGL()
     glActiveTexture(GL_TEXTURE0);
     checkGLError("20");
 
+
+    // Create cursor texture
+    unsigned char cursorPixels[4*32*32];
+    for(int i = 0; i < 4*32*32; i++)
+        cursorPixels[i] = 255;
+
+    cursorTexture = new WTexture();
+    cursorTexture->setData(32,32,&cursorPixels);
 }
 
 float phase = 0.f;
-int n = 0;
 void MyCompositor::paintGL()
 {
     /*************************************************
@@ -184,16 +192,29 @@ void MyCompositor::paintGL()
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             checkGLError("23");
 
+            //wl_pointer_send
+            //wl_pointer_send_enter((*client)->pointer,0,(*surface)->resource,100,300);
+            //wl_keyboard_send_key((*client)->keyboard, 0, n, 16, wl_keyboard_key_state::WL_KEYBOARD_KEY_STATE_PRESSED);
+            //wl_keyboard_send_key((*client)->keyboard, 0, n, 16, wl_keyboard_key_state::WL_KEYBOARD_KEY_STATE_RELEASED);
+
+
+            /*
             if ((*surface)->frame_callback)
             {
-                wl_callback_send_done((*surface)->frame_callback,n);
-                n++;
+
+                wl_callback_send_done((*surface)->frame_callback,getMilliseconds());
                 wl_resource_destroy((*surface)->frame_callback);
                 (*surface)->frame_callback = nullptr;
             }
+            */
+
         }
     }
 
+    //if(focusSurface)
+        //wl_pointer_send_frame(focusSurface->client->pointer);
+
+    drawCursor();
 }
 
 void MyCompositor::libinputEvent(struct libinput_event *ev)
@@ -216,7 +237,11 @@ void MyCompositor::libinputEvent(struct libinput_event *ev)
         {
             int keyCode = libinput_event_keyboard_get_key(keyEvent);
 
-            //printf("Key Code:%i\n",keyCode);
+            if(focusSurface)
+            {
+
+            }
+            printf("Key Code:%i\n",keyCode);
 
             // Ends compositor if Q is pressed
             if(keyCode == 16)
@@ -226,19 +251,96 @@ void MyCompositor::libinputEvent(struct libinput_event *ev)
             }
 
 
-            if(keyCode == 17)
+            if(keyCode == 2)
             {
                 pid_t pid = fork();
                 if (pid==0)
                 {
-                    system("/home/eduardo/Escritorio/build-wiggly-Desktop_Qt_6_2_1_GCC_64bit-Debug/./wiggly --platform wayland");
+                    system("/home/eduardo/Escritorio/build-cube-Desktop_Qt_6_2_1_GCC_64bit-Debug/./cube --platform wayland");
+                    exit(0);
+                }
+            }
+            if(keyCode == 3)
+            {
+                pid_t pid = fork();
+                if (pid==0)
+                {
+                    system("/home/eduardo/Escritorio/build-chip-Desktop_Qt_6_2_1_GCC_64bit-Debug/./chip --platform wayland");
                     exit(0);
                 }
             }
         }
+    }
+
+    //repaint();
+}
+
+void MyCompositor::pointerPosChanged(double x, double y)
+{
+    for(list<WClient*>::iterator client = clients.begin(); client != clients.end(); ++client)
+    {
+        for(list<WSurface*>::iterator surface = (*client)->surfaces.begin(); surface != (*client)->surfaces.end(); ++surface)
+        {
+
+            if(!(*surface)->xdg_shell) continue;
+
+            // Mouse move event
+            if((*surface)->containsPoint(x,y) && focusSurface == (*surface))
+            {
+                wl_pointer_send_motion(
+                            (*client)->pointer,
+                            getMilliseconds(),
+                            wl_fixed_from_double((*surface)->mapXtoLocal(x)),
+                            wl_fixed_from_double((*surface)->mapYtoLocal(y)));
+
+                wl_pointer_send_frame((*client)->pointer);
 
 
+            }
+
+            // Mouse leave surface
+            if(!(*surface)->containsPoint(x,y) && focusSurface == (*surface))
+            {
+                wl_pointer_send_leave((*client)->pointer,0,(*surface)->resource);
+                wl_pointer_send_frame((*client)->pointer);
+                focusSurface = nullptr;
+                printf("Mouse left surface\n");
+            }
+
+            // Mouse enter surface
+            if((*surface)->containsPoint(x,y) && focusSurface != (*surface))
+            {
+                wl_pointer_send_enter(
+                            (*client)->pointer,
+                            0,
+                            (*surface)->resource,
+                            wl_fixed_from_double((*surface)->mapXtoLocal(x)),
+                            wl_fixed_from_double((*surface)->mapYtoLocal(y)));
+
+
+                wl_pointer_send_frame((*client)->pointer);
+                focusSurface = (*surface);
+                printf("Mouse entered surface\n");
+            }
+        }
     }
 
     repaint();
+}
+
+void MyCompositor::pointerClickEvent(int x, int y, uint32_t button, libinput_button_state state)
+{
+    if(focusSurface)
+    {
+        wl_pointer_send_button(focusSurface->client->pointer,0,getMilliseconds(),button,state);
+        wl_pointer_send_frame(focusSurface->client->pointer);
+    }
+    printf("Mouse button: %i state %i\n",BTN_LEFT,state);
+}
+
+void MyCompositor::drawCursor()
+{
+    glBindTexture(GL_TEXTURE_2D,cursorTexture->textureId());
+    glUniform4f(rectUniform,getPointerX(),getPointerY(),5,5);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }

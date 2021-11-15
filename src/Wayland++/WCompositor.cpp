@@ -10,7 +10,7 @@ pollfd pfds[2];
 
 WCompositor::WCompositor()
 {
-
+    clock_gettime(CLOCK_MONOTONIC_RAW, &startTime);
 }
 
 void WCompositor::start()
@@ -48,6 +48,50 @@ int WCompositor::screenHeight()
     return backendHeight();
 }
 
+double WCompositor::getPointerX()
+{
+    return _pointerX;
+}
+
+double WCompositor::getPointerY()
+{
+    return _pointerY;
+}
+
+void WCompositor::setPointerPos(double x, double y)
+{
+    if(x < 0.0)
+        x = 0.0;
+    if(y < 0.0)
+        y = 0.0;
+    if(x > screenWidth())
+        x = screenWidth();
+    if(y > screenHeight())
+        y = screenHeight();
+
+    _pointerX = x;
+    _pointerY = y;
+
+    pointerPosChanged(x,y);
+}
+
+void WCompositor::setFocusSurface(WSurface *surface)
+{
+    _focusSurface = surface;
+}
+
+WSurface *WCompositor::getFocusSurface()
+{
+    return _focusSurface;
+}
+
+uint64_t WCompositor::getMilliseconds()
+{
+    timespec endTime;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &endTime);
+    return (endTime.tv_sec - startTime.tv_sec) * 1000000 + (endTime.tv_nsec - startTime.tv_nsec) / 1000;
+}
+
 
 void WCompositor::mainLoop()
 {
@@ -56,10 +100,10 @@ void WCompositor::mainLoop()
     {
         poll(pfds, 2, -1);
 
-        if(pfds[0].revents & POLLIN)
+        //if(pfds[0].revents & POLLIN)
             processInput();
 
-        if(pfds[1].revents & POLLIN)
+        //if(pfds[1].revents & POLLIN)
             processWayland();
 
         if(readyToDraw)

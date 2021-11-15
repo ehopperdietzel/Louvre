@@ -45,6 +45,25 @@ void processInput()
           return;
       }
 
+      libinput_event_type eventType = libinput_event_get_type(ev);
+
+
+      if(eventType == LIBINPUT_EVENT_POINTER_MOTION)
+      {
+          libinput_event_pointer *pointerEvent = libinput_event_get_pointer_event(ev);
+          comp->setPointerPos(comp->getPointerX() + libinput_event_pointer_get_dx(pointerEvent), comp->getPointerY() + libinput_event_pointer_get_dy(pointerEvent));
+      }
+      else if(eventType == LIBINPUT_EVENT_POINTER_BUTTON)
+      {
+          libinput_event_pointer *pointerEvent = libinput_event_get_pointer_event(ev);
+
+          uint32_t button = libinput_event_pointer_get_button(pointerEvent);
+          libinput_button_state state = libinput_event_pointer_get_button_state(pointerEvent);
+
+          comp->pointerClickEvent(comp->getPointerX(),comp->getPointerY(),button,state);
+      }
+
+
       // Sends event to the compositor
       comp->libinputEvent(ev);
       libinput_event_destroy(ev);

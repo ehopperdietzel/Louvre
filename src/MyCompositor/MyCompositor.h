@@ -7,9 +7,13 @@ class MyCompositor : public WCompositor
 {
 public:
     MyCompositor();
+
+    // Virtual methods to override
     void initializeGL() override;
     void paintGL() override;
-    void libinputEvent(struct libinput_event *ev) override;
+    void libinputEvent(libinput_event *ev) override;
+    void pointerPosChanged(double x, double y) override;
+    void pointerClickEvent(int x, int y, uint32_t button, libinput_button_state state) override;
 
     // Square
     GLfloat square[16] =
@@ -28,6 +32,11 @@ public:
     borderRadiusCornersUniform, // Esquinas activas del border radius (TL,TR,BL,BR)
     shadowCornerUniform,        // Indica la sombra a dibujar -1=Para no dibujar 0 = TL
     shadowConfUniform;          // Indica el xOffset, yOffsety radio de la sombra
+
+    // Focus surface
+    WSurface *focusSurface = nullptr;
+
+    void drawCursor();
 };
 
 #endif // MYCOMPOSITOR_H

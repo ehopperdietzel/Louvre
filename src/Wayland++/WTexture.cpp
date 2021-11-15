@@ -41,7 +41,7 @@ void WTexture::setData(int width, int height, void *data, bool isEGLImage)
         checkGLError("36");
     }
 
-    printf("%i\n",_textureId);
+    //printf("%i\n",_textureId);
     glBindTexture (GL_TEXTURE_2D, 0);
     checkGLError("37");
 }
