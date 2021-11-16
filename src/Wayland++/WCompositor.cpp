@@ -10,6 +10,8 @@ pollfd pfds[2];
 
 WCompositor::WCompositor()
 {
+
+    // Initialize milliseconds clock
     clock_gettime(CLOCK_MONOTONIC_RAW, &startTime);
 }
 

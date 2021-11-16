@@ -4,17 +4,20 @@
 #include <WTexture.h>
 #include <pthread.h>
 #include <protocols/xdg-shell.h>
+#include <WOpenGL.h>
+
+
+using namespace std;
 
 static PFNEGLBINDWAYLANDDISPLAYWL eglBindWaylandDisplayWL = NULL;
 static PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL = NULL;
-
-using namespace std;
 
 WCompositor *compositor;
 
 static struct wl_display *display;
 struct wl_event_loop *event_loop;
 int wayland_fd;
+EGLint texture_format;
 
 
 static void delete_surface(struct wl_resource *resource)
@@ -49,18 +52,21 @@ static void surface_attach(wl_client *client, wl_resource *resource, wl_resource
 
 static void surface_frame(wl_client *client, wl_resource *resource, uint32_t callback)
 {
-    //printf("SURFACE FRAME.\n");
+    /* Client waits for this frame to be marked as done before creating next frame*/
 
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
     surface->frame_callback = wl_resource_create (client, &wl_callback_interface, 1, callback);
 }
 
-static void surface_destroy (struct wl_client *client, struct wl_resource *resource) {}
+static void surface_destroy(wl_client *client, wl_resource *resource) {}
 
 static void surface_commit(wl_client *client, wl_resource *resource)
 {
     //printf("SURFACE COMMIT.\n");
+
+    /* Client tells the server that the current buffer is ready to be drawed
+     * (this means that the current buffer already contains all the damages and transformations) */
 
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
@@ -72,7 +78,7 @@ static void surface_commit(wl_client *client, wl_resource *resource)
         return;
     }
 
-    EGLint texture_format;
+
     if(eglQueryWaylandBufferWL(getEGLDisplay(), surface->buffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
         EGLint width, height;
@@ -80,8 +86,7 @@ static void surface_commit(wl_client *client, wl_resource *resource)
         eglQueryWaylandBufferWL(getEGLDisplay(), surface->buffer, EGL_WIDTH, &height);
         EGLAttrib attribs = EGL_NONE;
         EGLImage image = eglCreateImage(getEGLDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, surface->buffer, &attribs);
-        surface->texture->deleteTexture();
-        surface->texture->setData(width, height, &image, true);
+        surface->texture->setData(width, height, &image, WTexture::Type::EGL);
         eglDestroyImage (getEGLDisplay(), image);
     }
     else
@@ -90,10 +95,8 @@ static void surface_commit(wl_client *client, wl_resource *resource)
         uint32_t width = wl_shm_buffer_get_width(shm_buffer);
         uint32_t height = wl_shm_buffer_get_height(shm_buffer);
         void *data = wl_shm_buffer_get_data(shm_buffer);
-        surface->texture->deleteTexture();
         surface->texture->setData(width, height, data);
     }
-
 
     wl_buffer_send_release(surface->buffer);
 
@@ -113,10 +116,10 @@ static void surface_commit(wl_client *client, wl_resource *resource)
 static void surface_damage (wl_client *client, wl_resource *resource, int32_t x, int32_t y, int32_t width, int32_t height)
 {
 
-    //surface_commit(client,resource);
-    printf("Damage\n");
+    printf("Damage: x:%i,y:%i,w:%i,h:%i\n",x,y,width,height);
 
-    return;
+    /* The client tells the server that has updated a region of the current buffer */
+
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
 
 
@@ -127,27 +130,7 @@ static void surface_damage (wl_client *client, wl_resource *resource, int32_t x,
     }
 
 
-    wl_shm_buffer *shm_buffer = wl_shm_buffer_get(surface->buffer);
-    void *data = wl_shm_buffer_get_data(shm_buffer);
 
-    glBindTexture(GL_TEXTURE_2D, surface->texture->textureId());
-
-    //glActiveTexture()
-
-    glTexSubImage2D(GL_TEXTURE_2D,
-        0,
-        x,
-        y,
-        width,
-        height,
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
-        data);
-
-
-   // wl_buffer_send_release(surface->buffer);
-
-    compositor->repaint();
 }
 static void surface_set_opaque_region (struct wl_client *client, struct wl_resource *resource, struct wl_resource *region){}
 static void surface_set_input_region (struct wl_client *client, struct wl_resource *resource, struct wl_resource *region){}
@@ -366,11 +349,11 @@ static void seat_bind(wl_client *client, void *data, uint32_t version, uint32_t 
 int initWayland(WCompositor *comp)
 {
 
-    // Stores compositor reference
-    compositor = comp;
-
     eglBindWaylandDisplayWL = (PFNEGLBINDWAYLANDDISPLAYWL) eglGetProcAddress ("eglBindWaylandDisplayWL");
     eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
+
+    // Stores compositor reference
+    compositor = comp;
 
     // Create a new Wayland display
     display = wl_display_create();

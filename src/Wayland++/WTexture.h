@@ -5,20 +5,30 @@
 #include <EGL/eglext.h>
 #include <GL/gl.h>
 
-
 class WTexture
 {
+
 public:
+
+    enum Type
+    {
+        SHM = 0,
+        EGL = 1
+    };
+
     WTexture();
-    void setData(int width, int height, void *data, bool isEGLImage = false);
+    void setData(int width, int height, void *data, Type textureType = SHM);
     void deleteTexture();
-    void draw(int x, int y);
     int height(){return _height;}
     int width(){return _width;}
+    bool isInitialized(){ return _initialized;}
     GLuint textureId(){return _textureId;}
+    Type type(){return _type;}
 private:
-    int _width,_height;
-    GLuint _textureId = 10000;
+    int _width,_height = 0;
+    GLuint _textureId = 0;
+    bool _initialized = false;
+    Type _type = SHM;
 };
 
 #endif

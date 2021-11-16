@@ -162,6 +162,7 @@ void MyCompositor::initializeGL()
 
     cursorTexture = new WTexture();
     cursorTexture->setData(32,32,&cursorPixels);
+
 }
 
 float phase = 0.f;
@@ -171,8 +172,8 @@ void MyCompositor::paintGL()
      *  Here you do your drawing
      *************************************************/
 
-    glClearColor(abs(sinf(phase)), 0.3f, 0.5f, 1.0f);
-    phase+=0.1;
+    //glClearColor(abs(sinf(phase)), 0.3f, 0.5f, 1.0f);
+    //phase+=0.1;
 
     // Clear the color buffer
     glClear(GL_COLOR_BUFFER_BIT);

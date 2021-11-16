@@ -21,7 +21,7 @@
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
-#include <WBackendDRM.h>
+#include <WBackend.h>
 #include <WCompositor.h>
 
 int drmWidth = 0;
@@ -415,6 +415,8 @@ void initBackend(WCompositor *compositor)
         return;
     }
 
+    printf("DRM backend initialized.\n");
+    compositor->initializeGL();
 
     return;
 }
@@ -432,5 +434,5 @@ EGLDisplay getEGLDisplay()
 {
     return gl.display;
 }
-
 */
+
