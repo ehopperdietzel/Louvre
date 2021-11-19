@@ -37,9 +37,13 @@ public:
 
     bool containsPoint(int x, int y);
 
+    int32_t getBufferScale();
+    void setBufferScale(int32_t scale);
+
  private:
     int _posX = 0;
     int _posY = 0;
+    int32_t _bufferScale = 1;
 
 };
 

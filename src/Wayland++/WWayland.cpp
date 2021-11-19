@@ -20,7 +20,7 @@ int wayland_fd;
 EGLint texture_format;
 
 
-static void delete_surface(struct wl_resource *resource)
+static void delete_surface(wl_resource *resource)
 {
     printf("DELETE SURFACE.\n");
 
@@ -59,7 +59,10 @@ static void surface_frame(wl_client *client, wl_resource *resource, uint32_t cal
     surface->frame_callback = wl_resource_create (client, &wl_callback_interface, 1, callback);
 }
 
-static void surface_destroy(wl_client *client, wl_resource *resource) {}
+static void surface_destroy(wl_client *client, wl_resource *resource)
+{
+    printf("DESTROY SURFACE.\n");
+}
 
 static void surface_commit(wl_client *client, wl_resource *resource)
 {
@@ -116,12 +119,9 @@ static void surface_commit(wl_client *client, wl_resource *resource)
 static void surface_damage (wl_client *client, wl_resource *resource, int32_t x, int32_t y, int32_t width, int32_t height)
 {
 
-    printf("Damage: x:%i,y:%i,w:%i,h:%i\n",x,y,width,height);
-
     /* The client tells the server that has updated a region of the current buffer */
 
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
-
 
     if (!surface->buffer)
     {
@@ -129,20 +129,40 @@ static void surface_damage (wl_client *client, wl_resource *resource, int32_t x,
         return;
     }
 
+    if(x+width > surface->texture->width() || y+height > surface->texture->height())
+        return;
 
-
+    Rect damage = {0};
+    damage.x = x;
+    damage.y = y;
+    damage.width = width;
+    damage.height = height;
+    surface->texture->damages.push(damage);
 }
-static void surface_set_opaque_region (struct wl_client *client, struct wl_resource *resource, struct wl_resource *region){}
-static void surface_set_input_region (struct wl_client *client, struct wl_resource *resource, struct wl_resource *region){}
+static void surface_set_opaque_region (wl_client *client, wl_resource *resource, wl_resource *region){}
+static void surface_set_input_region (wl_client *client, wl_resource *resource, wl_resource *region){}
 
 
 static void surface_set_buffer_transform (struct wl_client *client, struct wl_resource *resource, int32_t transform){}
-static void surface_set_buffer_scale (struct wl_client *client, struct wl_resource *resource, int32_t scale){}
+static void surface_set_buffer_scale(wl_client *client, wl_resource *resource, int32_t scale)
+{
+    (void)client;
+    printf("BUFFER SCALE:%i\n",scale);
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    surface->setBufferScale(scale);
+}
 
 static struct wl_surface_interface surface_implementation = {&surface_destroy, &surface_attach, &surface_damage, &surface_frame, &surface_set_opaque_region, &surface_set_input_region, &surface_commit, &surface_set_buffer_transform, &surface_set_buffer_scale};
 
 // REGION
-static void region_destroy (struct wl_client *client, struct wl_resource *resource){}
+static void region_destroy(wl_client *client, wl_resource *resource)
+{
+    (void)client;
+    printf("DELETED REGION\n");
+    WRegion *region = (WRegion*)wl_resource_get_user_data(resource);
+    region->client->regions.remove(region);
+    delete region;
+}
 static void region_add (struct wl_client *client, struct wl_resource *resource, int32_t x, int32_t y, int32_t width, int32_t height){}
 static void region_subtract (struct wl_client *client, struct wl_resource *resource, int32_t x, int32_t y, int32_t width, int32_t height){}
 
@@ -188,6 +208,9 @@ static void compositor_create_region (wl_client *client, wl_resource *resource, 
 
     // Find client
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
+
+    // Assign client
+    wRegion->client = wClient;
 
     // Append region to client
     wClient->regions.push_back(wRegion);
@@ -235,7 +258,7 @@ static void xdg_toplevel_set_app_id (struct wl_client *client, struct wl_resourc
 static void xdg_toplevel_show_window_menu (struct wl_client *client, struct wl_resource *resource, struct wl_resource *seat, uint32_t serial, int32_t x, int32_t y) {
 
 }
-static void xdg_toplevel_move (struct wl_client *client, struct wl_resource *resource, struct wl_resource *seat, uint32_t serial)
+static void xdg_toplevel_move(wl_client *client, wl_resource *resource, wl_resource *seat, uint32_t serial)
 {
     /*
     struct surface *surface = wl_resource_get_user_data (resource);
@@ -305,14 +328,27 @@ static void xdg_wm_base_bind (wl_client *client, void *data, uint32_t version, u
 // POINTER
 static void pointer_set_cursor (wl_client *client, wl_resource *resource, uint32_t serial, wl_resource *_surface, int32_t hotspot_x, int32_t hotspot_y)
 {
+    printf("CURSOR SURFACE\n");
     //struct surface *surface = wl_resource_get_user_data(_surface);
     //cursor = surface;
 }
-static void pointer_release(wl_client *client, wl_resource *resource){}
+static void pointer_release(wl_client *client, wl_resource *resource)
+{
+    printf("POINTER RELEASED\n");
+    WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
+    wl_resource_destroy(wClient->pointer);
+    wClient->pointer = nullptr;
+}
 static struct wl_pointer_interface pointer_implementation = {&pointer_set_cursor, &pointer_release};
 
 // KEYBOARD
-static void keyboard_release(wl_client *client, wl_resource *resource){}
+static void keyboard_release(wl_client *client, wl_resource *resource)
+{
+    printf("KEYBOARD RELEASED\n");
+    WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
+    wl_resource_destroy(wClient->keyboard);
+    wClient->keyboard = nullptr;
+}
 static struct wl_keyboard_interface keyboard_implementation = {&keyboard_release};
 
 // SEAT
@@ -320,7 +356,7 @@ static void seat_get_pointer (wl_client *client, wl_resource *resource, uint32_t
 {
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
     wl_resource *pointer = wl_resource_create (client, &wl_pointer_interface, 7, id);
-    wl_resource_set_implementation (pointer, &pointer_implementation, NULL, NULL);
+    wl_resource_set_implementation (pointer, &pointer_implementation, wClient, NULL);
     wClient->pointer = pointer;
 }
 
@@ -331,9 +367,23 @@ static void seat_get_keyboard (wl_client *client, wl_resource *resource, uint32_
     wl_resource_set_implementation(keyboard, &keyboard_implementation, NULL, NULL);
     wClient->keyboard = keyboard;
     wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_NO_KEYMAP, 0, 0);
+
+    WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1
+            struct wl_resource *keyboard = wl_resource_create (client, &wl_keyboard_interface, 1, id);
+                wl_resource_set_implementation (keyboard, &keyboard_implementation, NULL, NULL);
+                get_client(client)->keyboard = keyboard;
+                int fd, size;
+                backend_get_keymap (&fd, &size);
+                wl_keyboard_send_keymap (keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, fd, size);
+                //close (fd);
 }
 static void seat_get_touch (wl_client *client, wl_resource *resource, uint32_t id){}
-static void seat_release( wl_client *client, wl_resource *resource){}
+
+static void seat_release( wl_client *client, wl_resource *resource)
+{
+    printf("SEAT RELEASED\n");
+    wl_resource_destroy(resource);
+}
 
 static struct wl_seat_interface seat_implementation = {&seat_get_pointer, &seat_get_keyboard, &seat_get_touch,&seat_release};
 static void seat_bind(wl_client *client, void *data, uint32_t version, uint32_t id)

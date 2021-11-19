@@ -32,48 +32,49 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
         }
         else
         {
+            while(!damages.empty())
+                damages.pop();
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
             checkGLError("Error creating texture from shared memory.");
         }
     }
     else
     {
-        /*
+        glBindTexture(GL_TEXTURE_2D, _textureId);
+
         // If texture is not EGL
-        if(surface->texture->type() == WTexture::SHM)
+        while(!damages.empty())
         {
-
-            // Updates damaged region
-            wl_shm_buffer *shm_buffer = wl_shm_buffer_get(surface->buffer);
-            void *data = wl_shm_buffer_get_data(shm_buffer);
-
-
             //checkGLError("Error updating damage region.");
-            glBindTexture(GL_TEXTURE_2D, surface->texture->textureId());
-            glPixelStorei(GL_UNPACK_ROW_LENGTH,surface->texture->width());
-            glPixelStorei(GL_UNPACK_SKIP_PIXELS,x);
-            glPixelStorei(GL_UNPACK_SKIP_ROWS,y);
+            glPixelStorei(GL_UNPACK_ROW_LENGTH,_width);
+            glPixelStorei(GL_UNPACK_SKIP_PIXELS,(GLint)damages.front().x);
+            glPixelStorei(GL_UNPACK_SKIP_ROWS,(GLint)damages.front().y);
+
+            //printf("%i %i %i %i\n",damages.front().x,damages.front().y,damages.front().width,damages.front().height);
+            //printf("%i %i\n",width,height);
 
 
             glTexSubImage2D(GL_TEXTURE_2D,
                 0,
-                x,
-                y,
-                width,
-                height,
+                (GLint)damages.front().x,
+                (GLint)damages.front().y,
+                (GLsizei)damages.front().width,
+                (GLsizei)damages.front().height,
                 GL_RGBA,
                 GL_UNSIGNED_BYTE,
                 data);
 
-            return;
-            glPixelStorei(GL_UNPACK_ROW_LENGTH,0);
-            glPixelStorei(GL_UNPACK_SKIP_PIXELS,0);
-            glPixelStorei(GL_UNPACK_SKIP_ROWS,0);
+            checkGLError("Error updating texture region.");
 
+            damages.pop();
         }
-        */
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH,0);
+        glPixelStorei(GL_UNPACK_SKIP_PIXELS,0);
+        glPixelStorei(GL_UNPACK_SKIP_ROWS,0);
     }
 
+    glBindTexture(GL_TEXTURE_2D,0);
     _type = textureType;
     _initialized = true;
 }

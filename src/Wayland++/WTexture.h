@@ -4,6 +4,15 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GL/gl.h>
+#include <queue>
+
+struct Rect
+{
+    int32_t x = 0;
+    int32_t y = 0;
+    int32_t width = 0;
+    int32_t height = 0;
+};
 
 class WTexture
 {
@@ -24,6 +33,9 @@ public:
     bool isInitialized(){ return _initialized;}
     GLuint textureId(){return _textureId;}
     Type type(){return _type;}
+
+    std::queue<Rect>damages;
+
 private:
     int _width,_height = 0;
     GLuint _textureId = 0;

@@ -257,7 +257,9 @@ void MyCompositor::libinputEvent(struct libinput_event *ev)
                 pid_t pid = fork();
                 if (pid==0)
                 {
-                    system("/home/eduardo/Escritorio/build-cube-Desktop_Qt_6_2_1_GCC_64bit-Debug/./cube --platform wayland");
+                    //system("/home/eduardo/Escritorio/build-cube-Desktop_Qt_6_2_1_GCC_64bit-Debug/./cube --platform wayland");
+                    system("/home/eduardo/Escritorio/build-easing-Desktop_Qt_6_2_0_GCC_64bit-Debug/./easing --platform wayland");
+
                     exit(0);
                 }
             }

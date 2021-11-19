@@ -64,3 +64,13 @@ bool WSurface::containsPoint(int x, int y)
 
     return true;
 }
+
+int32_t WSurface::getBufferScale()
+{
+    return _bufferScale;
+}
+
+void WSurface::setBufferScale(int32_t scale)
+{
+    _bufferScale = scale;
+}
