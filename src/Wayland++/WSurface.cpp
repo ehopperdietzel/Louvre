@@ -1,8 +1,62 @@
 #include "WSurface.h"
-
+#include <WClient.h>
 WSurface::WSurface(wl_resource *res)
 {
     resource = res;
+}
+
+void WSurface::sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UInt32 milliseconds)
+{
+    if(client->pointer)
+    {
+        wl_pointer_send_button(client->pointer,0,milliseconds,buttonCode,buttonState);
+        wl_pointer_send_frame(client->pointer);
+    }
+}
+
+void WSurface::sendPointerMotionEvent(double x, double y, UInt32 milliseconds)
+{
+    if(client->pointer)
+    {
+        wl_pointer_send_motion(
+                    client->pointer,
+                    milliseconds,
+                    wl_fixed_from_double(x),
+                    wl_fixed_from_double(y));
+
+        wl_pointer_send_frame(client->pointer);
+    }
+}
+
+void WSurface::sendPointerEnterEvent(double x, double y)
+{
+    if(client->pointer)
+    {
+        wl_pointer_send_enter(
+                    client->pointer,
+                    0,
+                    resource,
+                    wl_fixed_from_double(x),
+                    wl_fixed_from_double(y));
+    }
+}
+
+void WSurface::sendPointerLeaveEvent()
+{
+    if(client->pointer)
+        wl_pointer_send_leave(client->pointer,0,resource);
+}
+
+void WSurface::sendKeyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds)
+{
+    if(client->keyboard)
+        wl_keyboard_send_key(client->keyboard,0,milliseconds,keyCode,keyState);
+}
+
+void WSurface::sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
+{
+    if(client->keyboard)
+        wl_keyboard_send_modifiers(client->keyboard,0,depressed,latched,locked,group);
 }
 
 void WSurface::setPos(int x, int y)
@@ -65,12 +119,12 @@ bool WSurface::containsPoint(int x, int y)
     return true;
 }
 
-int32_t WSurface::getBufferScale()
+Int32 WSurface::getBufferScale()
 {
     return _bufferScale;
 }
 
-void WSurface::setBufferScale(int32_t scale)
+void WSurface::setBufferScale(Int32 scale)
 {
     _bufferScale = scale;
 }

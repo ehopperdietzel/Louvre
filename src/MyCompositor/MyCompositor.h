@@ -12,8 +12,10 @@ public:
     void initializeGL() override;
     void paintGL() override;
     void libinputEvent(libinput_event *ev) override;
-    void pointerPosChanged(double x, double y) override;
-    void pointerClickEvent(int x, int y, uint32_t button, libinput_button_state state) override;
+    void pointerPosChanged(double x, double y, UInt32 milliseconds) override;
+    void pointerClickEvent(int x, int y, UInt32 button, UInt32 state, UInt32 milliseconds) override;
+    void keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) override;
+    void keyEvent(UInt32 keyCode,UInt32 keyState,UInt32 milliseconds) override;
 
     // Square
     GLfloat square[16] =

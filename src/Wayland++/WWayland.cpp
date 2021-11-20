@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <protocols/xdg-shell.h>
 #include <WOpenGL.h>
+#include <WInput.h>
 
 
 using namespace std;
@@ -363,19 +364,10 @@ static void seat_get_pointer (wl_client *client, wl_resource *resource, uint32_t
 static void seat_get_keyboard (wl_client *client, wl_resource *resource, uint32_t id)
 {
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
-    wl_resource *keyboard = wl_resource_create(client, &wl_keyboard_interface, 1, id);
+    wl_resource *keyboard = wl_resource_create(client, &wl_keyboard_interface,7, id);
     wl_resource_set_implementation(keyboard, &keyboard_implementation, NULL, NULL);
     wClient->keyboard = keyboard;
-    wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_NO_KEYMAP, 0, 0);
-
-    WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1
-            struct wl_resource *keyboard = wl_resource_create (client, &wl_keyboard_interface, 1, id);
-                wl_resource_set_implementation (keyboard, &keyboard_implementation, NULL, NULL);
-                get_client(client)->keyboard = keyboard;
-                int fd, size;
-                backend_get_keymap (&fd, &size);
-                wl_keyboard_send_keymap (keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, fd, size);
-                //close (fd);
+    wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,getKeymapFD(),getKeymapSize());
 }
 static void seat_get_touch (wl_client *client, wl_resource *resource, uint32_t id){}
 

@@ -5,5 +5,8 @@ class WCompositor;
 
 int initInput(WCompositor *compositor);
 void processInput();
+int getKeymapFD();
+int getKeymapSize();
+
 
 #endif // WINPUT_H

@@ -11,6 +11,7 @@
 #include <WClient.h>
 
 #include <sys/time.h>
+#include <WTypes.h>
 
 using namespace std;
 
@@ -22,24 +23,26 @@ public:
     virtual void initializeGL() = 0;
     virtual void paintGL() = 0;
     virtual void libinputEvent(libinput_event *ev) = 0;
-    virtual void pointerPosChanged(double x, double y) = 0;
-    virtual void pointerClickEvent(int x, int y, uint32_t button, libinput_button_state state) = 0;
+    virtual void pointerPosChanged(double x, double y, UInt32 milliseconds) = 0;
+    virtual void pointerClickEvent(Int32 x, Int32 y, UInt32 button, UInt32 state, UInt32 milliseconds) = 0;
+    virtual void keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) = 0;
+    virtual void keyEvent(UInt32 keyCode,UInt32 keyState,UInt32 milliseconds) = 0;
 
     void repaint();
 
-    int screenWidth();
-    int screenHeight();
+    Int32 screenWidth();
+    Int32 screenHeight();
 
     double getPointerX();
     double getPointerY();
 
-    void setPointerPos(double x, double y);
+    void setPointerPos(double x, double y, UInt32 milliseconds);
 
     void setFocusSurface(WSurface *surface);
     WSurface *getFocusSurface();
 
 
-    uint64_t getMilliseconds();
+    UInt32 getMilliseconds();
 
     list<WClient*>clients;
 

@@ -3,7 +3,7 @@ CONFIG += console c++17
 CONFIG -= app_bundle
 CONFIG -= qt
 
-LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11
+LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lxkbcommon
 INCLUDEPATH += /usr/include/drm
 INCLUDEPATH += ../Wayland++/
 INCLUDEPATH += /usr/share/
@@ -33,6 +33,7 @@ HEADERS += \
     ../Wayland++/WRegion.h \
     ../Wayland++/WSurface.h \
     ../Wayland++/WTexture.h \
+    ../Wayland++/WTypes.h \
     ../Wayland++/WView.h \
     ../Wayland++/WWayland.h \
     ../Wayland++/protocols/xdg-shell.h \

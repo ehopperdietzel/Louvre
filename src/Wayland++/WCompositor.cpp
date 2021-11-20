@@ -60,7 +60,7 @@ double WCompositor::getPointerY()
     return _pointerY;
 }
 
-void WCompositor::setPointerPos(double x, double y)
+void WCompositor::setPointerPos(double x, double y, UInt32 milliseconds)
 {
     if(x < 0.0)
         x = 0.0;
@@ -74,7 +74,7 @@ void WCompositor::setPointerPos(double x, double y)
     _pointerX = x;
     _pointerY = y;
 
-    pointerPosChanged(x,y);
+    pointerPosChanged(x,y, milliseconds);
 }
 
 void WCompositor::setFocusSurface(WSurface *surface)
@@ -87,7 +87,7 @@ WSurface *WCompositor::getFocusSurface()
     return _focusSurface;
 }
 
-uint64_t WCompositor::getMilliseconds()
+UInt32 WCompositor::getMilliseconds()
 {
     timespec endTime;
     clock_gettime(CLOCK_MONOTONIC_RAW, &endTime);
