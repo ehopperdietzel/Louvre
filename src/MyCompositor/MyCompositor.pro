@@ -20,6 +20,10 @@ SOURCES += \
         ../Wayland++/WTexture.cpp \
         ../Wayland++/WView.cpp \
         ../Wayland++/WWayland.cpp \
+        ../Wayland++/globals/Compositor.cpp \
+        ../Wayland++/globals/Region.cpp \
+        ../Wayland++/globals/Seat.cpp \
+        ../Wayland++/globals/Surface.cpp \
         ../Wayland++/protocols/xdg-shell.c \
         MyCompositor.cpp \
         main.cpp
@@ -36,6 +40,10 @@ HEADERS += \
     ../Wayland++/WTypes.h \
     ../Wayland++/WView.h \
     ../Wayland++/WWayland.h \
+    ../Wayland++/globals/Compositor.h \
+    ../Wayland++/globals/Region.h \
+    ../Wayland++/globals/Seat.h \
+    ../Wayland++/globals/Surface.h \
     ../Wayland++/protocols/xdg-shell.h \
     MyCompositor.h
 

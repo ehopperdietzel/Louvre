@@ -22,6 +22,13 @@ public:
     void start();
     virtual void initializeGL() = 0;
     virtual void paintGL() = 0;
+
+    virtual void newClient(WClient *client) = 0;
+    virtual void clientDisconnected(WClient *client) = 0;
+
+    virtual void newSurface(WSurface *surface) = 0;
+    virtual void surfaceDestroyed(WSurface *surface) = 0;
+
     virtual void libinputEvent(libinput_event *ev) = 0;
     virtual void pointerPosChanged(double x, double y, UInt32 milliseconds) = 0;
     virtual void pointerClickEvent(Int32 x, Int32 y, UInt32 button, UInt32 state, UInt32 milliseconds) = 0;
@@ -38,8 +45,11 @@ public:
 
     void setPointerPos(double x, double y, UInt32 milliseconds);
 
-    void setFocusSurface(WSurface *surface);
-    WSurface *getFocusSurface();
+    WSurface *getPointerFocusSurface();
+    WSurface *getKeyboardFocusSurface();
+
+    void clearPointerFocus();
+    void clearKeyboardFocus();
 
 
     UInt32 getMilliseconds();
@@ -48,10 +58,12 @@ public:
 
     WTexture *cursorTexture = nullptr;
 private:
+    friend class WSurface;
+
     bool readyToDraw = false;
     void mainLoop();
 
-    WSurface *_focusSurface = nullptr;
+    WSurface *_pointerFocusSurface,*_keyboardFocusSurface = nullptr;
 
     double _pointerX = 0.0;
     double _pointerY = 0.0;

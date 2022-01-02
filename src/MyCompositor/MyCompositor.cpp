@@ -75,85 +75,62 @@ void MyCompositor::initializeGL()
 
     // Create the program object
     programObject = glCreateProgram(); 
-    checkGLError("1");
 
     glAttachShader(programObject, vertexShader);
-    checkGLError("2");
 
     glAttachShader(programObject, fragmentShader);
-    checkGLError("3");
-
 
     // Bind vPosition to attribute 0
     glBindAttribLocation(programObject, 0, "vertexPosition");
-    checkGLError("4");
 
     // Link the program
     glLinkProgram(programObject);
-    checkGLError("5");
 
     GLint linked;
 
     // Check the link status
     glGetProgramiv(programObject, GL_LINK_STATUS, &linked);
-    checkGLError("6");
 
     if (!linked)
     {
         GLint infoLen = 0;
         glGetProgramiv(programObject, GL_INFO_LOG_LENGTH, &infoLen);
-        checkGLError("7");
-
         glDeleteProgram(programObject);
-        checkGLError("8");
         return exit(-1);
     }
 
     // Enable alpha blending
     glEnable(GL_BLEND);
-    checkGLError("9");
 
     // Set blend mode
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    checkGLError("10");
 
     // Set clear screen color
     glClearColor(0.0f, 0.3f, 0.5f, 1.0f);
-    checkGLError("11");
 
     // Use the program object
     glUseProgram(programObject);
-    checkGLError("12");
 
     // Set the viewport
     glViewport(0, 0, screenWidth(), screenHeight());
-    checkGLError("13");
 
     // Load the vertex data
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, square);
-    checkGLError("14");
 
     // Enables the vertex array
     glEnableVertexAttribArray(0);
-    checkGLError("15");
 
     // Get Uniform Variables
     screenUniform = glGetUniformLocation(programObject, "screen"); // (width,height) Screen dimensions
-    checkGLError("16");
 
     rectUniform = glGetUniformLocation(programObject, "rect");     // (left,top,with,height) App window pos and size
-    checkGLError("17");
 
     glUniform1i(glGetUniformLocation(programObject, "application"), 0);
-    checkGLError("18");
 
     // Set screen size
     glUniform2f(screenUniform,screenWidth(),screenHeight());
-    checkGLError("19");
 
     glActiveTexture(GL_TEXTURE0);
-    checkGLError("20");
-
 
     // Create cursor texture
     unsigned char cursorPixels[4*32*32];
@@ -173,79 +150,98 @@ void MyCompositor::paintGL()
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    for(list<WClient*>::iterator client = clients.begin(); client != clients.end(); ++client)
+
+    for(list<WSurface*>::iterator surface = surfacesList.begin(); surface != surfacesList.end(); ++surface)
     {
-        for(list<WSurface*>::iterator surface = (*client)->surfaces.begin(); surface != (*client)->surfaces.end(); ++surface)
-        {
-            if(!(*surface)->xdg_shell) continue;
-            glBindTexture(GL_TEXTURE_2D,(*surface)->texture->textureId());
-            checkGLError("21");
+        if(!(*surface)->xdg_shell) continue;
+        glBindTexture(GL_TEXTURE_2D,(*surface)->texture->textureId());
+        checkGLError("21");
 
-            glUniform4f(rectUniform,0,0,(*surface)->texture->width(),(*surface)->texture->height());
-            checkGLError("22");
+        glUniform4f(rectUniform,(*surface)->getX(),(*surface)->getY(),(*surface)->texture->width(),(*surface)->texture->height());
+        checkGLError("22");
 
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            checkGLError("23");
-        }
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        checkGLError("23");
     }
 
     drawCursor();
 }
 
-void MyCompositor::libinputEvent(libinput_event *ev)
+void MyCompositor::newClient(WClient *)
 {
-    (void)ev;
+    /*******************************************************************************
+     * Notify a new client connection, it's automatically added to an internal list
+     * you can access with 'compositor->clients'
+     *******************************************************************************/
+
+    printf("New client connected.\n");
+}
+
+void MyCompositor::clientDisconnected(WClient *)
+{
+    /*******************************************************************************
+     * Notify a client disconnection, it's automatically removed from the internal
+     * 'compositor->clients' list.
+     * All destroy events from resources related to the client (like surfaces, regions, etc)
+     * are prevously notified.
+     *******************************************************************************/
+
+    printf("Client disconnected.\n");
+}
+
+void MyCompositor::newSurface(WSurface *surface)
+{
+    surfacesList.push_back(surface);
+}
+
+void MyCompositor::surfaceDestroyed(WSurface *surface)
+{
+    surfacesList.remove(surface);
+}
+
+void MyCompositor::libinputEvent(libinput_event *)
+{
 
     /*************************************************
      * If you wish to process libinput events manually
      *************************************************/
 
-    // libinput_event_type eventType = libinput_event_get_type(ev);
+    // libinput_event_type eventType = libinput_event_get_type(event);
 }
 
 void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
 {
-    WSurface *surface;WClient *client;
+    WSurface *surface;
 
-    for(list<WClient*>::iterator clientIt = clients.begin(); clientIt != clients.end(); ++clientIt)
+    for(list<WSurface*>::reverse_iterator surfaceIt = surfacesList.rbegin(); surfaceIt != surfacesList.rend(); ++surfaceIt)
     {
-        client = *clientIt;
 
-        for(list<WSurface*>::iterator surfaceIt = client->surfaces.begin(); surfaceIt != client->surfaces.end(); ++surfaceIt)
+        surface =  *surfaceIt;
+
+        if(!surface->xdg_shell) continue;
+
+        // Mouse move event
+        if(surface->containsPoint(x,y) && getPointerFocusSurface() == surface)
+        {
+            surface->sendPointerMotionEvent(surface->mapXtoLocal(x),surface->mapYtoLocal(y),milliseconds);
+            break;
+        }
+
+        // Mouse leave surface
+        if(!surface->containsPoint(x,y) && getPointerFocusSurface() == surface)
+        {
+            surface->sendPointerLeaveEvent();
+            printf("Mouse left surface\n");
+            continue;
+        }
+
+        // Mouse enter surface
+        if(surface->containsPoint(x,y) && getPointerFocusSurface() != surface)
         {
 
-            surface =  *surfaceIt;
-
-            if(!surface->xdg_shell) continue;
-
-            // Mouse move event
-            if(surface->containsPoint(x,y) && focusSurface == surface)
-            {
-                surface->sendPointerMotionEvent(surface->mapXtoLocal(x),surface->mapYtoLocal(y),milliseconds);
-            }
-
-            // Mouse leave surface
-            if(!surface->containsPoint(x,y) && focusSurface == surface)
-            {
-                surface->sendPointerLeaveEvent();
-                focusSurface = nullptr;
-                printf("Mouse left surface\n");
-            }
-
-            // Mouse enter surface
-            if(surface->containsPoint(x,y) && focusSurface != surface)
-            {
-
-                surface->sendPointerEnterEvent(surface->mapXtoLocal(x),surface->mapXtoLocal(y));
-
-                focusSurface = surface;
-
-                wl_array keys;
-                wl_array_init(&keys);
-                wl_keyboard_send_enter(focusSurface->client->keyboard,0,focusSurface->resource,&keys);
-                wl_array_release(&keys);
-                printf("Mouse entered surface\n");
-            }
+            surface->sendPointerEnterEvent(surface->mapXtoLocal(x),surface->mapXtoLocal(y));
+            printf("Mouse entered surface\n");
+            break;
         }
     }
 
@@ -255,23 +251,30 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
 void MyCompositor::pointerClickEvent(int x, int y, UInt32 button, UInt32 state, UInt32 milliseconds)
 {
     (void)x;(void)y;
-    if(focusSurface)
-        focusSurface->sendPointerButtonEvent(button,state,milliseconds);
+    if(getPointerFocusSurface())
+    {
+        getPointerFocusSurface()->sendPointerButtonEvent(button,state,milliseconds);
+
+        if(getKeyboardFocusSurface() != getPointerFocusSurface())
+            getPointerFocusSurface()->sendKeyboardEnterEvent();
+
+        // Raise view
+        surfacesList.remove(getPointerFocusSurface());
+        surfacesList.push_back(getPointerFocusSurface());
+    }
 }
 
 void MyCompositor::keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
-    if(focusSurface)
-        focusSurface->sendKeyModifiersEvent(depressed,latched,locked,group);
+    if(getKeyboardFocusSurface())
+        getKeyboardFocusSurface()->sendKeyModifiersEvent(depressed,latched,locked,group);
 }
 
 void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds)
 {
-    if(focusSurface)
-    {
-        focusSurface->sendKeyEvent(keyCode,keyState,milliseconds);
-        //printf("Key Code:%i\n",keyCode);
-    }
+    if(getKeyboardFocusSurface())
+        getKeyboardFocusSurface()->sendKeyEvent(keyCode,keyState,milliseconds);
+
 
     if(keyState == LIBINPUT_KEY_STATE_RELEASED)
     {

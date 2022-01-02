@@ -11,6 +11,13 @@ public:
     // Virtual methods to override
     void initializeGL() override;
     void paintGL() override;
+
+    void newClient(WClient *client) override;
+    void clientDisconnected(WClient *client) override;
+
+    void newSurface(WSurface *surface) override;
+    void surfaceDestroyed(WSurface *surface) override;
+
     void libinputEvent(libinput_event *ev) override;
     void pointerPosChanged(double x, double y, UInt32 milliseconds) override;
     void pointerClickEvent(int x, int y, UInt32 button, UInt32 state, UInt32 milliseconds) override;
@@ -37,6 +44,9 @@ public:
 
     // Focus surface
     WSurface *focusSurface = nullptr;
+
+    // Surfaces list ( orderer from back to front )
+    list<WSurface*>surfacesList;
 
     void drawCursor();
 };

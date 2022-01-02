@@ -1,62 +1,116 @@
 #include "WSurface.h"
 #include <WClient.h>
-WSurface::WSurface(wl_resource *res)
+#include <WCompositor.h>
+
+#include <time.h>
+#include <stdlib.h>
+
+
+wl_array nullKeys;
+
+void createNullKeys()
 {
-    resource = res;
+    wl_array_init(&nullKeys);
+}
+
+WSurface::WSurface(UInt32 id, wl_resource *res, WClient *client)
+{
+    srand(time(NULL));
+    _resource = res;
+    _client = client;
+    _id = id;
+    setX(rand() % 50);
+    setY(rand() % 50);
 }
 
 void WSurface::sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UInt32 milliseconds)
 {
-    if(client->pointer)
+    if(_client->getPointer())
     {
-        wl_pointer_send_button(client->pointer,0,milliseconds,buttonCode,buttonState);
-        wl_pointer_send_frame(client->pointer);
+        wl_pointer_send_button(_client->getPointer(),0,milliseconds,buttonCode,buttonState);
+        wl_pointer_send_frame(_client->getPointer());
     }
 }
 
 void WSurface::sendPointerMotionEvent(double x, double y, UInt32 milliseconds)
 {
-    if(client->pointer)
+    if(_client->getPointer())
     {
         wl_pointer_send_motion(
-                    client->pointer,
+                    _client->getPointer(),
                     milliseconds,
                     wl_fixed_from_double(x),
                     wl_fixed_from_double(y));
 
-        wl_pointer_send_frame(client->pointer);
+        wl_pointer_send_frame(_client->getPointer());
     }
 }
 
 void WSurface::sendPointerEnterEvent(double x, double y)
 {
-    if(client->pointer)
+    if(getCompositor()->_pointerFocusSurface == this)
+        return;
+
+    // Send previus surface a leave event
+    if(getCompositor()->getPointerFocusSurface())
+        getCompositor()->getPointerFocusSurface()->sendPointerLeaveEvent();
+
+    if(_client->getPointer())
     {
         wl_pointer_send_enter(
-                    client->pointer,
+                    _client->getPointer(),
                     0,
-                    resource,
+                    _resource,
                     wl_fixed_from_double(x),
                     wl_fixed_from_double(y));
+
+        getCompositor()->_pointerFocusSurface = this;
     }
 }
 
 void WSurface::sendPointerLeaveEvent()
 {
-    if(client->pointer)
-        wl_pointer_send_leave(client->pointer,0,resource);
+    if(getCompositor()->_pointerFocusSurface != this)
+        return;
+
+    if(_client->getPointer())
+        wl_pointer_send_leave(_client->getPointer(),0,_resource);
+
+    getCompositor()->_pointerFocusSurface = nullptr;
 }
 
 void WSurface::sendKeyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds)
 {
-    if(client->keyboard)
-        wl_keyboard_send_key(client->keyboard,0,milliseconds,keyCode,keyState);
+    if(_client->getKeyboard())
+        wl_keyboard_send_key(_client->getKeyboard(),0,milliseconds,keyCode,keyState);
 }
 
 void WSurface::sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
-    if(client->keyboard)
-        wl_keyboard_send_modifiers(client->keyboard,0,depressed,latched,locked,group);
+    if(_client->getKeyboard())
+        wl_keyboard_send_modifiers(_client->getKeyboard(),0,depressed,latched,locked,group);
+}
+
+void WSurface::sendKeyboardEnterEvent()
+{
+    if(getCompositor()->_keyboardFocusSurface == this)
+        return;
+
+    if(_client->getKeyboard())
+        wl_keyboard_send_enter(_client->getKeyboard(),0,_resource,&nullKeys);
+
+    getCompositor()->_keyboardFocusSurface = this;
+}
+
+void WSurface::sendKeyboardLeaveEvent()
+{
+    if(getCompositor()->_keyboardFocusSurface != this)
+        return;
+
+    if(_client->getKeyboard())
+        wl_keyboard_send_leave(_client->getKeyboard(),0,_resource);
+
+    getCompositor()->_keyboardFocusSurface = nullptr;
 }
 
 void WSurface::setPos(int x, int y)
@@ -128,3 +182,25 @@ void WSurface::setBufferScale(Int32 scale)
 {
     _bufferScale = scale;
 }
+
+wl_resource *WSurface::getResource()
+{
+    return _resource;
+}
+
+WClient *WSurface::getClient()
+{
+    return _client;
+}
+
+WCompositor *WSurface::getCompositor()
+{
+    return _client->getCompositor();
+}
+
+UInt32 WSurface::getId()
+{
+    return _id;
+}
+
+

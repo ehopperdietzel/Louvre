@@ -77,14 +77,24 @@ void WCompositor::setPointerPos(double x, double y, UInt32 milliseconds)
     pointerPosChanged(x,y, milliseconds);
 }
 
-void WCompositor::setFocusSurface(WSurface *surface)
+WSurface *WCompositor::getPointerFocusSurface()
 {
-    _focusSurface = surface;
+    return _pointerFocusSurface;
 }
 
-WSurface *WCompositor::getFocusSurface()
+WSurface *WCompositor::getKeyboardFocusSurface()
 {
-    return _focusSurface;
+    return _keyboardFocusSurface;
+}
+
+void WCompositor::clearPointerFocus()
+{
+    _pointerFocusSurface = nullptr;
+}
+
+void WCompositor::clearKeyboardFocus()
+{
+    _keyboardFocusSurface = nullptr;
 }
 
 UInt32 WCompositor::getMilliseconds()

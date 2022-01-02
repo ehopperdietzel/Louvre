@@ -5,14 +5,8 @@
 #include <EGL/eglext.h>
 #include <GL/gl.h>
 #include <queue>
+#include <WTypes.h>
 
-struct Rect
-{
-    int32_t x = 0;
-    int32_t y = 0;
-    int32_t width = 0;
-    int32_t height = 0;
-};
 
 class WTexture
 {
