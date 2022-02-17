@@ -24,6 +24,7 @@ SOURCES += \
         ../Wayland++/globals/Region.cpp \
         ../Wayland++/globals/Seat.cpp \
         ../Wayland++/globals/Surface.cpp \
+        ../Wayland++/globals/XdgShell.cpp \
         ../Wayland++/protocols/xdg-shell.c \
         MyCompositor.cpp \
         main.cpp
@@ -44,6 +45,7 @@ HEADERS += \
     ../Wayland++/globals/Region.h \
     ../Wayland++/globals/Seat.h \
     ../Wayland++/globals/Surface.h \
+    ../Wayland++/globals/XdgShell.h \
     ../Wayland++/protocols/xdg-shell.h \
     MyCompositor.h
 
