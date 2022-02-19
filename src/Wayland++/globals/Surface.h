@@ -16,6 +16,7 @@ void surface_damage(wl_client *client, wl_resource *resource, Int32 x, Int32 y, 
 void surface_set_opaque_region(wl_client *client, wl_resource *resource, wl_resource *region);
 void surface_set_input_region(wl_client *client, wl_resource *resource, wl_resource *region);
 void surface_set_buffer_transform(wl_client *client, wl_resource *resource, Int32 transform);
+void surface_damage_buffer(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 w, Int32 h);
 void surface_set_buffer_scale(wl_client *client, wl_resource *resource, Int32 scale);
 
 

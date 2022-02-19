@@ -289,9 +289,7 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
             pid_t pid = fork();
             if (pid==0)
             {
-                //system("/home/eduardo/Escritorio/build-cube-Desktop_Qt_6_2_1_GCC_64bit-Debug/./cube --platform wayland");
-                //system("/home/eduardo/Escritorio/build-easing-Desktop_Qt_6_2_0_GCC_64bit-Debug/./easing --platform wayland");
-                system("/home/eduardo/Escritorio/build-wiggly-Desktop_Qt_6_2_1_GCC_64bit-Debug/./wiggly --platform wayland");
+                system("gnome-calculator");
                 exit(0);
             }
         }
@@ -300,7 +298,7 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
             pid_t pid = fork();
             if (pid==0)
             {
-                system("/home/eduardo/Escritorio/build-chip-Desktop_Qt_6_2_1_GCC_64bit-Debug/./chip --platform wayland");
+                system("xed");
                 exit(0);
             }
         }

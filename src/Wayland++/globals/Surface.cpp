@@ -159,6 +159,11 @@ void surface_set_buffer_transform(wl_client *client, wl_resource *resource, Int3
     (void)client;(void)resource;(void)transform;
 }
 
+void surface_damage_buffer(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 w, Int32 h)
+{
+    (void)client;(void)resource;(void)x;(void)y;(void)w;(void)h;
+}
+
 void surface_set_buffer_scale(wl_client *client, wl_resource *resource, Int32 scale)
 {
     (void)client;

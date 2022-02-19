@@ -21,10 +21,15 @@ SOURCES += \
         ../Wayland++/WView.cpp \
         ../Wayland++/WWayland.cpp \
         ../Wayland++/globals/Compositor.cpp \
+        ../Wayland++/globals/Keyboard.cpp \
+        ../Wayland++/globals/Pointer.cpp \
         ../Wayland++/globals/Region.cpp \
         ../Wayland++/globals/Seat.cpp \
         ../Wayland++/globals/Surface.cpp \
-        ../Wayland++/globals/XdgShell.cpp \
+        ../Wayland++/globals/XdgPopup.cpp \
+        ../Wayland++/globals/XdgSurface.cpp \
+        ../Wayland++/globals/XdgToplevel.cpp \
+        ../Wayland++/globals/XdgWmBase.cpp \
         ../Wayland++/protocols/xdg-shell.c \
         MyCompositor.cpp \
         main.cpp
@@ -42,10 +47,15 @@ HEADERS += \
     ../Wayland++/WView.h \
     ../Wayland++/WWayland.h \
     ../Wayland++/globals/Compositor.h \
+    ../Wayland++/globals/Keyboard.h \
+    ../Wayland++/globals/Pointer.h \
     ../Wayland++/globals/Region.h \
     ../Wayland++/globals/Seat.h \
     ../Wayland++/globals/Surface.h \
-    ../Wayland++/globals/XdgShell.h \
+    ../Wayland++/globals/XdgPopup.h \
+    ../Wayland++/globals/XdgSurface.h \
+    ../Wayland++/globals/XdgToplevel.h \
+    ../Wayland++/globals/XdgWmBase.h \
     ../Wayland++/protocols/xdg-shell.h \
     MyCompositor.h
 

@@ -10,7 +10,7 @@
 #include <globals/Compositor.h>
 #include <globals/Surface.h>
 #include <globals/Seat.h>
-#include <globals/XdgShell.h>
+#include <globals/XdgWmBase.h>
 
 using namespace std;
 

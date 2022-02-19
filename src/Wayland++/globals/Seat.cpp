@@ -2,38 +2,13 @@
 
 #include <WCompositor.h>
 
-#include <globals/Region.h>
-#include <globals/Surface.h>
+#include <globals/Pointer.h>
+#include <globals/Keyboard.h>
 #include <WInput.h>
 
 static struct wl_pointer_interface pointer_implementation = {&pointer_set_cursor, &pointer_release};
 static struct wl_keyboard_interface keyboard_implementation = {&keyboard_release};
 static struct wl_seat_interface seat_implementation = {&seat_get_pointer, &seat_get_keyboard, &seat_get_touch,&seat_release};
-
-// POINTER
-void pointer_set_cursor (wl_client *client, wl_resource *resource, UInt32 serial, wl_resource *_surface, Int32 hotspot_x, Int32 hotspot_y)
-{
-    printf("CURSOR SURFACE\n");
-    //struct surface *surface = wl_resource_get_user_data(_surface);
-    //cursor = surface;
-}
-
-void pointer_release(wl_client *client, wl_resource *resource)
-{
-    printf("POINTER RELEASED\n");
-    (void)client;
-    WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
-    wClient->setPointer(nullptr);
-}
-
-// KEYBOARD
-void keyboard_release(wl_client *client, wl_resource *resource)
-{
-    printf("KEYBOARD RELEASED\n");
-    (void)client;
-    WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
-    wClient->setKeyboard(nullptr);
-}
 
 // SEAT
 void seat_get_pointer (wl_client *client, wl_resource *resource, UInt32 id)
@@ -53,10 +28,14 @@ void seat_get_keyboard (wl_client *client, wl_resource *resource, UInt32 id)
     wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,getKeymapFD(),getKeymapSize());
 }
 
-void seat_get_touch (wl_client *client, wl_resource *resource, UInt32 id){}
+void seat_get_touch (wl_client *client, wl_resource *resource, UInt32 id)
+{
+    (void)client;(void)resource;(void)id;
+}
 
 void seat_release( wl_client *client, wl_resource *resource)
 {
+    (void)client;
     printf("SEAT RELEASED\n");
     wl_resource_destroy(resource);
 }
