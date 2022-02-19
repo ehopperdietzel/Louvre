@@ -17,7 +17,6 @@ WCompositor::WCompositor()
 
 void WCompositor::start()
 {
-
     // Bind the libinput events
     pfds[0].fd = initInput(this);
     pfds[0].events = POLLIN;

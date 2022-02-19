@@ -101,6 +101,8 @@ static void create_window ()
     XMapWindow (x_display, window.window);
 
     XMoveWindow(x_display,window.window,0,0);
+
+    printf("X11 Window created.\n");
 }
 
 int backendWidth()

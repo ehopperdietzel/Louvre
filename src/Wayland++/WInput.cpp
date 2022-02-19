@@ -136,14 +136,15 @@ void initXKB()
     char *string = xkb_keymap_get_as_string(keymap, XKB_KEYMAP_FORMAT_TEXT_V1);
     keymapSize = strlen(string) + 1;
     char *xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
-    printf("XDG_RUNTIME_DIR:%s\n",xdg_runtime_dir);
-    printf("KEYMAP:%s\n",string);
+    //printf("XDG_RUNTIME_DIR:%s\n",xdg_runtime_dir);
+    //printf("KEYMAP:%s\n",string);
     keymapFD = open(xdg_runtime_dir, O_TMPFILE|O_RDWR|O_EXCL, 0600);
     if(keymapFD < 0)
     {
         printf("Error creating shared memory for keyboard layout.\n");
         exit(-1);
     }
+    printf("Keyboard layout found.\n");
     ftruncate(keymapFD, keymapSize);
     char *map = (char*)mmap(NULL, keymapSize, PROT_READ|PROT_WRITE, MAP_SHARED, keymapFD, 0);
     strcpy(map, string);
@@ -164,11 +165,10 @@ int getKeymapSize()
 int initInput(WCompositor *compositor)
 {
     initXKB();
-
     comp = compositor;
     udev = udev_new();
-    li = libinput_udev_create_context(&interface, NULL, udev);
 
+    li = libinput_udev_create_context(&interface, NULL, udev);
     libinput_udev_assign_seat(li, "seat0");
     libinput_dispatch(li);
 
