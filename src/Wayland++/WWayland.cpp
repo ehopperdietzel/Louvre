@@ -10,6 +10,8 @@
 #include <globals/Compositor.h>
 #include <globals/Surface.h>
 #include <globals/Seat.h>
+#include <globals/DataDeviceManager.h>
+#include <globals/Output.h>
 #include <globals/XdgWmBase.h>
 
 using namespace std;
@@ -21,8 +23,6 @@ WCompositor *compositor;
 static struct wl_display *display;
 struct wl_event_loop *event_loop;
 int wayland_fd;
-
-
 
 int initWayland(WCompositor *comp)
 {
@@ -53,13 +53,19 @@ int initWayland(WCompositor *comp)
     // GLOBALS
 
     // Create compositor global
-    wl_global_create(display, &wl_compositor_interface, 3, comp, &compositor_bind);
-
-    // Create xdg shell global
-    wl_global_create(display, &xdg_wm_base_interface, 1, NULL, &xdg_wm_base_bind);
+    wl_global_create(display, &wl_compositor_interface, 4, comp, &compositor_bind);
 
     // Create seat global
     wl_global_create(display, &wl_seat_interface, 7, comp, &seat_bind);
+
+    // Create output global
+    wl_global_create(display, &wl_output_interface, 3, comp, &output_bind);
+
+    // Create data device manager global
+    wl_global_create(display, &wl_data_device_manager_interface, 3, comp, &dataDeviceManager_bind);
+
+    // Create xdg shell global
+    wl_global_create(display, &xdg_wm_base_interface, 4, comp, &xdg_wm_base_bind);
 
     eglBindWaylandDisplayWL(getEGLDisplay(), display);
 

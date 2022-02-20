@@ -15,14 +15,14 @@ void xdg_surface_destroy (wl_client *client, wl_resource *resource)
 void xdg_surface_get_toplevel(wl_client *client,wl_resource *resource, UInt32 id)
 {
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, 1, id);
+    surface->xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, 4, id);
     wl_resource_set_implementation(surface->xdg_toplevel, &xdg_toplevel_implementation, surface, NULL);
 }
 void xdg_surface_get_popup(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *parent, wl_resource *positioner)
 {
     (void)parent;(void)positioner;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, 1, id);
+    surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, 4, id);
     wl_resource_set_implementation(surface->xdg_popup, &xdg_popup_implementation, surface, NULL);
 }
 void xdg_surface_set_window_geometry(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)

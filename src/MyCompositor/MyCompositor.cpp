@@ -137,8 +137,8 @@ void MyCompositor::initializeGL()
     for(int i = 0; i < 4*32*32; i++)
         cursorPixels[i] = 255;
 
-    cursorTexture = new WTexture();
-    cursorTexture->setData(32,32,&cursorPixels);
+    defaultCursorTexture = new WTexture();
+    defaultCursorTexture->setData(32,32,&cursorPixels);
 
 }
 
@@ -289,7 +289,7 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
             pid_t pid = fork();
             if (pid==0)
             {
-                system("gnome-calculator");
+                system("/home/eduardo/Escritorio/build-wiggly-Desktop_Qt_6_2_3_GCC_64bit-Debug/wiggly --platform wayland");
                 exit(0);
             }
         }
@@ -298,7 +298,7 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
             pid_t pid = fork();
             if (pid==0)
             {
-                system("xed");
+                system("gedit");
                 exit(0);
             }
         }
@@ -307,7 +307,17 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
 
 void MyCompositor::drawCursor()
 {
-    glBindTexture(GL_TEXTURE_2D,cursorTexture->textureId());
-    glUniform4f(rectUniform,getPointerX(),getPointerY(),5,5);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    if(getCursorSurface())
+    {
+        WSurface *cursor = getCursorSurface();
+        glBindTexture(GL_TEXTURE_2D,cursor->texture->textureId());
+        glUniform4f(rectUniform,getPointerX()-cursorXOffset,getPointerY()-cursorYOffset,cursor->getWidth(),cursor->getHeight());
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D,defaultCursorTexture->textureId());
+        glUniform4f(rectUniform,getPointerX(),getPointerY(),5,5);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
 }

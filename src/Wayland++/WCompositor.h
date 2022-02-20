@@ -47,6 +47,8 @@ public:
 
     WSurface *getPointerFocusSurface();
     WSurface *getKeyboardFocusSurface();
+    WSurface *getCursorSurface();
+    UInt32 cursorXOffset, cursorYOffset = 0;
 
     void clearPointerFocus();
     void clearKeyboardFocus();
@@ -56,7 +58,7 @@ public:
 
     list<WClient*>clients;
 
-    WTexture *cursorTexture = nullptr;
+    WSurface *cursorSurface = nullptr;
 private:
     friend class WSurface;
 

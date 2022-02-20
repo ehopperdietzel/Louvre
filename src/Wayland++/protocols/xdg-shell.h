@@ -162,6 +162,11 @@ extern const struct wl_interface xdg_positioner_interface;
  * manipulate a buffer prior to the first xdg_surface.configure call must
  * also be treated as errors.
  *
+ * After creating a role-specific object and setting it up, the client must
+ * perform an initial commit without any buffer attached. The compositor
+ * will reply with an xdg_surface.configure event. The client must
+ * acknowledge it and is then allowed to attach a buffer to map the surface.
+ *
  * Mapping an xdg_surface-based role surface is defined as making it
  * possible for the surface to be shown by the compositor. Note that
  * a mapped surface is not guaranteed to be visible once it is mapped.
@@ -175,7 +180,8 @@ extern const struct wl_interface xdg_positioner_interface;
  *
  * A newly-unmapped surface is considered to have met condition (1) out
  * of the 3 required conditions for mapping a surface if its role surface
- * has not been destroyed.
+ * has not been destroyed, i.e. the client must perform the initial commit
+ * again before attaching a buffer.
  * @section page_iface_xdg_surface_api API
  * See @ref iface_xdg_surface.
  */
@@ -207,6 +213,11 @@ extern const struct wl_interface xdg_positioner_interface;
  * manipulate a buffer prior to the first xdg_surface.configure call must
  * also be treated as errors.
  *
+ * After creating a role-specific object and setting it up, the client must
+ * perform an initial commit without any buffer attached. The compositor
+ * will reply with an xdg_surface.configure event. The client must
+ * acknowledge it and is then allowed to attach a buffer to map the surface.
+ *
  * Mapping an xdg_surface-based role surface is defined as making it
  * possible for the surface to be shown by the compositor. Note that
  * a mapped surface is not guaranteed to be visible once it is mapped.
@@ -220,7 +231,8 @@ extern const struct wl_interface xdg_positioner_interface;
  *
  * A newly-unmapped surface is considered to have met condition (1) out
  * of the 3 required conditions for mapping a surface if its role surface
- * has not been destroyed.
+ * has not been destroyed, i.e. the client must perform the initial commit
+ * again before attaching a buffer.
  */
 extern const struct wl_interface xdg_surface_interface;
 /**
@@ -237,7 +249,11 @@ extern const struct wl_interface xdg_surface_interface;
  * by the compositor until it is explicitly mapped again.
  * All active operations (e.g., move, resize) are canceled and all
  * attributes (e.g. title, state, stacking, ...) are discarded for
- * an xdg_toplevel surface when it is unmapped.
+ * an xdg_toplevel surface when it is unmapped. The xdg_toplevel returns to
+ * the state it had right after xdg_surface.get_toplevel. The client
+ * can re-map the toplevel by perfoming a commit without any buffer
+ * attached, waiting for a configure event and handling it as usual (see
+ * xdg_surface description).
  *
  * Attaching a null buffer to a toplevel unmaps the surface.
  * @section page_iface_xdg_toplevel_api API
@@ -256,7 +272,11 @@ extern const struct wl_interface xdg_surface_interface;
  * by the compositor until it is explicitly mapped again.
  * All active operations (e.g., move, resize) are canceled and all
  * attributes (e.g. title, state, stacking, ...) are discarded for
- * an xdg_toplevel surface when it is unmapped.
+ * an xdg_toplevel surface when it is unmapped. The xdg_toplevel returns to
+ * the state it had right after xdg_surface.get_toplevel. The client
+ * can re-map the toplevel by perfoming a commit without any buffer
+ * attached, waiting for a configure event and handling it as usual (see
+ * xdg_surface description).
  *
  * Attaching a null buffer to a toplevel unmaps the surface.
  */
@@ -384,7 +404,9 @@ struct xdg_wm_base_interface {
 	 * This creates an xdg_surface for the given surface. While
 	 * xdg_surface itself is not a role, the corresponding surface may
 	 * only be assigned a role extending xdg_surface, such as
-	 * xdg_toplevel or xdg_popup.
+	 * xdg_toplevel or xdg_popup. It is illegal to create an
+	 * xdg_surface for a wl_surface which already has an assigned role
+	 * and this will result in a protocol error.
 	 *
 	 * This creates an xdg_surface for the given surface. An
 	 * xdg_surface is used as basis to define a role to a given
@@ -670,7 +692,7 @@ struct xdg_positioner_interface {
 	/**
 	 * set parent configure this is a response to
 	 *
-	 * Set the serial of a xdg_surface.configure event this
+	 * Set the serial of an xdg_surface.configure event this
 	 * positioner will be used in response to. The compositor may use
 	 * this information together with set_parent_size to determine what
 	 * future state the popup should be constrained using.
@@ -888,6 +910,16 @@ xdg_surface_send_configure(struct wl_resource *resource_, uint32_t serial)
 	wl_resource_post_event(resource_, XDG_SURFACE_CONFIGURE, serial);
 }
 
+#ifndef XDG_TOPLEVEL_ERROR_ENUM
+#define XDG_TOPLEVEL_ERROR_ENUM
+enum xdg_toplevel_error {
+	/**
+	 * provided value is         not a valid variant of the resize_edge enum
+	 */
+	XDG_TOPLEVEL_ERROR_INVALID_RESIZE_EDGE = 0,
+};
+#endif /* XDG_TOPLEVEL_ERROR_ENUM */
+
 #ifndef XDG_TOPLEVEL_RESIZE_EDGE_ENUM
 #define XDG_TOPLEVEL_RESIZE_EDGE_ENUM
 /**
@@ -914,7 +946,7 @@ enum xdg_toplevel_resize_edge {
 #define XDG_TOPLEVEL_STATE_ENUM
 /**
  * @ingroup iface_xdg_toplevel
- * the surface is tiled
+ * the surface’s bottom edge is tiled
  *
  * The window is currently in a tiled layout and the bottom edge is
  * considered to be adjacent to another part of the tiling grid.
@@ -1134,11 +1166,12 @@ struct xdg_toplevel_interface {
 	 * is completed.
 	 *
 	 * The edges parameter specifies how the surface should be resized,
-	 * and is one of the values of the resize_edge enum. The compositor
-	 * may use this information to update the surface position for
-	 * example when dragging the top left corner. The compositor may
-	 * also use this information to adapt its behavior, e.g. choose an
-	 * appropriate cursor image.
+	 * and is one of the values of the resize_edge enum. Values not
+	 * matching a variant of the enum will cause a protocol error. The
+	 * compositor may use this information to update the surface
+	 * position for example when dragging the top left corner. The
+	 * compositor may also use this information to adapt its behavior,
+	 * e.g. choose an appropriate cursor image.
 	 * @param seat the wl_seat of the user event
 	 * @param serial the serial of the user event
 	 * @param edges which edge or corner is being dragged
@@ -1359,6 +1392,7 @@ struct xdg_toplevel_interface {
 
 #define XDG_TOPLEVEL_CONFIGURE 0
 #define XDG_TOPLEVEL_CLOSE 1
+#define XDG_TOPLEVEL_CONFIGURE_BOUNDS 2
 
 /**
  * @ingroup iface_xdg_toplevel
@@ -1368,6 +1402,10 @@ struct xdg_toplevel_interface {
  * @ingroup iface_xdg_toplevel
  */
 #define XDG_TOPLEVEL_CLOSE_SINCE_VERSION 1
+/**
+ * @ingroup iface_xdg_toplevel
+ */
+#define XDG_TOPLEVEL_CONFIGURE_BOUNDS_SINCE_VERSION 4
 
 /**
  * @ingroup iface_xdg_toplevel
@@ -1446,6 +1484,17 @@ static inline void
 xdg_toplevel_send_close(struct wl_resource *resource_)
 {
 	wl_resource_post_event(resource_, XDG_TOPLEVEL_CLOSE);
+}
+
+/**
+ * @ingroup iface_xdg_toplevel
+ * Sends an configure_bounds event to the client owning the resource.
+ * @param resource_ The client's resource
+ */
+static inline void
+xdg_toplevel_send_configure_bounds(struct wl_resource *resource_, int32_t width, int32_t height)
+{
+	wl_resource_post_event(resource_, XDG_TOPLEVEL_CONFIGURE_BOUNDS, width, height);
 }
 
 #ifndef XDG_POPUP_ERROR_ENUM
@@ -1550,13 +1599,13 @@ struct xdg_popup_interface {
 	 *
 	 * If the popup is repositioned in response to a configure event
 	 * for its parent, the client should send an
-	 * xdg_positioner.set_parent_configure and possibly a
+	 * xdg_positioner.set_parent_configure and possibly an
 	 * xdg_positioner.set_parent_size request to allow the compositor
 	 * to properly constrain the popup.
 	 *
 	 * If the popup is repositioned together with a parent that is
 	 * being resized, but not in response to a configure event, the
-	 * client should send a xdg_positioner.set_parent_size request.
+	 * client should send an xdg_positioner.set_parent_size request.
 	 * @param token reposition request token
 	 * @since 3
 	 */

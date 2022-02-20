@@ -24,7 +24,7 @@ int keymapFD,keymapSize;
 xkb_state *xkbState;
 
 struct modifier_state {
-    uint32_t depressed, latched, locked, group;
+    UInt32 depressed, latched, locked, group;
 }modifier_state;
 
 static int open_restricted(const char *path, int flags, void *user_data)
@@ -146,7 +146,7 @@ void initXKB()
     }
     printf("Keyboard layout found.\n");
     ftruncate(keymapFD, keymapSize);
-    char *map = (char*)mmap(NULL, keymapSize, PROT_READ|PROT_WRITE, MAP_SHARED, keymapFD, 0);
+    char *map = (char*)mmap(NULL, keymapSize, PROT_READ|PROT_WRITE, MAP_PRIVATE, keymapFD, 0);
     strcpy(map, string);
     munmap(map, keymapSize);
     free(string);

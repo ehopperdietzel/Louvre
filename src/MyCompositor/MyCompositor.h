@@ -48,6 +48,8 @@ public:
     // Surfaces list ( orderer from back to front )
     list<WSurface*>surfacesList;
 
+    WTexture *defaultCursorTexture = nullptr;
+
     void drawCursor();
 };
 

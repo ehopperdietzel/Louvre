@@ -80,16 +80,12 @@ void surface_commit(wl_client *client, wl_resource *resource)
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
 
-
-    if (!surface->buffer)
-    {
-        xdg_surface_send_configure(surface->xdg_shell, 0);
+    if(!surface->buffer)
         return;
-    }
-
 
     if(eglQueryWaylandBufferWL(getEGLDisplay(), surface->buffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
+        printf("EGL buffer\n");
         EGLint width, height;
         eglQueryWaylandBufferWL(getEGLDisplay(), surface->buffer, EGL_WIDTH, &width);
         eglQueryWaylandBufferWL(getEGLDisplay(), surface->buffer, EGL_WIDTH, &height);
@@ -167,7 +163,7 @@ void surface_damage_buffer(wl_client *client, wl_resource *resource, Int32 x, In
 void surface_set_buffer_scale(wl_client *client, wl_resource *resource, Int32 scale)
 {
     (void)client;
-    printf("BUFFER SCALE:%i\n",scale);
+    //printf("BUFFER SCALE:%i\n",scale);
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->setBufferScale(scale);
 }

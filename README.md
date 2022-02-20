@@ -41,10 +41,16 @@ Wayland++ uses **libinput** and **evdev** for input listening, **xkbcommon** for
 		* get_touch
 		* release ✅
 	* Pointer
-		* set_cursor
+		* set_cursor ✅
 		* release ✅
 	* Keyboard
 		* release ✅
+	* Output
+		* release ✅
+	* Data Device Manager
+		* create_data_source
+		* get_data_device
+
 * Extensions Implementation
 	* Xdg wm-base
 		* create_positioner

@@ -20,8 +20,9 @@ void xdg_wm_base_get_xdg_surface(wl_client *client, wl_resource *resource, UInt3
     (void)resource;
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data(_surface);
-    surface->xdg_shell = wl_resource_create(client, &xdg_surface_interface, 1, id);
+    surface->xdg_shell = wl_resource_create(client, &xdg_surface_interface, 4, id);
     wl_resource_set_implementation(surface->xdg_shell, &xdg_surface_implementation, surface, NULL);
+    xdg_surface_send_configure(surface->xdg_shell, 0);
 }
 void xdg_wm_base_pong(wl_client *client, wl_resource *resource, UInt32 serial)
 {

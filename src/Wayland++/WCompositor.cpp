@@ -86,6 +86,11 @@ WSurface *WCompositor::getKeyboardFocusSurface()
     return _keyboardFocusSurface;
 }
 
+WSurface *WCompositor::getCursorSurface()
+{
+    return cursorSurface;
+}
+
 void WCompositor::clearPointerFocus()
 {
     _pointerFocusSurface = nullptr;

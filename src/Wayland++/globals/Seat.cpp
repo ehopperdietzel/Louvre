@@ -15,7 +15,7 @@ void seat_get_pointer (wl_client *client, wl_resource *resource, UInt32 id)
 {
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
     wl_resource *pointer = wl_resource_create (client, &wl_pointer_interface, 7, id);
-    wl_resource_set_implementation (pointer, &pointer_implementation, wClient, NULL);
+    wl_resource_set_implementation (pointer, &pointer_implementation, wClient->getCompositor(),NULL);
     wClient->setPointer(pointer);
 }
 
@@ -25,7 +25,9 @@ void seat_get_keyboard (wl_client *client, wl_resource *resource, UInt32 id)
     wl_resource *keyboard = wl_resource_create(client, &wl_keyboard_interface,7, id);
     wl_resource_set_implementation(keyboard, &keyboard_implementation, NULL, NULL);
     wClient->setKeyboard(keyboard);
-    wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,getKeymapFD(),getKeymapSize());
+    wl_keyboard_send_repeat_info(keyboard,200,1000);
+    wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_NO_KEYMAP,NULL,NULL);
+    //wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,getKeymapFD(),getKeymapSize());
 }
 
 void seat_get_touch (wl_client *client, wl_resource *resource, UInt32 id)
