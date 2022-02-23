@@ -1,8 +1,8 @@
 
 # Wayland++
-A friendly C++ library to create Wayland compositors that runs directly on top of DRM (or X11 for testing).
+A friendly C++ library to create Wayland compositors that run directly on top of DRM or X11 (useful while developing).
 
-Wayland++ uses **libinput** and **evdev** for input listening, **xkbcommon** for keyboard mapping and **OpenGL ES 2.0** for drawing.
+Wayland++ makes use of **libinput** and **evdev** for input listening and devices discovering, **xkbcommon** for keyboard mapping and any version of **Open GL** or **Vulkan** for drawing (any **EGL** - compatible API).
 
 ## Libraries
 `sudo apt-get update & sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libinput-dev libegl-dev mesa-common-dev libgles2-mesa-dev libxkbcommon-dev`
@@ -11,7 +11,7 @@ Wayland++ uses **libinput** and **evdev** for input listening, **xkbcommon** for
 
 1. Add your user to the **input** and **video** groups and then reboot.
 2. Compile the ***MyCompositor*** example. (Easily buildable with QtCreator).
-3. Run it like a normal program when using the X11 backend and on a new tty when using the DRM backend.
+3. Run it like a regular program when using the X11 backend and on a new tty when using the DRM backend.
 5. Press Q to quit.
 
 ## Todo
@@ -65,16 +65,16 @@ Wayland++ uses **libinput** and **evdev** for input listening, **xkbcommon** for
 		* set_window_geometry
 	* Xdg toplevel
 		* destroy
-		* move
+		* move ✅
 		* resize
-		* set_app_id
+		* set_app_id ✅
 		* set_fullscreen
-		* set_max_size
+		* set_max_size ✅
 		* set_maximized
-		* set_min_size
+		* set_min_size ✅
 		* set_minimized
 		* set_parent
-		* set_title
+		* set_title ✅
 		* show_window_menu
 		* unset_fullscreen
 		* unset_maximized
@@ -82,4 +82,7 @@ Wayland++ uses **libinput** and **evdev** for input listening, **xkbcommon** for
 		* destroy
 		* grab
 		* reposition
+* Shared Memory Textures  ✅
+* EGL Texture Sharing (share textures already stored in GPU) ✅
+* XWayland Support
 

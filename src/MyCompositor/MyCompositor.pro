@@ -6,63 +6,71 @@ CONFIG -= qt
 LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lxkbcommon
 INCLUDEPATH += /usr/include/drm
 INCLUDEPATH += ../Wayland++/
+INCLUDEPATH += ../Wayland++/classes/
+INCLUDEPATH += ../Wayland++/globals/Wayland/
+INCLUDEPATH += ../Wayland++/globals/XdgShell/
 INCLUDEPATH += /usr/share/
 
 SOURCES += \
-        ../Wayland++/WBackendDRM.cpp \
-        ../Wayland++/WBackendX11.cpp \
-        ../Wayland++/WClient.cpp \
-        ../Wayland++/WCompositor.cpp \
-        ../Wayland++/WInput.cpp \
-        ../Wayland++/WOpenGL.cpp \
-        ../Wayland++/WRegion.cpp \
-        ../Wayland++/WSurface.cpp \
-        ../Wayland++/WTexture.cpp \
-        ../Wayland++/WView.cpp \
-        ../Wayland++/WWayland.cpp \
-        ../Wayland++/globals/Compositor.cpp \
-        ../Wayland++/globals/DataDeviceManager.cpp \
-        ../Wayland++/globals/Keyboard.cpp \
-        ../Wayland++/globals/Output.cpp \
-        ../Wayland++/globals/Pointer.cpp \
-        ../Wayland++/globals/Region.cpp \
-        ../Wayland++/globals/Seat.cpp \
-        ../Wayland++/globals/Surface.cpp \
-        ../Wayland++/globals/XdgPopup.cpp \
-        ../Wayland++/globals/XdgSurface.cpp \
-        ../Wayland++/globals/XdgToplevel.cpp \
-        ../Wayland++/globals/XdgWmBase.cpp \
-        ../Wayland++/protocols/xdg-shell.c \
+        ../Wayland++/classes/WBackendDRM.cpp \
+        ../Wayland++/classes/WBackendX11.cpp \
+        ../Wayland++/classes/WClient.cpp \
+        ../Wayland++/classes/WCompositor.cpp \
+        ../Wayland++/classes/WInput.cpp \
+        ../Wayland++/classes/WOpenGL.cpp \
+        ../Wayland++/classes/WRegion.cpp \
+        ../Wayland++/classes/WSurface.cpp \
+        ../Wayland++/classes/WTexture.cpp \
+        ../Wayland++/classes/WView.cpp \
+        ../Wayland++/classes/WWayland.cpp \
+        ../Wayland++/globals/Wayland/Compositor.cpp \
+        ../Wayland++/globals/Wayland/DataDeviceManager.cpp \
+        ../Wayland++/globals/Wayland/Keyboard.cpp \
+        ../Wayland++/globals/Wayland/Output.cpp \
+        ../Wayland++/globals/Wayland/Pointer.cpp \
+        ../Wayland++/globals/Wayland/Region.cpp \
+        ../Wayland++/globals/Wayland/Seat.cpp \
+        ../Wayland++/globals/Wayland/Surface.cpp \
+        ../Wayland++/globals/XdgShell/XdgPopup.cpp \
+        ../Wayland++/globals/XdgShell/XdgSurface.cpp \
+        ../Wayland++/globals/XdgShell/XdgToplevel.cpp \
+        ../Wayland++/globals/XdgShell/XdgWmBase.cpp \
+        ../Wayland++/globals/XdgShell/xdg-shell.c \
         MyCompositor.cpp \
         main.cpp
 
 HEADERS += \
-    ../Wayland++/WBackend.h \
-    ../Wayland++/WClient.h \
-    ../Wayland++/WCompositor.h \
-    ../Wayland++/WInput.h \
-    ../Wayland++/WOpenGL.h \
-    ../Wayland++/WRegion.h \
-    ../Wayland++/WSurface.h \
-    ../Wayland++/WTexture.h \
-    ../Wayland++/WTypes.h \
-    ../Wayland++/WView.h \
-    ../Wayland++/WWayland.h \
-    ../Wayland++/globals/Compositor.h \
-    ../Wayland++/globals/DataDeviceManager.h \
-    ../Wayland++/globals/Keyboard.h \
-    ../Wayland++/globals/Output.h \
-    ../Wayland++/globals/Pointer.h \
-    ../Wayland++/globals/Region.h \
-    ../Wayland++/globals/Seat.h \
-    ../Wayland++/globals/Surface.h \
-    ../Wayland++/globals/XdgPopup.h \
-    ../Wayland++/globals/XdgSurface.h \
-    ../Wayland++/globals/XdgToplevel.h \
-    ../Wayland++/globals/XdgWmBase.h \
-    ../Wayland++/protocols/xdg-shell.h \
+    ../Wayland++/classes/WBackend.h \
+    ../Wayland++/classes/WClient.h \
+    ../Wayland++/classes/WCompositor.h \
+    ../Wayland++/classes/WInput.h \
+    ../Wayland++/classes/WNamespaces.h \
+    ../Wayland++/classes/WOpenGL.h \
+    ../Wayland++/classes/WRegion.h \
+    ../Wayland++/classes/WSurface.h \
+    ../Wayland++/classes/WTexture.h \
+    ../Wayland++/classes/WView.h \
+    ../Wayland++/classes/WWayland.h \
+    ../Wayland++/globals/Wayland/Compositor.h \
+    ../Wayland++/globals/Wayland/DataDeviceManager.h \
+    ../Wayland++/globals/Wayland/Keyboard.h \
+    ../Wayland++/globals/Wayland/Output.h \
+    ../Wayland++/globals/Wayland/Pointer.h \
+    ../Wayland++/globals/Wayland/Region.h \
+    ../Wayland++/globals/Wayland/Seat.h \
+    ../Wayland++/globals/Wayland/Surface.h \
+    ../Wayland++/globals/XdgShell/XdgPopup.h \
+    ../Wayland++/globals/XdgShell/XdgSurface.h \
+    ../Wayland++/globals/XdgShell/XdgToplevel.h \
+    ../Wayland++/globals/XdgShell/XdgWmBase.h \
+    ../Wayland++/globals/XdgShell/xdg-shell.h \
     MyCompositor.h
 
 DISTFILES += \
+    ../Wayland++/protocols/wayland.xml \
+    ../Wayland++/protocols/xdg-shell.xml \
     shaders/Fragment.glsl \
     shaders/Vertex.glsl
+
+SUBDIRS += \
+    ../Wayland++/Wayland++.pro

@@ -15,37 +15,37 @@ GLuint LoadShader(GLenum type, const char *shaderSrc)
 
     // Create the shader object
     shader = glCreateShader(type);
-    checkGLError("21");
+    WOpenGL::checkGLError("21");
 
     // Load the shader source
     glShaderSource(shader, 1, &shaderSrc, nullptr);
-    checkGLError("22");
+    WOpenGL::checkGLError("22");
 
     // Compile the shader
     glCompileShader(shader);
-    checkGLError("23");
+    WOpenGL::checkGLError("23");
 
     // Check the compile status
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-    checkGLError("24");
+    WOpenGL::checkGLError("24");
 
     if (!compiled)
     {
         GLint infoLen = 0;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
-        checkGLError("25");
+        WOpenGL::checkGLError("25");
 
         GLchar *errorLog = new GLchar(infoLen);
 
         glGetShaderInfoLog(shader, infoLen, &infoLen, errorLog);
-        checkGLError("26");
+        WOpenGL::checkGLError("26");
 
         printf("%s",errorLog);
 
         delete errorLog;
 
         glDeleteShader(shader);
-        checkGLError("27");
+        WOpenGL::checkGLError("27");
         return 0;
     }
 
@@ -60,9 +60,9 @@ void MyCompositor::initializeGL()
      * Here you initialize the OpenGL ES 2 context
      *************************************************/
 
-    GLchar *vShaderStr = openShader("../MyCompositor/shaders/Vertex.glsl");
+    GLchar *vShaderStr = WOpenGL::openShader("../MyCompositor/shaders/Vertex.glsl");
 
-    GLchar *fShaderStr = openShader("../MyCompositor/shaders/Fragment.glsl");
+    GLchar *fShaderStr = WOpenGL::openShader("../MyCompositor/shaders/Fragment.glsl");
 
     GLuint vertexShader,fragmentShader,programObject;
 
@@ -155,13 +155,13 @@ void MyCompositor::paintGL()
     {
         if(!(*surface)->xdg_shell) continue;
         glBindTexture(GL_TEXTURE_2D,(*surface)->texture->textureId());
-        checkGLError("21");
+        WOpenGL::checkGLError("21");
 
         glUniform4f(rectUniform,(*surface)->getX(),(*surface)->getY(),(*surface)->texture->width(),(*surface)->texture->height());
-        checkGLError("22");
+        WOpenGL::checkGLError("22");
 
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        checkGLError("23");
+        WOpenGL::checkGLError("23");
     }
 
     drawCursor();
@@ -199,6 +199,26 @@ void MyCompositor::surfaceDestroyed(WSurface *surface)
     surfacesList.remove(surface);
 }
 
+// Event when window is grabbed
+void MyCompositor::surfaceMoveEvent(WSurface *surface)
+{
+    movingSurfaceInitialPosX = surface->getX();
+    movingSurfaceInitialPosY = surface->getY();
+    movingSurfaceInitialCursorPosX = getPointerX();
+    movingSurfaceInitialCursorPosY = getPointerY();
+    movingSurface = surface;
+}
+
+void MyCompositor::surfaceMaxSizeChanged(WSurface *surface, Int32 width, Int32 height)
+{
+    (void)surface;(void)width;(void)height;
+}
+
+void MyCompositor::surfaceMinSizeChanged(WSurface *surface, Int32 width, Int32 height)
+{
+    (void)surface;(void)width;(void)height;
+}
+
 void MyCompositor::libinputEvent(libinput_event *)
 {
 
@@ -212,6 +232,12 @@ void MyCompositor::libinputEvent(libinput_event *)
 void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
 {
     WSurface *surface;
+
+    if(movingSurface != nullptr)
+    {
+        movingSurface->setX(movingSurfaceInitialPosX + ( x - movingSurfaceInitialCursorPosX ));
+        movingSurface->setY(movingSurfaceInitialPosY + ( y - movingSurfaceInitialCursorPosY ));
+    }
 
     for(list<WSurface*>::reverse_iterator surfaceIt = surfacesList.rbegin(); surfaceIt != surfacesList.rend(); ++surfaceIt)
     {
@@ -250,8 +276,9 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
 
 void MyCompositor::pointerClickEvent(int x, int y, UInt32 button, UInt32 state, UInt32 milliseconds)
 {
+    //printf("%i\n",button);
     (void)x;(void)y;
-    if(getPointerFocusSurface())
+    if(getPointerFocusSurface() != nullptr)
     {
         getPointerFocusSurface()->sendPointerButtonEvent(button,state,milliseconds);
 
@@ -262,6 +289,12 @@ void MyCompositor::pointerClickEvent(int x, int y, UInt32 button, UInt32 state, 
         surfacesList.remove(getPointerFocusSurface());
         surfacesList.push_back(getPointerFocusSurface());
     }
+
+    if(state == LIBINPUT_BUTTON_STATE_RELEASED && button == 272)
+    {
+        movingSurface = nullptr;
+    }
+
 }
 
 void MyCompositor::keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
@@ -281,7 +314,7 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
         // Ends compositor if Q is pressed
         if(keyCode == 16)
         {
-            terminateDisplay();
+            WWayland::terminateDisplay();
             exit(0);
         }
         if(keyCode == 2)

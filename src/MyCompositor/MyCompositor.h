@@ -3,6 +3,8 @@
 
 #include <WCompositor.h>
 
+using namespace WaylandPlus;
+
 class MyCompositor : public WCompositor
 {
 public:
@@ -17,6 +19,9 @@ public:
 
     void newSurface(WSurface *surface) override;
     void surfaceDestroyed(WSurface *surface) override;
+    void surfaceMoveEvent(WSurface *surface) override;
+    void surfaceMaxSizeChanged(WSurface *surface, Int32 width, Int32 height) override;
+    void surfaceMinSizeChanged(WSurface *surface, Int32 width, Int32 height) override;
 
     void libinputEvent(libinput_event *ev) override;
     void pointerPosChanged(double x, double y, UInt32 milliseconds) override;
@@ -49,6 +54,9 @@ public:
     list<WSurface*>surfacesList;
 
     WTexture *defaultCursorTexture = nullptr;
+
+    UInt32 movingSurfaceInitialPosX,movingSurfaceInitialPosY,movingSurfaceInitialCursorPosX,movingSurfaceInitialCursorPosY = 0;
+    WSurface *movingSurface = nullptr;
 
     void drawCursor();
 };
