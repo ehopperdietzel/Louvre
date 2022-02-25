@@ -22,6 +22,10 @@ public:
     void surfaceMoveEvent(WSurface *surface) override;
     void surfaceMaxSizeChanged(WSurface *surface, Int32 width, Int32 height) override;
     void surfaceMinSizeChanged(WSurface *surface, Int32 width, Int32 height) override;
+    void surfaceResizeRequest(WSurface *surface, ResizeEdge edge) override;
+    void surfaceGeometryChangedRequest(WSurface *surface, Int32 x, Int32 y, Int32 width, Int32 height) override;
+
+    void setCursorRequest(WSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY) override;
 
     void libinputEvent(libinput_event *ev) override;
     void pointerPosChanged(double x, double y, UInt32 milliseconds) override;
@@ -47,17 +51,26 @@ public:
     shadowCornerUniform,        // Indica la sombra a dibujar -1=Para no dibujar 0 = TL
     shadowConfUniform;          // Indica el xOffset, yOffsety radio de la sombra
 
-    // Focus surface
-    WSurface *focusSurface = nullptr;
+    // Active surfaces
+    WSurface *focusSurface,*movingSurface,*resizingSurface,*cursorSurface = nullptr;
+
+    // Active resize edge
+    ResizeEdge resizeEdge;
+
+    // Resize surface initial rect
+    RectD resizeInitialSurfaceRect;
+
+    // Resize surface initial mouse pos
+    PointD resizeInitialMousePos;
 
     // Surfaces list ( orderer from back to front )
     list<WSurface*>surfacesList;
 
     WTexture *defaultCursorTexture = nullptr;
 
-    UInt32 movingSurfaceInitialPosX,movingSurfaceInitialPosY,movingSurfaceInitialCursorPosX,movingSurfaceInitialCursorPosY = 0;
-    WSurface *movingSurface = nullptr;
+    Int32 movingSurfaceInitialPosX,movingSurfaceInitialPosY,movingSurfaceInitialCursorPosX,movingSurfaceInitialCursorPosY = 0;
 
+    bool isLeftMouseButtonPressed = false;
     void drawCursor();
 };
 

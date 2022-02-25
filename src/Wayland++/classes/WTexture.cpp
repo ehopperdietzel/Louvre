@@ -30,7 +30,7 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
 
             glEGLImageTargetTexture2DOES(GL_TEXTURE_2D,*(EGLImage*)data);
             WOpenGL::checkGLError("35");
-            printf("EGL\n");
+            //printf("EGL\n");
         }
         else
         {

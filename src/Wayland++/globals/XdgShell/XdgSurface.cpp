@@ -3,6 +3,7 @@
 #include <XdgPopup.h>
 #include <xdg-shell.h>
 #include <WSurface.h>
+#include <WCompositor.h>
 
 using namespace WaylandPlus;
 
@@ -39,19 +40,30 @@ void Extensions::XdgShell::Surface::destroy (wl_client *client, wl_resource *res
 void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *resource, UInt32 id)
 {
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, 4, id);
+    surface->xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
+    surface->_type = SurfaceType::Toplevel;
     wl_resource_set_implementation(surface->xdg_toplevel, &xdg_toplevel_implementation, surface, NULL);
+    surface->getCompositor()->newSurface(surface);
+    surface->sendConfigureEvent(0,0,SurfaceState::Activated);
 }
 void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *parent, wl_resource *positioner)
 {
     (void)parent;(void)positioner;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, 4, id);
+    surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
+    surface->_type = SurfaceType::Popup;
     wl_resource_set_implementation(surface->xdg_popup, &xdg_popup_implementation, surface, NULL);
 }
 void Extensions::XdgShell::Surface::set_window_geometry(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {
-    (void)client;(void)resource;(void)x;(void)y;(void)width;(void)height;
+    (void)client;
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    surface->_decorationGeometry.x = x;
+    surface->_decorationGeometry.y = y;
+    surface->_decorationGeometry.width = width;
+    surface->_decorationGeometry.height = height;
+
+    surface->getCompositor()->surfaceGeometryChangedRequest(surface,x,y,width,height);
 }
 void Extensions::XdgShell::Surface::ack_configure(wl_client *client, wl_resource *resource, UInt32 serial)
 {

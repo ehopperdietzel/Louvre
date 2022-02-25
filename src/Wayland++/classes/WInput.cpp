@@ -22,7 +22,7 @@ WCompositor *comp;
 libinput *li;
 libinput_event *ev;
 udev *udev;
-int keymapFD,keymapSize;
+int keymapFD,keymapSize,keymapFDPrivate;
 xkb_state *xkbState;
 
 struct modifier_state {
@@ -118,11 +118,12 @@ void WInput::processInput()
     //libinput_unref(li);
 }
 
-void initXKB()
+int initXKB()
 {
     xkb_context *ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
     xkb_keymap *keymap;
+
 
     struct xkb_rule_names names =
     {
@@ -132,6 +133,7 @@ void initXKB()
         .variant = NULL,//"dvorak",
         .options = NULL//"terminate:ctrl_alt_bksp"
     };
+
 
     keymap = xkb_keymap_new_from_names(ctx, &names,XKB_KEYMAP_COMPILE_NO_FLAGS);
 
@@ -146,18 +148,35 @@ void initXKB()
         printf("Error creating shared memory for keyboard layout.\n");
         exit(-1);
     }
-    printf("Keyboard layout found.\n");
+
+    keymapFDPrivate = open(xdg_runtime_dir, O_TMPFILE|O_RDWR|O_EXCL, 0600);
+    if(keymapFDPrivate < 0)
+    {
+        printf("Error creating shared memory for keyboard layout.\n");
+        exit(-1);
+    }
+
     ftruncate(keymapFD, keymapSize);
-    char *map = (char*)mmap(NULL, keymapSize, PROT_READ|PROT_WRITE, MAP_PRIVATE, keymapFD, 0);
+    ftruncate(keymapFDPrivate, keymapSize);
+
+    char *map = (char*)mmap(NULL, keymapSize, PROT_READ|PROT_WRITE, MAP_SHARED, keymapFD, 0);
     strcpy(map, string);
     munmap(map, keymapSize);
+
+    map = (char*)mmap(NULL, keymapSize, PROT_READ|PROT_WRITE, MAP_PRIVATE, keymapFDPrivate, 0);
+    strcpy(map, string);
+    munmap(map, keymapSize);
+
     free(string);
     xkbState = xkb_state_new(keymap);
 }
 
-int WInput::getKeymapFD()
+int WInput::getKeymapFD(bool privated)
 {
-    return keymapFD;
+    if(privated)
+        return keymapFDPrivate;
+    else
+        return keymapFD;
 }
 int WInput::getKeymapSize()
 {

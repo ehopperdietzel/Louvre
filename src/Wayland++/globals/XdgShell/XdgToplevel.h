@@ -4,6 +4,7 @@
 #include <wayland-server.h>
 #include <WNamespaces.h>
 
+
 class WaylandPlus::Extensions::XdgShell::Toplevel
 {
 public:

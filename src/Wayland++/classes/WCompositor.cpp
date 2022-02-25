@@ -26,6 +26,10 @@ void WCompositor::start()
     pfds[0].events = POLLIN;
     pfds[0].revents = 0;
 
+    pfds[0].fd = WInput::initInput(this);
+    pfds[0].events = POLLIN;
+    pfds[0].revents = 0;
+
     // Bind the EGL context for OpenGL
     WBackend::initBackend(this);
 

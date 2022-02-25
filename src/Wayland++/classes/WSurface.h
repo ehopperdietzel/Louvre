@@ -11,6 +11,7 @@ class WaylandPlus::WSurface
 {
 public:
     WSurface(UInt32 id, wl_resource *res, WClient *client);
+    ~WSurface();
 
     WTexture *texture = new WTexture();
 
@@ -30,6 +31,7 @@ public:
     void sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group);
     void sendKeyboardEnterEvent();
     void sendKeyboardLeaveEvent();
+    void sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags states);
 
     void setAppId(const char *appId);
     void setTitle(const char *title);
@@ -39,11 +41,15 @@ public:
     void setPos(int x, int y);
     void setX(int x);
     void setY(int y);
+    void setXWithoutDecoration(Int32 x);
+    void setYWithoutDecoration(Int32 y);
     int getX();
     int getY();
 
     int getWidth();
     int getHeight();
+
+    Rect getRectWithoutDecoration();
 
     Int32 getMinWidth();
     Int32 getMinHeight();
@@ -58,7 +64,7 @@ public:
     int mapXtoLocal(int xGlobal);
     int mapYtoLocal(int yGlobal);
 
-    bool containsPoint(int x, int y);
+    bool containsPoint(int x, int y, bool withoutDecoration = false);
 
     Int32 getBufferScale();
     void setBufferScale(Int32 scale);
@@ -67,8 +73,16 @@ public:
     WClient *getClient();
     WCompositor *getCompositor();
     UInt32 getId();
+    SurfaceType getType();
 
  private:
+    friend class Extensions::XdgShell::Surface;
+    friend class Extensions::XdgShell::Toplevel;
+
+    SurfaceType _type = SurfaceType::Undefined;
+
+    UInt32 moveSerial, pointerSerial, configureSerial = 0;
+
     WClient *_client = nullptr;
     wl_resource *_resource = nullptr;
     int _posX = 0;
@@ -78,6 +92,7 @@ public:
     UInt32 _id;
     char *_appId = nullptr;
     char *_title = nullptr;
+    Rect _decorationGeometry;
 
 
 

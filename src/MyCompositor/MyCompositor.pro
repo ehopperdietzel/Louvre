@@ -24,12 +24,15 @@ SOURCES += \
         ../Wayland++/classes/WView.cpp \
         ../Wayland++/classes/WWayland.cpp \
         ../Wayland++/globals/Wayland/Compositor.cpp \
+        ../Wayland++/globals/Wayland/DataDevice.cpp \
         ../Wayland++/globals/Wayland/DataDeviceManager.cpp \
         ../Wayland++/globals/Wayland/Keyboard.cpp \
         ../Wayland++/globals/Wayland/Output.cpp \
         ../Wayland++/globals/Wayland/Pointer.cpp \
         ../Wayland++/globals/Wayland/Region.cpp \
         ../Wayland++/globals/Wayland/Seat.cpp \
+        ../Wayland++/globals/Wayland/Subcompositor.cpp \
+        ../Wayland++/globals/Wayland/Subsurface.cpp \
         ../Wayland++/globals/Wayland/Surface.cpp \
         ../Wayland++/globals/XdgShell/XdgPopup.cpp \
         ../Wayland++/globals/XdgShell/XdgSurface.cpp \
@@ -52,12 +55,15 @@ HEADERS += \
     ../Wayland++/classes/WView.h \
     ../Wayland++/classes/WWayland.h \
     ../Wayland++/globals/Wayland/Compositor.h \
+    ../Wayland++/globals/Wayland/DataDevice.h \
     ../Wayland++/globals/Wayland/DataDeviceManager.h \
     ../Wayland++/globals/Wayland/Keyboard.h \
     ../Wayland++/globals/Wayland/Output.h \
     ../Wayland++/globals/Wayland/Pointer.h \
     ../Wayland++/globals/Wayland/Region.h \
     ../Wayland++/globals/Wayland/Seat.h \
+    ../Wayland++/globals/Wayland/Subcompositor.h \
+    ../Wayland++/globals/Wayland/Subsurface.h \
     ../Wayland++/globals/Wayland/Surface.h \
     ../Wayland++/globals/XdgShell/XdgPopup.h \
     ../Wayland++/globals/XdgShell/XdgSurface.h \
@@ -68,7 +74,7 @@ HEADERS += \
 
 DISTFILES += \
     ../Wayland++/protocols/wayland.xml \
-    ../Wayland++/protocols/xdg-shell.xml \
+    ../Wayland++/protocols/xdg-shell-unstable-v6.xml \
     shaders/Fragment.glsl \
     shaders/Vertex.glsl
 

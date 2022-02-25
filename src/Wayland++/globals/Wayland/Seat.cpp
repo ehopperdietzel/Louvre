@@ -6,6 +6,8 @@
 #include <Keyboard.h>
 #include <WInput.h>
 
+#include <sys/mman.h>
+
 static struct wl_pointer_interface pointer_implementation =
 {
     &WaylandPlus::Globals::Pointer::set_cursor,
@@ -29,7 +31,11 @@ static struct wl_seat_interface seat_implementation =
 void WaylandPlus::Globals::Seat::get_pointer (wl_client *client, wl_resource *resource, UInt32 id)
 {
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
-    wl_resource *pointer = wl_resource_create (client, &wl_pointer_interface, 7, id);
+
+    Int32 version = wl_resource_get_version(resource);
+
+    printf("Pointer Version: %i\n",version);
+    wl_resource *pointer = wl_resource_create(client, &wl_pointer_interface, version, id); // 7
     wl_resource_set_implementation (pointer, &pointer_implementation, wClient->getCompositor(),NULL);
     wClient->setPointer(pointer);
 }
@@ -37,12 +43,20 @@ void WaylandPlus::Globals::Seat::get_pointer (wl_client *client, wl_resource *re
 void WaylandPlus::Globals::Seat::get_keyboard (wl_client *client, wl_resource *resource, UInt32 id)
 {
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
-    wl_resource *keyboard = wl_resource_create(client, &wl_keyboard_interface,7, id);
+
+    Int32 version = wl_resource_get_version(resource);
+    wl_resource *keyboard = wl_resource_create(client, &wl_keyboard_interface,version,id); // 7
     wl_resource_set_implementation(keyboard, &keyboard_implementation, NULL, NULL);
     wClient->setKeyboard(keyboard);
     wl_keyboard_send_repeat_info(keyboard,200,500);
-    wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_NO_KEYMAP,0,0);
-    //wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,getKeymapFD(),getKeymapSize());
+
+    printf("Keyboard Version: %i\n",version);
+
+    //if(version >= 7)
+        //wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,WInput::getKeymapFD(true),WInput::getKeymapSize());
+    //else
+    wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,WInput::getKeymapFD(false),WInput::getKeymapSize());
+
 }
 
 void WaylandPlus::Globals::Seat::get_touch (wl_client *client, wl_resource *resource, UInt32 id)
@@ -53,7 +67,7 @@ void WaylandPlus::Globals::Seat::get_touch (wl_client *client, wl_resource *reso
 void WaylandPlus::Globals::Seat::release( wl_client *client, wl_resource *resource)
 {
     (void)client;
-    printf("SEAT RELEASED\n");
+    //printf("SEAT RELEASED\n");
     wl_resource_destroy(resource);
 }
 

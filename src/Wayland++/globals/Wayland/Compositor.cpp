@@ -37,10 +37,12 @@ struct wl_compositor_interface compositor_implementation =
 // COMPOSITOR
 void Globals::Compositor::create_surface(wl_client *client, wl_resource *resource, UInt32 id)
 {
-    printf("NEW SURFACE! %i\n",id);
+    Int32 version = wl_resource_get_version(resource);
+
+    printf("Surface version: %i\n",version);
 
     // New surface resource
-    wl_resource *surface = wl_resource_create (client, &wl_surface_interface, 4, id);
+    wl_resource *surface = wl_resource_create (client, &wl_surface_interface, version, id); // 4
 
     // Find client
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
@@ -51,17 +53,15 @@ void Globals::Compositor::create_surface(wl_client *client, wl_resource *resourc
     // Append surface
     wClient->surfaces.push_back(wSurface);
 
-    // Notify from compositor
-    wClient->getCompositor()->newSurface(wSurface);
-
     // Implement surface
     wl_resource_set_implementation(surface, &surface_implementation, wSurface, NULL);
+
 }
 
 void Globals::Compositor::create_region (wl_client *client, wl_resource *resource, UInt32 id)
 {
     // New region
-    wl_resource *region = wl_resource_create(client, &wl_region_interface, 1, id);
+    wl_resource *region = wl_resource_create(client, &wl_region_interface, wl_resource_get_version(resource), id); // 1
 
     // Find client
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
@@ -108,15 +108,23 @@ void Globals::Compositor::resource_destroy(wl_resource *resource)
 
 void Globals::Compositor::bind(wl_client *client, void *data, UInt32 version, UInt32 id)
 {
+    printf("Compositor version: %i\n",version);
 
     WCompositor *compositor = (WCompositor*)data;
+
+    WClient *wClient = nullptr;
 
     // Check if client already exists
     for(list<WClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
         if((*c)->getClient() == client)
-            return;
+        {
+            wClient = (*c);
+            break;
+        }
+
 
     wl_resource *resource = wl_resource_create(client, &wl_compositor_interface, version, id);
-    WClient *wClient = new WClient(client,resource,compositor);
+    if(wClient == nullptr)
+        wClient = new WClient(client,resource,compositor);
     wl_resource_set_implementation(resource, &compositor_implementation, wClient, &Compositor::resource_destroy);
 }

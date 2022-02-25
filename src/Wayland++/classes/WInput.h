@@ -8,7 +8,7 @@ class WaylandPlus::WInput
 public:
     static int initInput(WCompositor *compositor);
     static void processInput();
-    static int getKeymapFD();
+    static int getKeymapFD(bool privated);
     static int getKeymapSize();
 };
 

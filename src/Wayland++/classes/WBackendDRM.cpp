@@ -1,4 +1,5 @@
-/*#include <sys/types.h>
+/*
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
@@ -22,6 +23,8 @@
 
 #include <WBackend.h>
 #include <WCompositor.h>
+
+using namespace WaylandPlus;
 
 int drmWidth = 0;
 int drmHeight = 0;
@@ -319,7 +322,7 @@ struct drm_fb *fb;
 int ret;
 fd_set fds;
 
-void paintDRM()
+void WBackend::paintDRM()
 {
     struct gbm_bo *next_bo;
     int waiting_for_flip = 1;
@@ -366,7 +369,7 @@ void paintDRM()
 
 
 }
-void initBackend(WCompositor *compositor)
+void WBackend::initBackend(WCompositor *compositor)
 {
     evctx =
     {
@@ -420,16 +423,16 @@ void initBackend(WCompositor *compositor)
     return;
 }
 
-int backendWidth()
+int WBackend::backendWidth()
 {
     return drmWidth;
 }
-int backendHeight()
+int WBackend::backendHeight()
 {
     return drmHeight;
 }
 
-EGLDisplay getEGLDisplay()
+EGLDisplay WBackend::getEGLDisplay()
 {
     return gl.display;
 }

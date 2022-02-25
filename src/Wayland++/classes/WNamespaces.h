@@ -19,8 +19,21 @@ namespace WaylandPlus
     class WWayland;
 
     // Types
-    typedef uint32_t    UInt32;
-    typedef int32_t     Int32;
+    typedef uint32_t        UInt32;
+    typedef int32_t         Int32;
+    typedef unsigned char   SurfaceStateFlags;
+
+    struct Point
+    {
+        Int32 x = 0;
+        Int32 y = 0;
+    };
+
+    struct PointD
+    {
+        double x = 0;
+        double y = 0;
+    };
 
     struct Rect
     {
@@ -28,6 +41,14 @@ namespace WaylandPlus
         Int32 y = 0;
         Int32 width = 0;
         Int32 height = 0;
+    };
+
+    struct RectD
+    {
+        double x = 0;
+        double y = 0;
+        double width = 0;
+        double height = 0;
     };
 
     struct WRegionRect
@@ -39,17 +60,52 @@ namespace WaylandPlus
         bool add = true;
     };
 
+    enum ResizeEdge
+    {
+        Top = 1,
+        Bottom = 2,
+        Left = 4,
+        TopLeft = 5,
+        BottomLeft = 6,
+        Right = 8,
+        TopRight = 9,
+        BottomRight = 10
+    };
+
+    enum SurfaceState : unsigned char
+    {
+        Maximized = 1, // 1
+        Fullscreen = 2, // 2
+        Resizing = 4, // 3
+        Activated = 8, // 4
+        TiledLeft = 16, // 5
+        TiledRight = 32, // 6
+        TiledTop = 64, // 7
+        TiledBottom = 128 // 8
+    };
+
+    enum SurfaceType
+    {
+        Undefined = 0,
+        Toplevel = 1,
+        Popup = 2,
+        Subsurface = 3
+    };
+
     // Wayland Globals
     namespace Globals
     {
         class Compositor;
+        class Subcompositor;
         class DataDeviceManager;
+        class DataDevice;
         class Keyboard;
         class Output;
         class Pointer;
         class Region;
         class Seat;
         class Surface;
+        class Subsurface;
     };
 
     // Extensions

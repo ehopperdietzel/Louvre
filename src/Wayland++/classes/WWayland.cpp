@@ -8,6 +8,7 @@
 #include <WInput.h>
 
 #include <Compositor.h>
+#include <Subcompositor.h>
 #include <Surface.h>
 #include <Seat.h>
 #include <DataDeviceManager.h>
@@ -54,23 +55,28 @@ int WWayland::initWayland(WCompositor *comp)
     // GLOBALS
 
     // Create compositor global
-    wl_global_create(display, &wl_compositor_interface, 4, comp, &Globals::Compositor::bind);
+    wl_global_create(display, &wl_compositor_interface, 4, comp, &Globals::Compositor::bind);//4
+
+    // Create subcompositor global
+    wl_global_create(display, &wl_subcompositor_interface, 1, comp, &Globals::Subcompositor::bind); // 1
 
     // Create seat global
-    wl_global_create(display, &wl_seat_interface, 7, comp, &Globals::Seat::bind);
+    wl_global_create(display, &wl_seat_interface, 7, comp, &Globals::Seat::bind);//7
 
     // Create output global
-    wl_global_create(display, &wl_output_interface, 3, comp, &Globals::Output::bind);
+    wl_global_create(display, &wl_output_interface, 3, comp, &Globals::Output::bind);//3
 
     // Create data device manager global
-    wl_global_create(display, &wl_data_device_manager_interface, 3, comp, &Globals::DataDeviceManager::bind);
+    wl_global_create(display, &wl_data_device_manager_interface, 3, comp, &Globals::DataDeviceManager::bind);//3
 
     // Create xdg shell global
+    //wl_global_create(display, &zxdg_shell_v6_interface, 1, comp, &Extensions::XdgShell::ShellV6::bind);//4
     wl_global_create(display, &xdg_wm_base_interface, 4, comp, &Extensions::XdgShell::WmBase::bind);
 
     eglBindWaylandDisplayWL(WBackend::getEGLDisplay(), display);
 
-    wl_display_init_shm (display);
+    wl_display_init_shm(display);
+    //wl_data_device_manager_init(display);
 
     event_loop = wl_display_get_event_loop(display);
     wayland_fd = wl_event_loop_get_fd(event_loop);

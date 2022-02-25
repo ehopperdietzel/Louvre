@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <xdg-shell.h>
+
 using namespace WaylandPlus;
 
 wl_array nullKeys;
@@ -25,11 +27,18 @@ WSurface::WSurface(UInt32 id, wl_resource *res, WClient *client)
     setY(rand() % 50);
 }
 
+WSurface::~WSurface()
+{
+    delete []_appId;
+    delete []_title;
+}
+
 void WSurface::sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UInt32 milliseconds)
 {
     if(_client->getPointer())
     {
-        wl_pointer_send_button(_client->getPointer(),0,milliseconds,buttonCode,buttonState);
+        wl_pointer_send_button(_client->getPointer(),pointerSerial,milliseconds,buttonCode,buttonState);
+        pointerSerial++;
         wl_pointer_send_frame(_client->getPointer());
     }
 }
@@ -61,11 +70,12 @@ void WSurface::sendPointerEnterEvent(double x, double y)
     {
         wl_pointer_send_enter(
                     _client->getPointer(),
-                    0,
+                    pointerSerial,
                     _resource,
                     wl_fixed_from_double(x),
                     wl_fixed_from_double(y));
-
+        pointerSerial++;
+        wl_pointer_send_frame(_client->getPointer());
         getCompositor()->_pointerFocusSurface = this;
     }
 }
@@ -76,7 +86,11 @@ void WSurface::sendPointerLeaveEvent()
         return;
 
     if(_client->getPointer())
-        wl_pointer_send_leave(_client->getPointer(),0,_resource);
+    {
+        wl_pointer_send_leave(_client->getPointer(),pointerSerial,_resource);
+        pointerSerial++;
+        wl_pointer_send_frame(_client->getPointer());
+    }
 
     getCompositor()->_pointerFocusSurface = nullptr;
 }
@@ -102,6 +116,7 @@ void WSurface::sendKeyboardEnterEvent()
         wl_keyboard_send_enter(_client->getKeyboard(),0,_resource,&nullKeys);
 
     getCompositor()->_keyboardFocusSurface = this;
+
 }
 
 void WSurface::sendKeyboardLeaveEvent()
@@ -113,6 +128,79 @@ void WSurface::sendKeyboardLeaveEvent()
         wl_keyboard_send_leave(_client->getKeyboard(),0,_resource);
 
     getCompositor()->_keyboardFocusSurface = nullptr;
+}
+
+void WSurface::sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags states)
+{
+    if(xdg_toplevel != nullptr)
+    {
+        wl_array dummy;
+        wl_array_init(&dummy);
+        UInt32 index = 0;
+
+        if(states & SurfaceState::Activated)
+        {
+            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+            s[index] = XDG_TOPLEVEL_STATE_ACTIVATED;
+            index++;
+        }
+        if(states & SurfaceState::Fullscreen)
+        {
+            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+            s[index] = XDG_TOPLEVEL_STATE_FULLSCREEN;
+            index++;
+        }
+        if(states & SurfaceState::Maximized)
+        {
+            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+            s[index] = XDG_TOPLEVEL_STATE_MAXIMIZED;
+            index++;
+        }
+        if(states & SurfaceState::Resizing)
+        {
+            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+            s[index] = XDG_TOPLEVEL_STATE_RESIZING;
+            index++;
+        }
+
+        if(states & SurfaceState::TiledBottom)
+        {
+            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+            s[index] = XDG_TOPLEVEL_STATE_TILED_BOTTOM;
+            index++;
+        }
+        if(states & SurfaceState::TiledLeft)
+        {
+            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+            s[index] = XDG_TOPLEVEL_STATE_TILED_LEFT;
+            index++;
+        }
+        if(states & SurfaceState::TiledRight)
+        {
+            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+            s[index] = XDG_TOPLEVEL_STATE_TILED_RIGHT;
+            index++;
+        }
+        if(states & SurfaceState::TiledTop)
+        {
+            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+            s[index] = XDG_TOPLEVEL_STATE_TILED_TOP;
+            index++;
+        }
+
+        xdg_toplevel_send_configure(xdg_toplevel,width,height,&dummy);
+        wl_array_release(&dummy);
+        xdg_surface_send_configure(xdg_shell,configureSerial);
+        configureSerial++;
+    }
 }
 
 void WSurface::setAppId(const char *appId)
@@ -153,6 +241,16 @@ void WSurface::setY(int y)
     _posY = y;
 }
 
+void WSurface::setXWithoutDecoration(Int32 x)
+{
+    setX(x-_decorationGeometry.x);
+}
+
+void WSurface::setYWithoutDecoration(Int32 y)
+{
+    setY(y-_decorationGeometry.y);
+}
+
 int WSurface::getX()
 {
     return _posX;
@@ -171,6 +269,26 @@ int WSurface::getWidth()
 int WSurface::getHeight()
 {
     return texture->height();
+}
+
+Rect WSurface::getRectWithoutDecoration()
+{
+    Rect rect;
+    if(xdg_shell != nullptr)
+    {
+        rect.x = getX() + _decorationGeometry.x;
+        rect.y = getY() + _decorationGeometry.y;
+        rect.width = _decorationGeometry.width;
+        rect.height = _decorationGeometry.height;
+    }
+    else
+    {
+        rect.x = getX();
+        rect.y = getY();
+        rect.width = getWidth();
+        rect.height = getHeight();
+    }
+    return rect;
 }
 
 Int32 WSurface::getMinWidth()
@@ -223,18 +341,36 @@ int WSurface::mapYtoLocal(int yGlobal)
     return yGlobal - getY();
 }
 
-bool WSurface::containsPoint(int x, int y)
+bool WSurface::containsPoint(int x, int y, bool withoutDecoration)
 {
-    if(_posX > x)
-        return false;
-    if(_posX + getWidth() < x)
-        return false;
-    if(_posY > y)
-        return false;
-    if(_posY + getHeight() < y)
-        return false;
+    if(withoutDecoration)
+    {
+        Rect r = getRectWithoutDecoration();
 
-    return true;
+        if(r.x > x)
+            return false;
+        if(r.x + r.width < x)
+            return false;
+        if(r.y> y)
+            return false;
+        if(r.y + r.height < y)
+            return false;
+
+        return true;
+    }
+    else
+    {
+        if(_posX > x)
+            return false;
+        if(_posX + getWidth() < x)
+            return false;
+        if(_posY > y)
+            return false;
+        if(_posY + getHeight() < y)
+            return false;
+
+        return true;
+    }
 }
 
 Int32 WSurface::getBufferScale()
@@ -265,6 +401,11 @@ WCompositor *WSurface::getCompositor()
 UInt32 WSurface::getId()
 {
     return _id;
+}
+
+SurfaceType WSurface::getType()
+{
+    return _type;
 }
 
 

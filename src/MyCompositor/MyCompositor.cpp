@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <WWayland.h>
 #include <linux/input-event-codes.h>
+#include <stdio.h>
 
 MyCompositor::MyCompositor(){}
 
@@ -150,10 +151,29 @@ void MyCompositor::paintGL()
 
     glClear(GL_COLOR_BUFFER_BIT);
 
+    /*
+    for(list<WClient*>::iterator client = clients.begin(); client != clients.end();client++)
+    {
+        for(list<WSurface*>::iterator surface = (*client)->surfaces.begin(); surface != (*client)->surfaces.end(); ++surface)
+        {
+            if((*surface)->getType() == SurfaceType::Undefined) continue;
+
+            glBindTexture(GL_TEXTURE_2D,(*surface)->texture->textureId());
+            WOpenGL::checkGLError("21");
+
+            glUniform4f(rectUniform,(*surface)->getX(),(*surface)->getY(),(*surface)->texture->width(),(*surface)->texture->height());
+            WOpenGL::checkGLError("22");
+
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            WOpenGL::checkGLError("23");
+        }
+    }
+    */
 
     for(list<WSurface*>::iterator surface = surfacesList.begin(); surface != surfacesList.end(); ++surface)
     {
-        if(!(*surface)->xdg_shell) continue;
+        if((*surface)->getType() == SurfaceType::Undefined) continue;
+
         glBindTexture(GL_TEXTURE_2D,(*surface)->texture->textureId());
         WOpenGL::checkGLError("21");
 
@@ -170,7 +190,7 @@ void MyCompositor::paintGL()
 void MyCompositor::newClient(WClient *)
 {
     /*******************************************************************************
-     * Notify a new client connection, it's automatically added to an internal list
+     * Notify a new client connection, it's automatically added to an internal std list
      * you can access with 'compositor->clients'
      *******************************************************************************/
 
@@ -185,25 +205,32 @@ void MyCompositor::clientDisconnected(WClient *)
      * All destroy events from resources related to the client (like surfaces, regions, etc)
      * are prevously notified.
      *******************************************************************************/
-
     printf("Client disconnected.\n");
 }
 
 void MyCompositor::newSurface(WSurface *surface)
 {
+    printf("New surface %i\n",surface->getType());
     surfacesList.push_back(surface);
+    repaint();
 }
 
 void MyCompositor::surfaceDestroyed(WSurface *surface)
 {
+    if(cursorSurface == surface)
+        cursorSurface = nullptr;
+
     surfacesList.remove(surface);
+    repaint();
 }
 
 // Event when window is grabbed
 void MyCompositor::surfaceMoveEvent(WSurface *surface)
 {
-    movingSurfaceInitialPosX = surface->getX();
-    movingSurfaceInitialPosY = surface->getY();
+    if(!isLeftMouseButtonPressed)
+        return;
+    movingSurfaceInitialPosX = surface->getRectWithoutDecoration().x;
+    movingSurfaceInitialPosY = surface->getRectWithoutDecoration().y;
     movingSurfaceInitialCursorPosX = getPointerX();
     movingSurfaceInitialCursorPosY = getPointerY();
     movingSurface = surface;
@@ -217,6 +244,50 @@ void MyCompositor::surfaceMaxSizeChanged(WSurface *surface, Int32 width, Int32 h
 void MyCompositor::surfaceMinSizeChanged(WSurface *surface, Int32 width, Int32 height)
 {
     (void)surface;(void)width;(void)height;
+}
+
+void MyCompositor::surfaceResizeRequest(WSurface *surface, ResizeEdge edge)
+{
+    if(!isLeftMouseButtonPressed)
+        return;
+
+    resizingSurface = surface;
+    resizeEdge = edge;
+
+    resizeInitialMousePos.x = getPointerX();
+    resizeInitialMousePos.y = getPointerY();
+
+    Rect dRect = surface->getRectWithoutDecoration();
+    resizeInitialSurfaceRect.x = dRect.x;
+    resizeInitialSurfaceRect.y = dRect.y;
+    resizeInitialSurfaceRect.width = dRect.width;
+    resizeInitialSurfaceRect.height = dRect.height;
+
+}
+
+void MyCompositor::surfaceGeometryChangedRequest(WSurface *surface, Int32 x, Int32 y, Int32 width, Int32 height)
+{
+    /* Geometry of the surface without client decorations
+     * x and y represent the decoration margin */
+
+    (void)surface;(void)x;(void)y;
+
+    if(resizingSurface == surface)
+    {
+        if(resizeEdge == ResizeEdge::Top || resizeEdge == ResizeEdge::TopLeft ||resizeEdge == ResizeEdge::TopRight)
+            resizingSurface->setYWithoutDecoration(int(resizeInitialSurfaceRect.y) + int(resizeInitialSurfaceRect.height - height));
+
+        if(resizeEdge == ResizeEdge::Left || resizeEdge == ResizeEdge::TopLeft || resizeEdge == ResizeEdge::BottomLeft)
+            resizingSurface->setXWithoutDecoration(int(resizeInitialSurfaceRect.x) + int(resizeInitialSurfaceRect.width - width));
+
+        repaint();
+    }
+}
+
+void MyCompositor::setCursorRequest(WSurface *_cursorSurface, Int32 hotspotX, Int32 hotspotY)
+{
+    (void)hotspotX;(void)hotspotY;
+    cursorSurface = _cursorSurface;
 }
 
 void MyCompositor::libinputEvent(libinput_event *)
@@ -233,10 +304,76 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
 {
     WSurface *surface;
 
+    if(resizingSurface != nullptr)
+    {
+        switch(resizeEdge)
+        {
+            case ResizeEdge::Bottom:
+            {
+                resizingSurface->sendConfigureEvent(
+                            resizeInitialSurfaceRect.width,
+                            resizeInitialSurfaceRect.height + (y - resizeInitialMousePos.y),
+                            SurfaceState::Activated | SurfaceState::Resizing);
+            }break;
+            case ResizeEdge::Right:
+            {
+                resizingSurface->sendConfigureEvent(
+                            resizeInitialSurfaceRect.width + (x - resizeInitialMousePos.x),
+                            resizeInitialSurfaceRect.height,
+                            SurfaceState::Activated | SurfaceState::Resizing);
+            }break;
+            case ResizeEdge::BottomRight:
+            {
+                resizingSurface->sendConfigureEvent(
+                            resizeInitialSurfaceRect.width + (x - resizeInitialMousePos.x),
+                            resizeInitialSurfaceRect.height + (y - resizeInitialMousePos.y),
+                            SurfaceState::Activated | SurfaceState::Resizing);
+            }break;
+            case ResizeEdge::Top:
+            {
+                resizingSurface->sendConfigureEvent(
+                            resizeInitialSurfaceRect.width,
+                            resizeInitialSurfaceRect.height + (resizeInitialMousePos.y - y),
+                            SurfaceState::Activated | SurfaceState::Resizing);
+            }break;
+            case ResizeEdge::Left:
+            {
+                resizingSurface->sendConfigureEvent(
+                            resizeInitialSurfaceRect.width + (resizeInitialMousePos.x - x),
+                            resizeInitialSurfaceRect.height,
+                            SurfaceState::Activated | SurfaceState::Resizing);
+            }break;
+            case ResizeEdge::TopLeft:
+            {
+                resizingSurface->sendConfigureEvent(
+                            resizeInitialSurfaceRect.width + (resizeInitialMousePos.x - x),
+                            resizeInitialSurfaceRect.height + (resizeInitialMousePos.y - y),
+                            SurfaceState::Activated | SurfaceState::Resizing);
+            }break;
+            case ResizeEdge::BottomLeft:
+            {
+                resizingSurface->sendConfigureEvent(
+                            resizeInitialSurfaceRect.width + (resizeInitialMousePos.x - x),
+                            resizeInitialSurfaceRect.height + (y - resizeInitialMousePos.y),
+                            SurfaceState::Activated | SurfaceState::Resizing);
+            }break;
+            case ResizeEdge::TopRight:
+            {
+                resizingSurface->sendConfigureEvent(
+                            resizeInitialSurfaceRect.width + (x - resizeInitialMousePos.x),
+                            resizeInitialSurfaceRect.height + (resizeInitialMousePos.y - y),
+                            SurfaceState::Activated | SurfaceState::Resizing);
+            }break;
+        }
+        return;
+    }
+
     if(movingSurface != nullptr)
     {
-        movingSurface->setX(movingSurfaceInitialPosX + ( x - movingSurfaceInitialCursorPosX ));
-        movingSurface->setY(movingSurfaceInitialPosY + ( y - movingSurfaceInitialCursorPosY ));
+        movingSurface->setXWithoutDecoration(movingSurfaceInitialPosX + int( x - movingSurfaceInitialCursorPosX ));
+        movingSurface->setYWithoutDecoration(movingSurfaceInitialPosY + int( y - movingSurfaceInitialCursorPosY ));
+        repaint();
+        return;
     }
 
     for(list<WSurface*>::reverse_iterator surfaceIt = surfacesList.rbegin(); surfaceIt != surfacesList.rend(); ++surfaceIt)
@@ -247,22 +384,23 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
         if(!surface->xdg_shell) continue;
 
         // Mouse move event
-        if(surface->containsPoint(x,y) && getPointerFocusSurface() == surface)
+        if(surface->containsPoint(x,y,false) && getPointerFocusSurface() == surface)
         {
             surface->sendPointerMotionEvent(surface->mapXtoLocal(x),surface->mapYtoLocal(y),milliseconds);
             break;
         }
 
         // Mouse leave surface
-        if(!surface->containsPoint(x,y) && getPointerFocusSurface() == surface)
+        if(!surface->containsPoint(x,y,false) && getPointerFocusSurface() == surface)
         {
             surface->sendPointerLeaveEvent();
+            cursorSurface = nullptr;
             printf("Mouse left surface\n");
             continue;
         }
 
         // Mouse enter surface
-        if(surface->containsPoint(x,y) && getPointerFocusSurface() != surface)
+        if(surface->containsPoint(x,y,false) && getPointerFocusSurface() != surface)
         {
 
             surface->sendPointerEnterEvent(surface->mapXtoLocal(x),surface->mapXtoLocal(y));
@@ -278,21 +416,38 @@ void MyCompositor::pointerClickEvent(int x, int y, UInt32 button, UInt32 state, 
 {
     //printf("%i\n",button);
     (void)x;(void)y;
+
+    if(state == LIBINPUT_BUTTON_STATE_RELEASED && button == 272)
+    {
+        isLeftMouseButtonPressed = false;
+
+        if(resizingSurface != nullptr)
+        {
+            resizingSurface->sendConfigureEvent(
+                        resizingSurface->getRectWithoutDecoration().width,
+                        resizingSurface->getRectWithoutDecoration().height,
+                        SurfaceState::Activated);
+            resizingSurface = nullptr;
+        }
+        movingSurface = nullptr;
+    }
+
     if(getPointerFocusSurface() != nullptr)
     {
         getPointerFocusSurface()->sendPointerButtonEvent(button,state,milliseconds);
 
-        if(getKeyboardFocusSurface() != getPointerFocusSurface())
-            getPointerFocusSurface()->sendKeyboardEnterEvent();
+        if(state == LIBINPUT_BUTTON_STATE_PRESSED && button == 272)
+        {
+            isLeftMouseButtonPressed = true;
 
-        // Raise view
-        surfacesList.remove(getPointerFocusSurface());
-        surfacesList.push_back(getPointerFocusSurface());
-    }
+            if(getKeyboardFocusSurface() != getPointerFocusSurface())
+                getPointerFocusSurface()->sendKeyboardEnterEvent();
 
-    if(state == LIBINPUT_BUTTON_STATE_RELEASED && button == 272)
-    {
-        movingSurface = nullptr;
+            // Raise view
+            surfacesList.remove(getPointerFocusSurface());
+            surfacesList.push_back(getPointerFocusSurface());
+
+        }
     }
 
 }
@@ -322,7 +477,8 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
             pid_t pid = fork();
             if (pid==0)
             {
-                system("/home/eduardo/Escritorio/build-wiggly-Desktop_Qt_6_2_3_GCC_64bit-Debug/wiggly --platform wayland");
+                system("weston-terminal");
+                //system("terminology");
                 exit(0);
             }
         }
@@ -331,7 +487,8 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
             pid_t pid = fork();
             if (pid==0)
             {
-                system("gedit");
+                //system("gedit");
+                system("/home/eduardo/Escritorio/build-wiggly-Desktop_Qt_5_15_2_GCC_64bit-Debug/wiggly --platform wayland");
                 exit(0);
             }
         }
@@ -340,7 +497,7 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
 
 void MyCompositor::drawCursor()
 {
-    if(getCursorSurface())
+    if(cursorSurface != nullptr)
     {
         WSurface *cursor = getCursorSurface();
         glBindTexture(GL_TEXTURE_2D,cursor->texture->textureId());

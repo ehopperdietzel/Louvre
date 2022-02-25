@@ -136,4 +136,3 @@ void WBackend::paintDRM()
 {
     eglSwapBuffers (egl_display, window.surface);
 }
-

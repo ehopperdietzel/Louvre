@@ -31,6 +31,10 @@ public:
     virtual void surfaceMoveEvent(WSurface *surface)= 0;
     virtual void surfaceMaxSizeChanged(WSurface *surface, Int32 width, Int32 height) = 0;
     virtual void surfaceMinSizeChanged(WSurface *surface, Int32 width, Int32 height) = 0;
+    virtual void surfaceResizeRequest(WSurface *surface, ResizeEdge edge) = 0;
+    virtual void surfaceGeometryChangedRequest(WSurface *surface, Int32 x, Int32 y, Int32 width, Int32 height) = 0;
+
+    virtual void setCursorRequest(WSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY) = 0;
 
     virtual void libinputEvent(libinput_event *ev) = 0;
     virtual void pointerPosChanged(double x, double y, UInt32 milliseconds) = 0;

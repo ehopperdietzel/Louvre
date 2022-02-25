@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <WSurface.h>
 #include <WCompositor.h>
+#include <xdg-shell.h>
 
 using namespace WaylandPlus;
 
@@ -18,14 +19,14 @@ void Extensions::XdgShell::Toplevel::set_title (wl_client *client, wl_resource *
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->setTitle(title);
-    printf("App Title: %s\n",title);
+    //printf("App Title: %s\n",title);
 }
 void Extensions::XdgShell::Toplevel::set_app_id (wl_client *client, wl_resource *resource, const char *app_id)
 {
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->setAppId(app_id);
-    printf("App Id: %s\n",app_id);
+    //printf("App Id: %s\n",app_id);
 }
 void Extensions::XdgShell::Toplevel::show_window_menu (wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial, Int32 x, Int32 y)
 {
@@ -40,7 +41,10 @@ void Extensions::XdgShell::Toplevel::move(wl_client *client, wl_resource *resour
 }
 void Extensions::XdgShell::Toplevel::resize (wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial, UInt32 edges)
 {
-    (void)client;(void)resource;(void)seat;(void)serial;(void)edges;
+    printf("Resize\n");
+    (void)client;(void)seat;(void)serial;
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    surface->getCompositor()->surfaceResizeRequest(surface,(ResizeEdge)edges);
 }
 void Extensions::XdgShell::Toplevel::set_max_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
@@ -61,7 +65,7 @@ void Extensions::XdgShell::Toplevel::set_min_size (wl_client *client, wl_resourc
 void Extensions::XdgShell::Toplevel::set_maximized (wl_client *client, wl_resource *resource)
 {
     (void)client;(void)resource;
-    printf ("surface requested maximize\n");
+    //printf ("surface requested maximize\n");
 }
 void Extensions::XdgShell::Toplevel::unset_maximized (wl_client *client, wl_resource *resource)
 {
