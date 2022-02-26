@@ -81,6 +81,8 @@ public:
 
     SurfaceType _type = SurfaceType::Undefined;
 
+    Int32 xdgShellVersion = -1;
+
     UInt32 moveSerial, pointerSerial, configureSerial = 0;
 
     WClient *_client = nullptr;

@@ -463,11 +463,12 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
     if(getKeyboardFocusSurface())
         getKeyboardFocusSurface()->sendKeyEvent(keyCode,keyState,milliseconds);
 
+    printf("Key:%i\n",keyCode);
 
     if(keyState == LIBINPUT_KEY_STATE_RELEASED)
     {
-        // Ends compositor if Q is pressed
-        if(keyCode == 16)
+        // Ends compositor if ESC is pressed
+        if(keyCode == 1)
         {
             WWayland::terminateDisplay();
             exit(0);

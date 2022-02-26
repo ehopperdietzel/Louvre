@@ -18,6 +18,7 @@ SOURCES += \
         ../Wayland++/classes/WCompositor.cpp \
         ../Wayland++/classes/WInput.cpp \
         ../Wayland++/classes/WOpenGL.cpp \
+        ../Wayland++/classes/WPositioner.cpp \
         ../Wayland++/classes/WRegion.cpp \
         ../Wayland++/classes/WSurface.cpp \
         ../Wayland++/classes/WTexture.cpp \
@@ -35,6 +36,7 @@ SOURCES += \
         ../Wayland++/globals/Wayland/Subsurface.cpp \
         ../Wayland++/globals/Wayland/Surface.cpp \
         ../Wayland++/globals/XdgShell/XdgPopup.cpp \
+        ../Wayland++/globals/XdgShell/XdgPositioner.cpp \
         ../Wayland++/globals/XdgShell/XdgSurface.cpp \
         ../Wayland++/globals/XdgShell/XdgToplevel.cpp \
         ../Wayland++/globals/XdgShell/XdgWmBase.cpp \
@@ -49,6 +51,7 @@ HEADERS += \
     ../Wayland++/classes/WInput.h \
     ../Wayland++/classes/WNamespaces.h \
     ../Wayland++/classes/WOpenGL.h \
+    ../Wayland++/classes/WPositioner.h \
     ../Wayland++/classes/WRegion.h \
     ../Wayland++/classes/WSurface.h \
     ../Wayland++/classes/WTexture.h \
@@ -66,6 +69,7 @@ HEADERS += \
     ../Wayland++/globals/Wayland/Subsurface.h \
     ../Wayland++/globals/Wayland/Surface.h \
     ../Wayland++/globals/XdgShell/XdgPopup.h \
+    ../Wayland++/globals/XdgShell/XdgPositioner.h \
     ../Wayland++/globals/XdgShell/XdgSurface.h \
     ../Wayland++/globals/XdgShell/XdgToplevel.h \
     ../Wayland++/globals/XdgShell/XdgWmBase.h \

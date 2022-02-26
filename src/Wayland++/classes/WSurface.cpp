@@ -39,7 +39,8 @@ void WSurface::sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UIn
     {
         wl_pointer_send_button(_client->getPointer(),pointerSerial,milliseconds,buttonCode,buttonState);
         pointerSerial++;
-        wl_pointer_send_frame(_client->getPointer());
+        if(_client->_wl_pointer_version >= 5)
+            wl_pointer_send_frame(_client->getPointer());
     }
 }
 
@@ -53,7 +54,8 @@ void WSurface::sendPointerMotionEvent(double x, double y, UInt32 milliseconds)
                     wl_fixed_from_double(x),
                     wl_fixed_from_double(y));
 
-        wl_pointer_send_frame(_client->getPointer());
+        if(_client->_wl_pointer_version >= 5)
+            wl_pointer_send_frame(_client->getPointer());
     }
 }
 
@@ -75,7 +77,8 @@ void WSurface::sendPointerEnterEvent(double x, double y)
                     wl_fixed_from_double(x),
                     wl_fixed_from_double(y));
         pointerSerial++;
-        wl_pointer_send_frame(_client->getPointer());
+        if(_client->_wl_pointer_version >= 5)
+            wl_pointer_send_frame(_client->getPointer());
         getCompositor()->_pointerFocusSurface = this;
     }
 }
@@ -89,7 +92,8 @@ void WSurface::sendPointerLeaveEvent()
     {
         wl_pointer_send_leave(_client->getPointer(),pointerSerial,_resource);
         pointerSerial++;
-        wl_pointer_send_frame(_client->getPointer());
+        if(_client->_wl_pointer_version >= 5)
+            wl_pointer_send_frame(_client->getPointer());
     }
 
     getCompositor()->_pointerFocusSurface = nullptr;
@@ -132,34 +136,34 @@ void WSurface::sendKeyboardLeaveEvent()
 
 void WSurface::sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags states)
 {
-    if(xdg_toplevel != nullptr)
+    if(xdg_toplevel != nullptr) //xdgShellVersion >= 2
     {
         wl_array dummy;
         wl_array_init(&dummy);
         UInt32 index = 0;
 
-        if(states & SurfaceState::Activated)
+        if((states & (SurfaceStateFlags)SurfaceState::Activated))
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_ACTIVATED;
             index++;
         }
-        if(states & SurfaceState::Fullscreen)
+        if(states & (SurfaceStateFlags)SurfaceState::Fullscreen)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_FULLSCREEN;
             index++;
         }
-        if(states & SurfaceState::Maximized)
+        if(states & (SurfaceStateFlags)SurfaceState::Maximized)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_MAXIMIZED;
             index++;
         }
-        if(states & SurfaceState::Resizing)
+        if(states & (SurfaceStateFlags)SurfaceState::Resizing)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
@@ -167,28 +171,28 @@ void WSurface::sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags s
             index++;
         }
 
-        if(states & SurfaceState::TiledBottom)
+        if(states & (SurfaceStateFlags)SurfaceState::TiledBottom)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_TILED_BOTTOM;
             index++;
         }
-        if(states & SurfaceState::TiledLeft)
+        if(states & (SurfaceStateFlags)SurfaceState::TiledLeft)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_TILED_LEFT;
             index++;
         }
-        if(states & SurfaceState::TiledRight)
+        if(states & (SurfaceStateFlags)SurfaceState::TiledRight)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_TILED_RIGHT;
             index++;
         }
-        if(states & SurfaceState::TiledTop)
+        if(states & (SurfaceStateFlags)SurfaceState::TiledTop)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;

@@ -53,6 +53,8 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
     surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
     surface->_type = SurfaceType::Popup;
     wl_resource_set_implementation(surface->xdg_popup, &xdg_popup_implementation, surface, NULL);
+    surface->getCompositor()->newSurface(surface);
+    xdg_popup_send_configure(surface->xdg_popup,0,0,0,0);
 }
 void Extensions::XdgShell::Surface::set_window_geometry(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {

@@ -125,6 +125,6 @@ void Globals::Compositor::bind(wl_client *client, void *data, UInt32 version, UI
 
     wl_resource *resource = wl_resource_create(client, &wl_compositor_interface, version, id);
     if(wClient == nullptr)
-        wClient = new WClient(client,resource,compositor);
+        wClient = new WClient(client,compositor);
     wl_resource_set_implementation(resource, &compositor_implementation, wClient, &Compositor::resource_destroy);
 }

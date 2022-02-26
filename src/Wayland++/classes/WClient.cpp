@@ -3,10 +3,9 @@
 
 using namespace WaylandPlus;
 
-WClient::WClient(wl_client *client, wl_resource *resource, WCompositor *compositor)
+WClient::WClient(wl_client *client, WCompositor *compositor)
 {
     _client = client;
-    _resource = resource;
     _compositor = compositor;
 
     // Append client to compositor
@@ -29,11 +28,6 @@ WCompositor *WClient::getCompositor()
 wl_client *WClient::getClient()
 {
     return _client;
-}
-
-wl_resource *WClient::getResource()
-{
-    return _resource;
 }
 
 wl_resource *WClient::getKeyboard()
@@ -62,6 +56,11 @@ void WClient::newRegion(WRegion *)
 }
 
 void WClient::regionDestroyed(WRegion *)
+{
+
+}
+
+void WClient::newPositioner(WPositioner *)
 {
 
 }

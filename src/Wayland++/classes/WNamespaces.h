@@ -2,6 +2,7 @@
 #define WNAMESPACES_H
 
 #include <libinput.h>
+#include <xdg-shell.h>
 
 namespace WaylandPlus
 {
@@ -11,6 +12,7 @@ namespace WaylandPlus
     class WCompositor;
     class WInput;
     class WOpenGL;
+    class WPositioner;
     class WRegion;
     class WSurface;
     class WTexture;
@@ -22,6 +24,9 @@ namespace WaylandPlus
     typedef uint32_t        UInt32;
     typedef int32_t         Int32;
     typedef unsigned char   SurfaceStateFlags;
+    typedef xdg_positioner_anchor Anchor;
+    typedef xdg_positioner_gravity Gravity;
+    typedef xdg_positioner_constraint_adjustment ConstraintAdjustment;
 
     struct Point
     {
@@ -60,7 +65,7 @@ namespace WaylandPlus
         bool add = true;
     };
 
-    enum ResizeEdge
+    enum ResizeEdge : UInt32
     {
         Top = 1,
         Bottom = 2,
@@ -84,13 +89,15 @@ namespace WaylandPlus
         TiledBottom = 128 // 8
     };
 
-    enum SurfaceType
+
+    enum SurfaceType : UInt32
     {
         Undefined = 0,
         Toplevel = 1,
         Popup = 2,
         Subsurface = 3
     };
+
 
     // Wayland Globals
     namespace Globals
@@ -117,6 +124,7 @@ namespace WaylandPlus
             class Surface;
             class Toplevel;
             class WmBase;
+            class Positioner;
         };
     };
 

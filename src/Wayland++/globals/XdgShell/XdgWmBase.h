@@ -7,6 +7,7 @@
 class WaylandPlus::Extensions::XdgShell::WmBase
 {
 public:
+    static void resource_destroy(wl_resource *resource);
     static void destroy(wl_client *client, wl_resource *resource);
     static void create_positioner(wl_client *client, wl_resource *resource, UInt32 id);
     static void get_xdg_surface(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *_surface);

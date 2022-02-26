@@ -38,6 +38,7 @@ void WaylandPlus::Globals::Seat::get_pointer (wl_client *client, wl_resource *re
     wl_resource *pointer = wl_resource_create(client, &wl_pointer_interface, version, id); // 7
     wl_resource_set_implementation (pointer, &pointer_implementation, wClient->getCompositor(),NULL);
     wClient->setPointer(pointer);
+    wClient->_wl_pointer_version = version;
 }
 
 void WaylandPlus::Globals::Seat::get_keyboard (wl_client *client, wl_resource *resource, UInt32 id)

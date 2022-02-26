@@ -7,6 +7,8 @@ void WaylandPlus::Globals::Pointer::set_cursor(wl_client *client, wl_resource *r
 {
     (void)client;(void)resource;(void)serial;(void)surface;(void)hotspot_x;(void)hotspot_y;
     WCompositor *compositor = (WCompositor*)wl_resource_get_user_data(resource);
+    if(surface == nullptr)
+        return;
     compositor->cursorSurface = (WSurface*)wl_resource_get_user_data(surface);
     compositor->cursorXOffset = hotspot_x;
     compositor->cursorYOffset = hotspot_y;

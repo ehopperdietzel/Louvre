@@ -815,7 +815,8 @@
 	  keyboard or pointer focus.
 	</description>
       </entry>
-      <entry name="tiled_left" value="5" since="2">
+
+Int32 xdgShellVersion = -1;
 	<description summary="the surface’s left edge is tiled">
 	  The window is currently in a tiled layout and the left edge is
 	  considered to be adjacent to another part of the tiling grid.
