@@ -23,16 +23,8 @@ public:
     virtual void initializeGL() = 0;
     virtual void paintGL() = 0;
 
-    virtual void newClient(WClient *client) = 0;
-    virtual void clientDisconnected(WClient *client) = 0;
-
-    virtual void newSurface(WSurface *surface) = 0;
-    virtual void surfaceDestroyed(WSurface *surface) = 0;
-    virtual void surfaceMoveEvent(WSurface *surface)= 0;
-    virtual void surfaceMaxSizeChanged(WSurface *surface, Int32 width, Int32 height) = 0;
-    virtual void surfaceMinSizeChanged(WSurface *surface, Int32 width, Int32 height) = 0;
-    virtual void surfaceResizeRequest(WSurface *surface, ResizeEdge edge) = 0;
-    virtual void surfaceGeometryChangedRequest(WSurface *surface, Int32 x, Int32 y, Int32 width, Int32 height) = 0;
+    virtual WClient *newClientRequest(wl_client *client) = 0;
+    virtual void clientDisconnectRequest(WClient *client) = 0;
 
     virtual void setCursorRequest(WSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY) = 0;
 

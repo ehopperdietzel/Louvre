@@ -98,7 +98,7 @@ void Extensions::XdgShell::WmBase::bind (wl_client *client, void *data, UInt32 v
         }
 
     if(wClient == nullptr)
-        wClient = new WClient(client,compositor);
+        wClient = compositor->newClientRequest(client);
 
     wl_resource *resource = wl_resource_create (client, &xdg_wm_base_interface, version, id);
     wl_resource_set_implementation (resource, &xdg_wm_base_implementation, wClient, &WmBase::resource_destroy);

@@ -48,7 +48,7 @@ void Globals::Compositor::create_surface(wl_client *client, wl_resource *resourc
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
 
     // Create surface
-    WSurface *wSurface = new WSurface(id,surface,wClient);
+    WSurface *wSurface = wClient->newSurfaceRequest(id,surface);
 
     // Append surface
     wClient->surfaces.push_back(wSurface);
@@ -97,7 +97,7 @@ void Globals::Compositor::resource_destroy(wl_resource *resource)
     client->regions.clear();
 
     // Notify
-    client->getCompositor()->clientDisconnected(client);
+    client->getCompositor()->clientDisconnectRequest(client);
 
     // Update screen
     client->getCompositor()->repaint();
@@ -125,6 +125,6 @@ void Globals::Compositor::bind(wl_client *client, void *data, UInt32 version, UI
 
     wl_resource *resource = wl_resource_create(client, &wl_compositor_interface, version, id);
     if(wClient == nullptr)
-        wClient = new WClient(client,compositor);
+        wClient = compositor->newClientRequest(client);
     wl_resource_set_implementation(resource, &compositor_implementation, wClient, &Compositor::resource_destroy);
 }

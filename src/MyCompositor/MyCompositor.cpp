@@ -5,6 +5,7 @@
 #include <WWayland.h>
 #include <linux/input-event-codes.h>
 #include <stdio.h>
+#include <MyClient.h>
 
 MyCompositor::MyCompositor(){}
 
@@ -187,7 +188,7 @@ void MyCompositor::paintGL()
     drawCursor();
 }
 
-void MyCompositor::newClient(WClient *)
+WClient *MyCompositor::newClientRequest(wl_client *client)
 {
     /*******************************************************************************
      * Notify a new client connection, it's automatically added to an internal std list
@@ -195,9 +196,11 @@ void MyCompositor::newClient(WClient *)
      *******************************************************************************/
 
     printf("New client connected.\n");
+
+    return new MyClient(client,this);
 }
 
-void MyCompositor::clientDisconnected(WClient *)
+void MyCompositor::clientDisconnectRequest(WClient *)
 {
     /*******************************************************************************
      * Notify a client disconnection, it's automatically removed from the internal
@@ -206,82 +209,6 @@ void MyCompositor::clientDisconnected(WClient *)
      * are prevously notified.
      *******************************************************************************/
     printf("Client disconnected.\n");
-}
-
-void MyCompositor::newSurface(WSurface *surface)
-{
-    printf("New surface %i\n",surface->getType());
-    surfacesList.push_back(surface);
-    repaint();
-}
-
-void MyCompositor::surfaceDestroyed(WSurface *surface)
-{
-    if(cursorSurface == surface)
-        cursorSurface = nullptr;
-
-    surfacesList.remove(surface);
-    repaint();
-}
-
-// Event when window is grabbed
-void MyCompositor::surfaceMoveEvent(WSurface *surface)
-{
-    if(!isLeftMouseButtonPressed)
-        return;
-    movingSurfaceInitialPosX = surface->getRectWithoutDecoration().x;
-    movingSurfaceInitialPosY = surface->getRectWithoutDecoration().y;
-    movingSurfaceInitialCursorPosX = getPointerX();
-    movingSurfaceInitialCursorPosY = getPointerY();
-    movingSurface = surface;
-}
-
-void MyCompositor::surfaceMaxSizeChanged(WSurface *surface, Int32 width, Int32 height)
-{
-    (void)surface;(void)width;(void)height;
-}
-
-void MyCompositor::surfaceMinSizeChanged(WSurface *surface, Int32 width, Int32 height)
-{
-    (void)surface;(void)width;(void)height;
-}
-
-void MyCompositor::surfaceResizeRequest(WSurface *surface, ResizeEdge edge)
-{
-    if(!isLeftMouseButtonPressed)
-        return;
-
-    resizingSurface = surface;
-    resizeEdge = edge;
-
-    resizeInitialMousePos.x = getPointerX();
-    resizeInitialMousePos.y = getPointerY();
-
-    Rect dRect = surface->getRectWithoutDecoration();
-    resizeInitialSurfaceRect.x = dRect.x;
-    resizeInitialSurfaceRect.y = dRect.y;
-    resizeInitialSurfaceRect.width = dRect.width;
-    resizeInitialSurfaceRect.height = dRect.height;
-
-}
-
-void MyCompositor::surfaceGeometryChangedRequest(WSurface *surface, Int32 x, Int32 y, Int32 width, Int32 height)
-{
-    /* Geometry of the surface without client decorations
-     * x and y represent the decoration margin */
-
-    (void)surface;(void)x;(void)y;
-
-    if(resizingSurface == surface)
-    {
-        if(resizeEdge == ResizeEdge::Top || resizeEdge == ResizeEdge::TopLeft ||resizeEdge == ResizeEdge::TopRight)
-            resizingSurface->setYWithoutDecoration(int(resizeInitialSurfaceRect.y) + int(resizeInitialSurfaceRect.height - height));
-
-        if(resizeEdge == ResizeEdge::Left || resizeEdge == ResizeEdge::TopLeft || resizeEdge == ResizeEdge::BottomLeft)
-            resizingSurface->setXWithoutDecoration(int(resizeInitialSurfaceRect.x) + int(resizeInitialSurfaceRect.width - width));
-
-        repaint();
-    }
 }
 
 void MyCompositor::setCursorRequest(WSurface *_cursorSurface, Int32 hotspotX, Int32 hotspotY)
@@ -381,7 +308,7 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
 
         surface =  *surfaceIt;
 
-        if(!surface->xdg_shell) continue;
+        if(surface->getType() == SurfaceType::Undefined) continue;
 
         // Mouse move event
         if(surface->containsPoint(x,y,false) && getPointerFocusSurface() == surface)

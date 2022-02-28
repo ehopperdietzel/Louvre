@@ -32,10 +32,7 @@ void Globals::Surface::delete_surface(wl_resource *resource)
     surface->getClient()->surfaces.remove(surface);
 
     // Notify from client
-    surface->getClient()->surfaceDestroyed(surface);
-
-    // Notify from compositor
-    surface->getCompositor()->surfaceDestroyed(surface);
+    surface->getClient()->surfaceDestroyRequest(surface);
 
     if(surface->getCompositor()->getPointerFocusSurface() == surface)
         surface->getCompositor()->clearPointerFocus();
@@ -44,9 +41,6 @@ void Globals::Surface::delete_surface(wl_resource *resource)
         surface->getCompositor()->clearKeyboardFocus();
 
     surface->texture->deleteTexture();
-
-    // Remove surface
-    delete surface;
 }
 
 // SURFACE

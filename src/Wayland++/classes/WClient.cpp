@@ -10,9 +10,6 @@ WClient::WClient(wl_client *client, WCompositor *compositor)
 
     // Append client to compositor
     _compositor->clients.push_back(this);
-
-    // Trigger new client notification
-    _compositor->newClient(this);
 }
 
 WClient::~WClient()
@@ -38,31 +35,6 @@ wl_resource *WClient::getKeyboard()
 wl_resource *WClient::getPointer()
 {
     return _pointer;
-}
-
-void WClient::newSurface(WSurface *)
-{
-
-}
-
-void WClient::surfaceDestroyed(WSurface *)
-{
-
-}
-
-void WClient::newRegion(WRegion *)
-{
-
-}
-
-void WClient::regionDestroyed(WRegion *)
-{
-
-}
-
-void WClient::newPositioner(WPositioner *)
-{
-
 }
 
 void WClient::setPointer(wl_resource *pointer)

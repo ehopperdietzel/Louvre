@@ -43,8 +43,8 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *
     surface->xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
     surface->_type = SurfaceType::Toplevel;
     wl_resource_set_implementation(surface->xdg_toplevel, &xdg_toplevel_implementation, surface, NULL);
-    surface->getCompositor()->newSurface(surface);
     surface->sendConfigureEvent(0,0,SurfaceState::Activated);
+    surface->typeChangeRequest();
 }
 void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *parent, wl_resource *positioner)
 {
@@ -52,9 +52,15 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
     surface->_type = SurfaceType::Popup;
+    if(parent != NULL)
+    {
+        WSurface *parentSurface = (WSurface*)wl_resource_get_user_data(resource);
+        surface->_parent = parentSurface;
+        parentSurface->_children.push_back(surface);
+    }
     wl_resource_set_implementation(surface->xdg_popup, &xdg_popup_implementation, surface, NULL);
-    surface->getCompositor()->newSurface(surface);
     xdg_popup_send_configure(surface->xdg_popup,0,0,0,0);
+    surface->typeChangeRequest();
 }
 void Extensions::XdgShell::Surface::set_window_geometry(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {
@@ -64,8 +70,7 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *client, wl_re
     surface->_decorationGeometry.y = y;
     surface->_decorationGeometry.width = width;
     surface->_decorationGeometry.height = height;
-
-    surface->getCompositor()->surfaceGeometryChangedRequest(surface,x,y,width,height);
+    surface->geometryChangeRequest(x,y,width,height);
 }
 void Extensions::XdgShell::Surface::ack_configure(wl_client *client, wl_resource *resource, UInt32 serial)
 {

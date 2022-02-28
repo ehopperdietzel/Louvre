@@ -40,6 +40,12 @@ namespace WaylandPlus
         double y = 0;
     };
 
+    struct Size
+    {
+        Int32 width = 0;
+        Int32 height = 0;
+    };
+
     struct Rect
     {
         Int32 x = 0;

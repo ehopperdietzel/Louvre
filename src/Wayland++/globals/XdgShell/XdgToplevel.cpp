@@ -13,6 +13,16 @@ void Extensions::XdgShell::Toplevel::destroy (wl_client *client, wl_resource *re
 void Extensions::XdgShell::Toplevel::set_parent (wl_client *client, wl_resource *resource, wl_resource *parent)
 {
     (void)client;(void)resource;(void)parent;
+
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    if(parent == NULL)
+        surface->_parent = nullptr;
+    else
+    {
+        surface->_parent = (WSurface*)wl_resource_get_user_data(parent);
+    }
+
+    surface->parentChangeRequest();
 }
 void Extensions::XdgShell::Toplevel::set_title (wl_client *client, wl_resource *resource, const char *title)
 {
@@ -36,7 +46,7 @@ void Extensions::XdgShell::Toplevel::move(wl_client *client, wl_resource *resour
 {
     (void)client;(void)seat;(void)serial;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->getCompositor()->surfaceMoveEvent(surface);
+    surface->moveStartRequest();
 
 }
 void Extensions::XdgShell::Toplevel::resize (wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial, UInt32 edges)
@@ -44,7 +54,7 @@ void Extensions::XdgShell::Toplevel::resize (wl_client *client, wl_resource *res
     printf("Resize\n");
     (void)client;(void)seat;(void)serial;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->getCompositor()->surfaceResizeRequest(surface,(ResizeEdge)edges);
+    surface->resizeStartRequest((ResizeEdge)edges);
 }
 void Extensions::XdgShell::Toplevel::set_max_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
@@ -52,7 +62,7 @@ void Extensions::XdgShell::Toplevel::set_max_size (wl_client *client, wl_resourc
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->setMaxWidth(width);
     surface->setMaxHeight(height);
-    surface->getCompositor()->surfaceMaxSizeChanged(surface,width,height);
+    surface->maxSizeChangeRequest(width,height);
 }
 void Extensions::XdgShell::Toplevel::set_min_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
@@ -60,7 +70,7 @@ void Extensions::XdgShell::Toplevel::set_min_size (wl_client *client, wl_resourc
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->setMinWidth(width);
     surface->setMinHeight(height);
-    surface->getCompositor()->surfaceMinSizeChanged(surface,width,height);
+    surface->minSizeChangeRequest(width,height);
 }
 void Extensions::XdgShell::Toplevel::set_maximized (wl_client *client, wl_resource *resource)
 {

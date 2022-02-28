@@ -209,22 +209,24 @@ void WSurface::sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags s
 
 void WSurface::setAppId(const char *appId)
 {
+    delete _appId;
     _appId = new char[strlen(appId)+1];
     strcpy(_appId,appId);
 }
 
 void WSurface::setTitle(const char *title)
 {
+    delete _title;
     _title = new char[strlen(title)+1];
     strcpy(_title,title);
 }
 
-char *WSurface::getAppId()
+const char *WSurface::getAppId()
 {
     return _appId;
 }
 
-char *WSurface::getTitle()
+const char *WSurface::getTitle()
 {
     return _title;
 }
@@ -295,6 +297,11 @@ Rect WSurface::getRectWithoutDecoration()
     return rect;
 }
 
+WPositioner *WSurface::getPositioner()
+{
+    return _positioner;
+}
+
 Int32 WSurface::getMinWidth()
 {
     return _minWidth;
@@ -345,7 +352,7 @@ int WSurface::mapYtoLocal(int yGlobal)
     return yGlobal - getY();
 }
 
-bool WSurface::containsPoint(int x, int y, bool withoutDecoration)
+bool WSurface::containsPoint(Int32 x, Int32 y, bool withoutDecoration)
 {
     if(withoutDecoration)
     {
@@ -410,6 +417,16 @@ UInt32 WSurface::getId()
 SurfaceType WSurface::getType()
 {
     return _type;
+}
+
+WaylandPlus::WSurface *WSurface::getParent()
+{
+
+}
+
+const list<WaylandPlus::WSurface *> WSurface::getChildren()
+{
+
 }
 
 

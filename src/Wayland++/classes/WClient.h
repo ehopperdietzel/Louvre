@@ -19,12 +19,12 @@ public:
     wl_resource *getKeyboard();
     wl_resource *getPointer();
 
-    virtual void newSurface(WSurface *surface);
-    virtual void surfaceDestroyed(WSurface *surface);
-    virtual void newRegion(WRegion *region);
-    virtual void regionDestroyed(WRegion *region);
-
-    virtual void newPositioner(WPositioner *positioner);
+    // Requests
+    virtual WSurface *newSurfaceRequest(UInt32 id, wl_resource *res) = 0;
+    virtual void surfaceDestroyRequest(WSurface *surface) = 0;
+    //virtual void newRegionRequest(WRegion *region) = 0;
+    //virtual void regionDestroyRequest(WRegion *region) = 0;
+    //virtual void newPositionerRequest(WPositioner *positioner) = 0;
 
     void setPointer(wl_resource *pointer);
     void setKeyboard(wl_resource *keyboard);

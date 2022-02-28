@@ -1,6 +1,19 @@
 #include "XdgPopup.h"
+#include <WSurface.h>
+#include <WClient.h>
 
 using namespace WaylandPlus;
+
+void Extensions::XdgShell::Popup::destroy_resource(wl_resource *resource)
+{
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+
+    if(surface->getParent() != nullptr)
+        surface->getParent()->_children.remove(surface);
+
+    surface->getClient()->surfaceDestroyRequest(surface);
+
+}
 
 void Extensions::XdgShell::Popup::destroy(wl_client *client, wl_resource *resource)
 {

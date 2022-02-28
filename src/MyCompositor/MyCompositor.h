@@ -14,16 +14,8 @@ public:
     void initializeGL() override;
     void paintGL() override;
 
-    void newClient(WClient *client) override;
-    void clientDisconnected(WClient *client) override;
-
-    void newSurface(WSurface *surface) override;
-    void surfaceDestroyed(WSurface *surface) override;
-    void surfaceMoveEvent(WSurface *surface) override;
-    void surfaceMaxSizeChanged(WSurface *surface, Int32 width, Int32 height) override;
-    void surfaceMinSizeChanged(WSurface *surface, Int32 width, Int32 height) override;
-    void surfaceResizeRequest(WSurface *surface, ResizeEdge edge) override;
-    void surfaceGeometryChangedRequest(WSurface *surface, Int32 x, Int32 y, Int32 width, Int32 height) override;
+    WClient *newClientRequest(wl_client *client) override;
+    void clientDisconnectRequest(WClient *client) override;
 
     void setCursorRequest(WSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY) override;
 
