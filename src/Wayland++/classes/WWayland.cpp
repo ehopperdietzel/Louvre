@@ -26,7 +26,7 @@ static struct wl_display *display;
 struct wl_event_loop *event_loop;
 int wayland_fd;
 
-int WWayland::initWayland(WCompositor *comp)
+int WWayland::initWayland(WCompositor *comp, int libinputFd,wl_event_loop_fd_func_t *libinputFunc)
 {
     eglBindWaylandDisplayWL = (PFNEGLBINDWAYLANDDISPLAYWL) eglGetProcAddress ("eglBindWaylandDisplayWL");
     Globals::Surface::get_egl_func();
@@ -80,6 +80,9 @@ int WWayland::initWayland(WCompositor *comp)
 
     event_loop = wl_display_get_event_loop(display);
     wayland_fd = wl_event_loop_get_fd(event_loop);
+
+
+    //wl_event_loop_add_fd(event_loop,libinputFd,WL_EVENT_READABLE,*libinputFunc,NULL);
 
     createNullKeys();
 

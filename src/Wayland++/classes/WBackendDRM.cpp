@@ -1,4 +1,3 @@
-/*
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -23,6 +22,8 @@
 
 #include <WBackend.h>
 #include <WCompositor.h>
+
+#if W_BACKEND == 1
 
 using namespace WaylandPlus;
 
@@ -436,4 +437,5 @@ EGLDisplay WBackend::getEGLDisplay()
 {
     return gl.display;
 }
-*/
+
+#endif

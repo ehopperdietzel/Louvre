@@ -94,7 +94,7 @@ void Globals::Compositor::resource_destroy(wl_resource *resource)
     while(!client->regions.empty())
         Globals::Region::remove(client->regions.back()->getResource());
 
-    client->regions.clear();
+    //client->regions.clear();
 
     // Notify
     client->getCompositor()->clientDisconnectRequest(client);

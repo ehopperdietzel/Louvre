@@ -66,11 +66,8 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *client, wl_re
 {
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->_decorationGeometry.x = x;
-    surface->_decorationGeometry.y = y;
-    surface->_decorationGeometry.width = width;
-    surface->_decorationGeometry.height = height;
-    surface->geometryChangeRequest(x,y,width,height);
+    surface->_decorationGeometry = {x, y, width, height};
+    surface->geometryChangeRequest();
 }
 void Extensions::XdgShell::Surface::ack_configure(wl_client *client, wl_resource *resource, UInt32 serial)
 {

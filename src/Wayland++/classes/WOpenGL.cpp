@@ -1,8 +1,6 @@
 #include "WOpenGL.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <GL/gl.h>
-
 using namespace WaylandPlus;
 
 char *WOpenGL::openShader(const char *fname)
@@ -40,4 +38,11 @@ void WOpenGL::checkGLError(const char *msg)
         printf("GL ERROR: %i %s\n",errCode,msg);
         exit(-1);
     }
+}
+
+GLuint WOpenGL::getMaxTextureUnits()
+{
+    GLint maxUnits = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS,&maxUnits);
+    return maxUnits;
 }

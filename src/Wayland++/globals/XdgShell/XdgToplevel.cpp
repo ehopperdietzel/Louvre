@@ -60,17 +60,15 @@ void Extensions::XdgShell::Toplevel::set_max_size (wl_client *client, wl_resourc
 {
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->setMaxWidth(width);
-    surface->setMaxHeight(height);
-    surface->maxSizeChangeRequest(width,height);
+    surface->_maxSize = {width,height};
+    surface->maxSizeChangeRequest();
 }
 void Extensions::XdgShell::Toplevel::set_min_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
     (void)client;(void)resource;(void)width;(void)height;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->setMinWidth(width);
-    surface->setMinHeight(height);
-    surface->minSizeChangeRequest(width,height);
+    surface->_minSize = {width,height};
+    surface->minSizeChangeRequest();
 }
 void Extensions::XdgShell::Toplevel::set_maximized (wl_client *client, wl_resource *resource)
 {

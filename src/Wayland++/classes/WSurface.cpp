@@ -17,14 +17,13 @@ void createNullKeys()
     wl_array_init(&nullKeys);
 }
 
-WSurface::WSurface(UInt32 id, wl_resource *res, WClient *client)
+WSurface::WSurface(UInt32 id, wl_resource *res, WClient *client, GLuint textureUnit)
 {
+    _texture = new WTexture(textureUnit);
     srand(time(NULL));
     _resource = res;
     _client = client;
     _id = id;
-    setX(rand() % 50);
-    setY(rand() % 50);
 }
 
 WSurface::~WSurface()
@@ -209,14 +208,14 @@ void WSurface::sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags s
 
 void WSurface::setAppId(const char *appId)
 {
-    delete _appId;
+    delete []_appId;
     _appId = new char[strlen(appId)+1];
     strcpy(_appId,appId);
 }
 
 void WSurface::setTitle(const char *title)
 {
-    delete _title;
+    delete []_title;
     _title = new char[strlen(title)+1];
     strcpy(_title,title);
 }
@@ -231,162 +230,55 @@ const char *WSurface::getTitle()
     return _title;
 }
 
-void WSurface::setPos(int x, int y)
+Int32 WSurface::getWidth()
 {
-    _posX = x;
-    _posY = y;
+    return _texture->width()/getBufferScale();
 }
 
-void WSurface::setX(int x)
+Int32 WSurface::getHeight()
 {
-    _posX = x;
+    return _texture->height()/getBufferScale();
 }
 
-void WSurface::setY(int y)
-{
-    _posY = y;
-}
-
-void WSurface::setXWithoutDecoration(Int32 x)
-{
-    setX(x-_decorationGeometry.x);
-}
-
-void WSurface::setYWithoutDecoration(Int32 y)
-{
-    setY(y-_decorationGeometry.y);
-}
-
-int WSurface::getX()
-{
-    return _posX;
-}
-
-int WSurface::getY()
-{
-    return _posY;
-}
-
-int WSurface::getWidth()
-{
-    return texture->width();
-}
-
-int WSurface::getHeight()
-{
-    return texture->height();
-}
-
-Rect WSurface::getRectWithoutDecoration()
-{
-    Rect rect;
-    if(xdg_shell != nullptr)
-    {
-        rect.x = getX() + _decorationGeometry.x;
-        rect.y = getY() + _decorationGeometry.y;
-        rect.width = _decorationGeometry.width;
-        rect.height = _decorationGeometry.height;
-    }
-    else
-    {
-        rect.x = getX();
-        rect.y = getY();
-        rect.width = getWidth();
-        rect.height = getHeight();
-    }
-    return rect;
-}
 
 WPositioner *WSurface::getPositioner()
 {
     return _positioner;
 }
 
+const Rect WSurface::getDecorationGeometry()
+{
+    return _decorationGeometry;
+}
+
 Int32 WSurface::getMinWidth()
 {
-    return _minWidth;
+    return _minSize.width;
 }
 
 Int32 WSurface::getMinHeight()
 {
-    return _minHeight;
+    return _minSize.height;
 }
 
 Int32 WSurface::getMaxWidth()
 {
-    return _maxWidth;
+    return _maxSize.width;
 }
 
 Int32 WSurface::getMaxHeight()
 {
-    return _maxHeight;
-}
-
-void WSurface::setMinWidth(Int32 width)
-{
-    _minWidth = width;
-}
-
-void WSurface::setMinHeight(Int32 height)
-{
-    _minHeight = height;
-}
-
-void WSurface::setMaxWidth(Int32 width)
-{
-    _maxWidth = width;
-}
-
-void WSurface::setMaxHeight(Int32 height)
-{
-    _maxHeight = height;
-}
-
-int WSurface::mapXtoLocal(int xGlobal)
-{
-    return xGlobal - getX();
-}
-
-int WSurface::mapYtoLocal(int yGlobal)
-{
-    return yGlobal - getY();
-}
-
-bool WSurface::containsPoint(Int32 x, Int32 y, bool withoutDecoration)
-{
-    if(withoutDecoration)
-    {
-        Rect r = getRectWithoutDecoration();
-
-        if(r.x > x)
-            return false;
-        if(r.x + r.width < x)
-            return false;
-        if(r.y> y)
-            return false;
-        if(r.y + r.height < y)
-            return false;
-
-        return true;
-    }
-    else
-    {
-        if(_posX > x)
-            return false;
-        if(_posX + getWidth() < x)
-            return false;
-        if(_posY > y)
-            return false;
-        if(_posY + getHeight() < y)
-            return false;
-
-        return true;
-    }
+    return _maxSize.height;
 }
 
 Int32 WSurface::getBufferScale()
 {
     return _bufferScale;
+}
+
+WTexture *WSurface::getTexture()
+{
+    return _texture;
 }
 
 void WSurface::setBufferScale(Int32 scale)
@@ -421,12 +313,12 @@ SurfaceType WSurface::getType()
 
 WaylandPlus::WSurface *WSurface::getParent()
 {
-
+    return _parent;
 }
 
 const list<WaylandPlus::WSurface *> WSurface::getChildren()
 {
-
+    return _children;
 }
 
 

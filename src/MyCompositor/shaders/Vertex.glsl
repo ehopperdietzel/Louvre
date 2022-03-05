@@ -1,3 +1,5 @@
+precision lowp float;
+precision lowp int;
 attribute vec4 vertexPosition;
 uniform vec2 screen;
 uniform vec4 rect;

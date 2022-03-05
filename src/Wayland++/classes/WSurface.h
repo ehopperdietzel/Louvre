@@ -13,20 +13,19 @@ void createNullKeys();
 class WaylandPlus::WSurface
 {
 public:
-    WSurface(UInt32 id, wl_resource *res, WClient *client);
+    WSurface(UInt32 id, wl_resource *res, WClient *client, GLuint textureUnit = 0);
     virtual ~WSurface() = 0;
 
-    WTexture *texture = new WTexture();
-
     // Requests
-    virtual void moveStartRequest()= 0;
-    virtual void maxSizeChangeRequest(Int32 width, Int32 height) = 0;
-    virtual void minSizeChangeRequest(Int32 width, Int32 height) = 0;
+    virtual void moveStartRequest() = 0;
+    virtual void maxSizeChangeRequest() = 0;
+    virtual void minSizeChangeRequest() = 0;
     virtual void resizeStartRequest(ResizeEdge edge) = 0;
-    virtual void geometryChangeRequest(Int32 x, Int32 y, Int32 width, Int32 height) = 0;
+    virtual void geometryChangeRequest() = 0;
     virtual void typeChangeRequest() = 0;
     virtual void positionerChangeRequest() = 0;
     virtual void parentChangeRequest() = 0;
+    virtual void bufferScaleChangeRequest() = 0;
 
     // Events
     void sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UInt32 milliseconds);
@@ -39,57 +38,52 @@ public:
     void sendKeyboardLeaveEvent();
     void sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags states);
 
+    // Surface info
     const char *getAppId();
     const char *getTitle();
+    UInt32 getId();
+    SurfaceType getType();
 
-    void setPos(int x, int y);
-    void setX(int x);
-    void setY(int y);
-    void setXWithoutDecoration(Int32 x);
-    void setYWithoutDecoration(Int32 y);
-    int getX();
-    int getY();
-
-    int getWidth();
-    int getHeight();
-
-    Rect getRectWithoutDecoration();
-
-    WPositioner *getPositioner();
-
+    // Size in surface coordinates
+    Int32 getWidth();
+    Int32 getHeight();
     Int32 getMinWidth();
     Int32 getMinHeight();
     Int32 getMaxWidth();
     Int32 getMaxHeight();
+    const Rect getDecorationGeometry();
 
-    void setMinWidth(Int32 width);
-    void setMinHeight(Int32 height);
-    void setMaxWidth(Int32 width);
-    void setMaxHeight(Int32 height);
+    // Popup positioner
+    WPositioner *getPositioner();
 
-    int mapXtoLocal(int xGlobal);
-    int mapYtoLocal(int yGlobal);
-
-    bool containsPoint(Int32 x, Int32 y, bool withoutDecoration = false);
-
+    // Buffer
     Int32 getBufferScale();
-    void setBufferScale(Int32 scale);
+    WTexture *getTexture();
 
+    // References
     wl_resource *getResource();
     WClient *getClient();
     WCompositor *getCompositor();
-    UInt32 getId();
-    SurfaceType getType();
+
+    // Hierarchy
     WSurface *getParent();
     const list<WSurface*>getChildren();
 
+
  private:
+    friend class WCompositor;
     friend class Globals::Surface;
     friend class Extensions::XdgShell::WmBase;
     friend class Extensions::XdgShell::Surface;
     friend class Extensions::XdgShell::Toplevel;
     friend class Extensions::XdgShell::Popup;
 
+    WTexture *_texture = nullptr;
+
+    // Buffer
+    void setBufferScale(Int32 scale);
+
+    // Xdg Toplevel
     void setAppId(const char *appId);
     void setTitle(const char *title);
 
@@ -110,14 +104,12 @@ public:
     wl_resource *xdg_toplevel = nullptr;
     wl_resource *xdg_popup = nullptr;
 
-
-    int _posX = 0;
-    int _posY = 0;
-    Int32 _maxWidth,_maxHeight,_minWidth,_minHeight = -1;
+    Size _maxSize = {1,1};
+    Size _minSize = {1,1};
     Int32 _bufferScale = 1;
     UInt32 _id;
-    char *_appId = new char(1);
-    char *_title = new char(1);
+    char *_appId = new char[1];
+    char *_title = new char[1];
 
     Rect _decorationGeometry;
 

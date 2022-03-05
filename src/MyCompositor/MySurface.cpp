@@ -1,11 +1,12 @@
 #include "MySurface.h"
 #include <MyCompositor.h>
 
-MySurface::MySurface(UInt32 id, wl_resource *resource, WClient *client):WSurface::WSurface(id,resource,client){}
+MySurface::MySurface(UInt32 id, wl_resource *resource, WClient *client, GLuint textureUnit):WSurface::WSurface(id,resource,client,textureUnit){}
 
 MySurface::~MySurface()
 {
-
+    setX(rand() % 50);
+    setY(rand() % 50);
 }
 
 // Event when window is grabbed (tipically by the topbar)
@@ -21,14 +22,12 @@ void MySurface::moveStartRequest()
     comp->movingSurface = this;
 }
 
-void MySurface::maxSizeChangeRequest(Int32 width, Int32 height)
+void MySurface::maxSizeChangeRequest()
 {
-    (void)width;(void)height;
 }
 
-void MySurface::minSizeChangeRequest(Int32 width, Int32 height)
+void MySurface::minSizeChangeRequest()
 {
-    (void)width;(void)height;
 }
 
 void MySurface::resizeStartRequest(ResizeEdge edge)
@@ -51,12 +50,13 @@ void MySurface::resizeStartRequest(ResizeEdge edge)
     comp->resizeInitialSurfaceRect.height = dRect.height;
 }
 
-void MySurface::geometryChangeRequest(Int32 x, Int32 y, Int32 width, Int32 height)
+void MySurface::geometryChangeRequest()
 {
     /* Geometry of the surface without client decorations
      * x and y represent the decoration margin */
 
-    (void)x;(void)y;
+    Int32 width = getDecorationGeometry().width;
+    Int32 height = getDecorationGeometry().height;
 
     MyCompositor *comp = (MyCompositor*)getCompositor();
 
@@ -96,4 +96,112 @@ void MySurface::parentChangeRequest()
      * If the surface has no parent, nullptr is returned */
 
     getCompositor()->repaint();
+}
+
+void MySurface::bufferScaleChangeRequest()
+{
+    /* Internally updated, can be accessed with the getBufferScale() menthod.
+     * If the surface has no parent, nullptr is returned */
+
+    getCompositor()->repaint();
+}
+
+Int32 MySurface::mapXtoLocal(int xGlobal)
+{
+    return xGlobal - getX();
+}
+
+Int32 MySurface::mapYtoLocal(int yGlobal)
+{
+    return yGlobal - getY();
+}
+
+bool MySurface::containsPoint(Int32 x, Int32 y, bool withoutDecoration)
+{
+    if(withoutDecoration)
+    {
+        Rect r = getRectWithoutDecoration();
+
+        if(r.x > x)
+            return false;
+        if(r.x + r.width < x)
+            return false;
+        if(r.y> y)
+            return false;
+        if(r.y + r.height < y)
+            return false;
+
+        return true;
+    }
+    else
+    {
+        if(_posX > x)
+            return false;
+        if(_posX + getWidth() < x)
+            return false;
+        if(_posY > y)
+            return false;
+        if(_posY + getHeight() < y)
+            return false;
+
+        return true;
+    }
+}
+
+Rect MySurface::getRectWithoutDecoration()
+{
+    Rect rect;
+    Rect decorationGeometry = getDecorationGeometry();
+    if(getType() != SurfaceType::Undefined)
+    {
+        rect.x = getX() + decorationGeometry.x;
+        rect.y = getY() + decorationGeometry.y;
+        rect.width = decorationGeometry.width;
+        rect.height = decorationGeometry.height;
+    }
+    else
+    {
+        rect.x = getX();
+        rect.y = getY();
+        rect.width = getWidth();
+        rect.height = getHeight();
+    }
+    return rect;
+}
+
+
+void MySurface::setPos(int x, int y)
+{
+    _posX = x;
+    _posY = y;
+}
+
+void MySurface::setX(int x)
+{
+    _posX = x;
+}
+
+void MySurface::setY(int y)
+{
+    _posY = y;
+}
+
+void MySurface::setXWithoutDecoration(Int32 x)
+{
+    setX(x-getDecorationGeometry().x);
+}
+
+void MySurface::setYWithoutDecoration(Int32 y)
+{
+    setY(y-getDecorationGeometry().y);
+}
+
+int MySurface::getX()
+{
+    return _posX;
+}
+
+int MySurface::getY()
+{
+    return _posY;
 }

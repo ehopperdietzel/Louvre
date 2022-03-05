@@ -6,8 +6,17 @@
 #include <linux/input-event-codes.h>
 #include <stdio.h>
 #include <MyClient.h>
+#include <WBackend.h>
+MyCompositor::MyCompositor()
+{
+    /* Suggests the client to scale their buffers
+     * 1 is the default ( 1 virtual pixel = 1 screen pixel )
+     * 2 is for HDPi screens ( 1 virtual pixel = 2 screen pixels )
+     * Clients can ignore this suggestion and use a different scale
+     * Get the client's surface scale with the surface->getScale() method */
 
-MyCompositor::MyCompositor(){}
+    setOutputScale(2);
+}
 
 
 GLuint LoadShader(GLenum type, const char *shaderSrc)
@@ -127,12 +136,14 @@ void MyCompositor::initializeGL()
 
     rectUniform = glGetUniformLocation(programObject, "rect");     // (left,top,with,height) App window pos and size
 
-    glUniform1i(glGetUniformLocation(programObject, "application"), 0);
+    activeTextureUniform = glGetUniformLocation(programObject, "application");
 
     // Set screen size
-    glUniform2f(screenUniform,screenWidth(),screenHeight());
+    glUniform2f(screenUniform,screenWidth()/getOutputScale(),screenHeight()/getOutputScale());
 
+    // Reserve unit 0 for cursor
     glActiveTexture(GL_TEXTURE0);
+    glUniform1i(activeTextureUniform,1);
 
     // Create cursor texture
     unsigned char cursorPixels[4*32*32];
@@ -142,6 +153,8 @@ void MyCompositor::initializeGL()
     defaultCursorTexture = new WTexture();
     defaultCursorTexture->setData(32,32,&cursorPixels);
 
+    maxTextureUnits = WOpenGL::getMaxTextureUnits();
+    freeTextureSlots = new bool[maxTextureUnits];
 }
 
 void MyCompositor::paintGL()
@@ -152,37 +165,19 @@ void MyCompositor::paintGL()
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    /*
-    for(list<WClient*>::iterator client = clients.begin(); client != clients.end();client++)
-    {
-        for(list<WSurface*>::iterator surface = (*client)->surfaces.begin(); surface != (*client)->surfaces.end(); ++surface)
-        {
-            if((*surface)->getType() == SurfaceType::Undefined) continue;
 
-            glBindTexture(GL_TEXTURE_2D,(*surface)->texture->textureId());
-            WOpenGL::checkGLError("21");
-
-            glUniform4f(rectUniform,(*surface)->getX(),(*surface)->getY(),(*surface)->texture->width(),(*surface)->texture->height());
-            WOpenGL::checkGLError("22");
-
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            WOpenGL::checkGLError("23");
-        }
-    }
-    */
-
-    for(list<WSurface*>::iterator surface = surfacesList.begin(); surface != surfacesList.end(); ++surface)
+    for(list<MySurface*>::iterator surface = surfacesList.begin(); surface != surfacesList.end(); ++surface)
     {
         if((*surface)->getType() == SurfaceType::Undefined) continue;
 
-        glBindTexture(GL_TEXTURE_2D,(*surface)->texture->textureId());
-        WOpenGL::checkGLError("21");
+        //glActiveTexture(GL_TEXTURE0 + (*surface)->getTexture()->textureUnit());
+        glUniform1i(activeTextureUniform,(*surface)->getTexture()->textureUnit());
 
-        glUniform4f(rectUniform,(*surface)->getX(),(*surface)->getY(),(*surface)->texture->width(),(*surface)->texture->height());
-        WOpenGL::checkGLError("22");
+        //glBindTexture(GL_TEXTURE_2D,(*surface)->getTexture()->textureId());
+
+        glUniform4f(rectUniform,(*surface)->getX(),(*surface)->getY(),(*surface)->getWidth(),(*surface)->getHeight());
 
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        WOpenGL::checkGLError("23");
     }
 
     drawCursor();
@@ -214,7 +209,7 @@ void MyCompositor::clientDisconnectRequest(WClient *)
 void MyCompositor::setCursorRequest(WSurface *_cursorSurface, Int32 hotspotX, Int32 hotspotY)
 {
     (void)hotspotX;(void)hotspotY;
-    cursorSurface = _cursorSurface;
+    cursorSurface = (MySurface*)_cursorSurface;
 }
 
 void MyCompositor::libinputEvent(libinput_event *)
@@ -229,7 +224,7 @@ void MyCompositor::libinputEvent(libinput_event *)
 
 void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
 {
-    WSurface *surface;
+    MySurface *surface;
 
     if(resizingSurface != nullptr)
     {
@@ -303,10 +298,10 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
         return;
     }
 
-    for(list<WSurface*>::reverse_iterator surfaceIt = surfacesList.rbegin(); surfaceIt != surfacesList.rend(); ++surfaceIt)
+    for(list<MySurface*>::reverse_iterator surfaceIt = surfacesList.rbegin(); surfaceIt != surfacesList.rend(); ++surfaceIt)
     {
 
-        surface =  *surfaceIt;
+        surface =*surfaceIt;
 
         if(surface->getType() == SurfaceType::Undefined) continue;
 
@@ -371,8 +366,8 @@ void MyCompositor::pointerClickEvent(int x, int y, UInt32 button, UInt32 state, 
                 getPointerFocusSurface()->sendKeyboardEnterEvent();
 
             // Raise view
-            surfacesList.remove(getPointerFocusSurface());
-            surfacesList.push_back(getPointerFocusSurface());
+            surfacesList.remove((MySurface*)getPointerFocusSurface());
+            surfacesList.push_back((MySurface*)getPointerFocusSurface());
 
         }
     }
@@ -416,7 +411,7 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
             if (pid==0)
             {
                 //system("gedit");
-                system("/home/eduardo/Escritorio/build-wiggly-Desktop_Qt_5_15_2_GCC_64bit-Debug/wiggly --platform wayland");
+                system("falkon --platform wayland");
                 exit(0);
             }
         }
@@ -425,10 +420,12 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
 
 void MyCompositor::drawCursor()
 {
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(activeTextureUniform,0);
     if(cursorSurface != nullptr)
     {
-        WSurface *cursor = getCursorSurface();
-        glBindTexture(GL_TEXTURE_2D,cursor->texture->textureId());
+        MySurface *cursor = (MySurface*)getCursorSurface();
+        glBindTexture(GL_TEXTURE_2D,cursor->getTexture()->textureId());
         glUniform4f(rectUniform,getPointerX()-cursorXOffset,getPointerY()-cursorYOffset,cursor->getWidth(),cursor->getHeight());
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }

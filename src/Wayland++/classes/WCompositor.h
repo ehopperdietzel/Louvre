@@ -12,6 +12,10 @@
 
 #include <sys/time.h>
 #include <WNamespaces.h>
+#include <condition_variable>
+#include <sys/eventfd.h>
+
+
 
 using namespace std;
 
@@ -33,6 +37,11 @@ public:
     virtual void pointerClickEvent(Int32 x, Int32 y, UInt32 button, UInt32 state, UInt32 milliseconds) = 0;
     virtual void keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) = 0;
     virtual void keyEvent(UInt32 keyCode,UInt32 keyState,UInt32 milliseconds) = 0;
+
+    // Output
+    void setOutputScale(Int32 scale);
+    Int32 getOutputScale();
+
 
     void repaint();
 
@@ -60,6 +69,10 @@ public:
     WSurface *cursorSurface = nullptr;
 private:
     friend class WSurface;
+    friend class Globals::Surface;
+
+    // Output
+    Int32 _outputScale = 1;
 
     bool readyToDraw = false;
     void mainLoop();
@@ -71,6 +84,28 @@ private:
     double _pointerY = 0.0;
 
     timespec startTime;
+
+    // Texture processing queue
+    struct TextureRingBufferElement {
+        WSurface *surface;
+        Int32 width;
+        Int32 height;
+        void *data;
+        WTexture::Type textureType;
+    };
+
+    void addTextureToRingBuffer(WSurface *surface, Int32 width, Int32 height, void *data, WTexture::Type textureType);
+
+    std::queue<TextureRingBufferElement>texturesToProcess;
+    std::queue<WSurface*>surfacesToRelease;
+
+    std::condition_variable cv;
+
+    static void eglThread(WCompositor *comp);
+
+    int compositorFd;
+    eventfd_t val = 1;
+    UInt32 prevTime = 0;
 };
 
 #endif // WCOMPOSITOR_H

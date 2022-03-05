@@ -22,8 +22,8 @@ void WaylandPlus::Globals::Output::bind(wl_client *client, void *data, UInt32 ve
 
     // TODO: This should be updated when the compositor screen changes
     wl_output_send_geometry(resource,0,0,compositor->screenWidth(),compositor->screenHeight(),wl_output_subpixel::WL_OUTPUT_SUBPIXEL_HORIZONTAL_RGB,"Cuarzo Software","Fake Model",wl_output_transform::WL_OUTPUT_TRANSFORM_NORMAL);
-    wl_output_send_mode(resource,wl_output_mode::WL_OUTPUT_MODE_CURRENT,compositor->screenWidth(),compositor->screenHeight(),60000);
-    wl_output_send_scale(resource,1);
+    wl_output_send_mode(resource,wl_output_mode::WL_OUTPUT_MODE_CURRENT,compositor->screenWidth(),compositor->screenHeight(),600000);
+    wl_output_send_scale(resource, compositor->getOutputScale());
     wl_output_send_done(resource);
 
 }

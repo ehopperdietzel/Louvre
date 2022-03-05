@@ -1,4 +1,5 @@
 #include <WBackend.h>
+
 #include <wayland-server.h>
 #include <X11/Xlib.h>
 #include <linux/input.h>
@@ -15,10 +16,12 @@
 #include <poll.h>
 #include <WCompositor.h>
 
+#if W_BACKEND == 2
+
 using namespace WaylandPlus;
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1800
+#define WINDOW_HEIGHT 1200
 
 static struct {
     Window window;
@@ -136,4 +139,4 @@ void WBackend::paintDRM()
 {
     eglSwapBuffers (egl_display, window.surface);
 }
-
+#endif

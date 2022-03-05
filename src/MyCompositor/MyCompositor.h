@@ -2,6 +2,7 @@
 #define MYCOMPOSITOR_H
 
 #include <WCompositor.h>
+#include <MySurface.h>
 
 using namespace WaylandPlus;
 
@@ -41,10 +42,11 @@ public:
     borderRadiusUniform,        // Radio de los bordes redondeados
     borderRadiusCornersUniform, // Esquinas activas del border radius (TL,TR,BL,BR)
     shadowCornerUniform,        // Indica la sombra a dibujar -1=Para no dibujar 0 = TL
-    shadowConfUniform;          // Indica el xOffset, yOffsety radio de la sombra
+    shadowConfUniform,          // Indica el xOffset, yOffsety radio de la sombra
+    activeTextureUniform;       // glActiveTexture
 
     // Active surfaces
-    WSurface *focusSurface,*movingSurface,*resizingSurface,*cursorSurface = nullptr;
+    MySurface *focusSurface,*movingSurface,*resizingSurface,*cursorSurface = nullptr;
 
     // Active resize edge
     ResizeEdge resizeEdge;
@@ -56,14 +58,18 @@ public:
     PointD resizeInitialMousePos;
 
     // Surfaces list ( orderer from back to front )
-    list<WSurface*>surfacesList;
+    list<MySurface*>surfacesList;
 
     WTexture *defaultCursorTexture = nullptr;
+
+    bool *freeTextureSlots = nullptr;
 
     Int32 movingSurfaceInitialPosX,movingSurfaceInitialPosY,movingSurfaceInitialCursorPosX,movingSurfaceInitialCursorPosY = 0;
 
     bool isLeftMouseButtonPressed = false;
     void drawCursor();
+
+    GLuint maxTextureUnits;
 };
 
 #endif // MYCOMPOSITOR_H

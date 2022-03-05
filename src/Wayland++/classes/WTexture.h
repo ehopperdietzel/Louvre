@@ -19,22 +19,24 @@ public:
         EGL = 1
     };
 
-    WTexture();
+    WTexture(GLuint textureUnit = 0);
     void setData(int width, int height, void *data, Type textureType = SHM);
     void deleteTexture();
     int height(){return _height;}
     int width(){return _width;}
     bool isInitialized(){ return _initialized;}
     GLuint textureId(){return _textureId;}
+    GLuint textureUnit(){return _textureUnit;}
     Type type(){return _type;}
 
-    std::queue<Rect>damages;
-
 private:
+    friend class WaylandPlus::Globals::Surface;
+    std::queue<Rect>damages;
     int _width,_height = 0;
-    GLuint _textureId = 0;
+    GLuint _textureId,_textureUnit = 0;
     bool _initialized = false;
     Type _type = SHM;
+
 };
 
 #endif

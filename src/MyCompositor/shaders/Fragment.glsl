@@ -1,4 +1,6 @@
-precision mediump float;
+precision lowp float;
+precision lowp int;
+//precision mediump float;
 
 // Textura de la app a dibujar
 uniform sampler2D application;

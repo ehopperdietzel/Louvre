@@ -55,7 +55,7 @@ void update_modifiers()
     modifier_state.group = xkb_state_serialize_layout (xkbState, XKB_STATE_LAYOUT_EFFECTIVE);
     comp->keyModifiersEvent(modifier_state.depressed,modifier_state.latched,modifier_state.locked,modifier_state.group);
 }
-void WInput::processInput()
+int WInput::processInput()
 {
     while(1)
     {
@@ -64,7 +64,7 @@ void WInput::processInput()
       if(ev == NULL)
       {
           libinput_dispatch(li);
-          return;
+          return 0;
       }
 
       libinput_event_type eventType = libinput_event_get_type(ev);
@@ -115,10 +115,11 @@ void WInput::processInput()
       libinput_dispatch(li);
     }
 
+    return 0;
     //libinput_unref(li);
 }
 
-int initXKB()
+void initXKB()
 {
     xkb_context *ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
@@ -183,8 +184,9 @@ int WInput::getKeymapSize()
     return keymapSize;
 }
 
-int WInput::initInput(WCompositor *compositor)
+int WInput::initInput(WCompositor *compositor,wl_event_loop_fd_func_t *libinputFunc)
 {
+    //(*libinputFunc) = &WInput::processInput;
     initXKB();
     comp = compositor;
     udev = udev_new();
