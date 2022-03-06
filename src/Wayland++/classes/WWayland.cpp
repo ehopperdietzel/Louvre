@@ -26,10 +26,9 @@ static struct wl_display *display;
 struct wl_event_loop *event_loop;
 int wayland_fd;
 
-int WWayland::initWayland(WCompositor *comp, int libinputFd,wl_event_loop_fd_func_t *libinputFunc)
+int WWayland::initWayland(WCompositor *comp)//, int libinputFd,wl_event_loop_fd_func_t *libinputFunc)
 {
     eglBindWaylandDisplayWL = (PFNEGLBINDWAYLANDDISPLAYWL) eglGetProcAddress ("eglBindWaylandDisplayWL");
-    Globals::Surface::get_egl_func();
 
     // Stores compositor reference
     compositor = comp;
@@ -95,11 +94,15 @@ int WWayland::initWayland(WCompositor *comp, int libinputFd,wl_event_loop_fd_fun
 void WWayland::terminateDisplay()
 {
    // Ends
-   wl_display_terminate(display);
+    wl_display_terminate(display);
 }
 
-void WWayland::processWayland()
+void WWayland::dispatchEvents()
 {
     wl_event_loop_dispatch(event_loop,0);
+}
+
+void WWayland::flushClients()
+{
     wl_display_flush_clients(display);
 }

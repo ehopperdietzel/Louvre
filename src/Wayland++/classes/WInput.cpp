@@ -16,6 +16,9 @@
 #include <xkbcommon/xkbcommon-names.h>
 #include <sys/mman.h>
 
+#include <sys/poll.h>
+
+
 using namespace WaylandPlus;
 
 WCompositor *comp;
@@ -57,11 +60,12 @@ void update_modifiers()
 }
 int WInput::processInput()
 {
-    while(1)
+    while(true)
     {
+
       ev = libinput_get_event(li);
 
-      if(ev == NULL)
+      if(ev == NULL )
       {
           libinput_dispatch(li);
           return 0;
@@ -76,7 +80,8 @@ int WInput::processInput()
           comp->setPointerPos(
                       comp->getPointerX() + libinput_event_pointer_get_dx(pointerEvent),
                       comp->getPointerY() + libinput_event_pointer_get_dy(pointerEvent),
-                      libinput_event_pointer_get_time_usec(pointerEvent));
+                      comp->getMilliseconds());
+                      // libinput_event_pointer_get_time_usec(pointerEvent));
       }
       else if(eventType == LIBINPUT_EVENT_POINTER_BUTTON)
       {
@@ -90,7 +95,8 @@ int WInput::processInput()
                       comp->getPointerY(),
                       button,
                       state,
-                      libinput_event_pointer_get_time_usec(pointerEvent));
+                      comp->getMilliseconds());
+                      // libinput_event_pointer_get_time_usec(pointerEvent));
       }
       else if(eventType == LIBINPUT_EVENT_KEYBOARD_KEY)
       {
@@ -101,7 +107,8 @@ int WInput::processInput()
           comp->keyEvent(
                       keyCode,
                       keyState,
-                      libinput_event_keyboard_get_time_usec(keyEvent));
+                      comp->getMilliseconds());
+                      // libinput_event_keyboard_get_time_usec(keyEvent));
 
           xkb_state_update_key(xkbState,keyCode+8,(xkb_key_direction)keyState);
           update_modifiers();
@@ -184,7 +191,7 @@ int WInput::getKeymapSize()
     return keymapSize;
 }
 
-int WInput::initInput(WCompositor *compositor,wl_event_loop_fd_func_t *libinputFunc)
+int WInput::initInput(WCompositor *compositor)//,wl_event_loop_fd_func_t *libinputFunc)
 {
     //(*libinputFunc) = &WInput::processInput;
     initXKB();
@@ -196,5 +203,17 @@ int WInput::initInput(WCompositor *compositor,wl_event_loop_fd_func_t *libinputF
     libinput_dispatch(li);
 
     printf("Libinput initialized.\n");
-    return libinput_get_fd(li);
+    //return libinput_get_fd(li);
+    pollfd pfds[1];
+
+    pfds[0].fd = libinput_get_fd(li);
+    pfds[0].events = POLLIN;
+    pfds[0].revents = 0;
+
+    while(true)
+    {
+        poll(pfds, 1, -1);
+        processInput();
+    }
+    return 0;
 }

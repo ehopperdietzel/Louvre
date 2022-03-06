@@ -25,13 +25,17 @@ void WCompositor::start()
 {
     // Bind the libinput events 
 
-    wl_event_loop_fd_func_t libinputFunc;
+    //wl_event_loop_fd_func_t libinputFunc;
 
-    int libinputFd = WInput::initInput(this,&libinputFunc);
+    //int libinputFd = WInput::initInput(this,&libinputFunc);
 
+    std::thread eglThrd(WInput::initInput, this);
+
+    /*
     pfds[1].fd = libinputFd;
     pfds[1].events = POLLIN;
     pfds[1].revents = 0;
+    */
 
     // Bind the EGL context for OpenGL
     WBackend::initBackend(this);
@@ -39,16 +43,17 @@ void WCompositor::start()
 
     // Bind wayland
 
-    pfds[0].fd = WWayland::initWayland(this,libinputFd,&libinputFunc);
+    pfds[0].fd = WWayland::initWayland(this);//,libinputFd,&libinputFunc);
     pfds[0].events = POLLIN;
 
-    /*
+
     compositorFd = eventfd(0,EFD_SEMAPHORE);
 
-    pfds[2].fd = compositorFd;
-    pfds[2].events = POLLIN;
-    pfds[2].revents = 0;
-    */
+
+    pfds[1].fd = compositorFd;
+    pfds[1].events = POLLIN;
+    pfds[1].revents = 0;
+
     readyToDraw = true;
 
     mainLoop();
@@ -67,6 +72,7 @@ Int32 WCompositor::getOutputScale()
 void WCompositor::repaint()
 {
     readyToDraw = true;
+    eventfd_write(compositorFd,1);
     //cv.notify_one();
 }
 
@@ -136,18 +142,31 @@ UInt32 WCompositor::getMilliseconds()
 {
     timespec endTime;
     clock_gettime(CLOCK_MONOTONIC_RAW, &endTime);
-    return (endTime.tv_sec - startTime.tv_sec) * 1000000 + (endTime.tv_nsec - startTime.tv_nsec) / 1000;
+    return endTime.tv_sec*1000 + endTime.tv_nsec/1000000;//(endTime.tv_sec - startTime.tv_sec) * 1000 + (endTime.tv_nsec - startTime.tv_nsec) / 1000000;
 }
 
 
 void WCompositor::mainLoop()
 {
-
+    float prevTime = getMilliseconds();
+    //float frames = 0;
+    //WBackend::setHWCursor();
     while(true)
     {
+        //usleep(1000*1000);
+        /*
+        float timeDiff = (float(getMilliseconds()) - prevTime)/1000.0;
+        frames++;
+        if(frames > 60)
+            printf("FPS:%f\n",frames/timeDiff);
+        */
 
+
+        //usleep(50);
         poll(pfds, 2, -1);
-        //poll(&pfd, 1, -1);
+
+        //float timeDiff = float(getMilliseconds()) - prevTime;
+
 
         /*
         if(pfds[2].revents & POLLIN)
@@ -157,6 +176,8 @@ void WCompositor::mainLoop()
             //printf("Wayland:%i\n",pfds[2].revents);
         }
         */
+
+
         /*
         while(!surfacesToRelease.empty())
         {
@@ -178,28 +199,37 @@ void WCompositor::mainLoop()
 
         //eventfd_write(compositorFd,0);
 
-        //if(pfds[0].revents & POLLIN)
-        WInput::processInput();
+        if(pfds[0].revents & POLLIN)
+            WWayland::dispatchEvents();
+
 
         //if(pfds[1].revents & POLLIN)
-        WWayland::processWayland();
-
-
-
-
+            //WInput::processInput();
 
         //cv.notify_one();
 
-
-
         //eventfd_read(compositorFd,NULL);
 
-        if(readyToDraw)
+
+
+        //WBackend::setHWCursorPos(getPointerX()*2,getPointerY()*2);
+
+        paintGL();
+        WBackend::paintDRM();
+        /*
+        if(timeDiff >= 1000.0/60.0)
         {
             paintGL();
             WBackend::paintDRM();
             readyToDraw = false;
+            prevTime = getMilliseconds();
         }
+        */
+
+
+
+        WWayland::flushClients();
+
 
     }
 
@@ -213,51 +243,11 @@ void WCompositor::addTextureToRingBuffer(WSurface *surface, Int32 width, Int32 h
 void WCompositor::eglThread(WCompositor *comp)
 {
     WBackend::initBackend(comp);
-    WCompositor::TextureRingBufferElement e;
     std::mutex mtx;
     std::unique_lock<std::mutex> lk(mtx);
-    bool dam = false;
     while(true)
     {
-
         comp->cv.wait(lk);
-
-        // Create and damage the textures
-        while(!comp->texturesToProcess.empty())
-        {
-            e = comp->texturesToProcess.front();
-
-            e.surface->_texture->setData(
-               e.width,
-               e.height,
-               e.data,
-               e.textureType
-            );
-
-            //comp->surfacesToRelease.push(e.surface);
-            comp->texturesToProcess.pop();
-            dam = true;
-            comp->readyToDraw = true;
-
-
-            wl_buffer_send_release(e.surface->buffer);
-
-            if (e.surface->frame_callback != nullptr)
-            {
-
-                wl_callback_send_done(e.surface->frame_callback,comp->getMilliseconds());
-                wl_resource_destroy(e.surface->frame_callback);
-                e.surface->frame_callback = nullptr;
-            }
-
-            //surfacesToRelease.pop();
-
-        }
-
-        if(dam)
-            eventfd_write(comp->compositorFd,1);
-
-        dam = false;
 
         if(comp->readyToDraw)
         {
@@ -267,5 +257,7 @@ void WCompositor::eglThread(WCompositor *comp)
         }
 
 
+        eventfd_write(comp->compositorFd,1);
     }
+
 }

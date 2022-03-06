@@ -59,6 +59,8 @@ public:
     // Buffer
     Int32 getBufferScale();
     WTexture *getTexture();
+    bool isDamaged();
+    void applyDamages();
 
     // References
     wl_resource *getResource();
@@ -114,6 +116,8 @@ public:
     Rect _decorationGeometry;
 
     list<WSurface*>_children;
+
+    bool _isDamaged = false;
 
 
 

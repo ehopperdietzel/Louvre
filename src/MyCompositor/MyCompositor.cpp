@@ -156,7 +156,7 @@ void MyCompositor::initializeGL()
     maxTextureUnits = WOpenGL::getMaxTextureUnits();
     freeTextureSlots = new bool[maxTextureUnits];
 }
-
+//float delt = 0;
 void MyCompositor::paintGL()
 {
     /*************************************************
@@ -170,10 +170,19 @@ void MyCompositor::paintGL()
     {
         if((*surface)->getType() == SurfaceType::Undefined) continue;
 
-        //glActiveTexture(GL_TEXTURE0 + (*surface)->getTexture()->textureUnit());
-        glUniform1i(activeTextureUniform,(*surface)->getTexture()->textureUnit());
+        //(*surface)->setX( 400 + sinf(delt)*400);
+        //delt+=0.01;
 
-        //glBindTexture(GL_TEXTURE_2D,(*surface)->getTexture()->textureId());
+        if((*surface)->isDamaged())
+            (*surface)->applyDamages();
+        else
+        {
+            // glActiveTexture(GL_TEXTURE0 + (*surface)->getTexture()->textureUnit());
+            // glBindTexture(GL_TEXTURE_2D,(*surface)->getTexture()->textureId());
+        }
+
+
+        glUniform1i(activeTextureUniform,(*surface)->getTexture()->textureUnit());
 
         glUniform4f(rectUniform,(*surface)->getX(),(*surface)->getY(),(*surface)->getWidth(),(*surface)->getHeight());
 
@@ -331,6 +340,9 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
         }
     }
 
+    //paintGL();
+    //WBackend::paintDRM();
+
     repaint();
 }
 
@@ -420,17 +432,24 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
 
 void MyCompositor::drawCursor()
 {
-    glActiveTexture(GL_TEXTURE0);
     glUniform1i(activeTextureUniform,0);
     if(cursorSurface != nullptr)
     {
         MySurface *cursor = (MySurface*)getCursorSurface();
-        glBindTexture(GL_TEXTURE_2D,cursor->getTexture()->textureId());
+        if(cursor->isDamaged())
+            cursor->applyDamages();
+        else
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D,cursor->getTexture()->textureId());
+        }
+
         glUniform4f(rectUniform,getPointerX()-cursorXOffset,getPointerY()-cursorYOffset,cursor->getWidth(),cursor->getHeight());
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
     else
     {
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,defaultCursorTexture->textureId());
         glUniform4f(rectUniform,getPointerX(),getPointerY(),5,5);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

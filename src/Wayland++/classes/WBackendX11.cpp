@@ -135,6 +135,11 @@ EGLDisplay WBackend::getEGLDisplay()
     return egl_display;
 }
 
+void WaylandPlus::WBackend::setHWCursor()
+{
+
+}
+
 void WBackend::paintDRM()
 {
     eglSwapBuffers (egl_display, window.surface);

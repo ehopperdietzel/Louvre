@@ -15,6 +15,9 @@ public:
     static int backendWidth();
     static int backendHeight();
     static EGLDisplay getEGLDisplay();
+
+    static void setHWCursor();
+    static void setHWCursorPos(Int32 x, Int32 y);
 };
 
 

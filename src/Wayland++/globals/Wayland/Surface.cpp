@@ -14,14 +14,6 @@
 
 using namespace WaylandPlus;
 
-PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL = NULL;
-
-EGLint texture_format;
-
-void Globals::Surface::get_egl_func()
-{
-     eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
-}
 
 void Globals::Surface::delete_surface(wl_resource *resource)
 {
@@ -90,45 +82,7 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
         return;
     }
 
-    if(eglQueryWaylandBufferWL(WBackend::getEGLDisplay(), surface->buffer, EGL_TEXTURE_FORMAT, &texture_format))
-    {
-        //printf("EGL buffer\n");
-        EGLint width, height;
-        eglQueryWaylandBufferWL(WBackend::getEGLDisplay(), surface->buffer, EGL_WIDTH, &width);
-        eglQueryWaylandBufferWL(WBackend::getEGLDisplay(), surface->buffer, EGL_HEIGHT, &height);
-        EGLAttrib attribs = EGL_NONE;
-        EGLImage image = eglCreateImage(WBackend::getEGLDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, surface->buffer, &attribs);
-        surface->getCompositor()->addTextureToRingBuffer(surface,width,height,&image,WTexture::Type::EGL);
-        surface->_texture->setData(width, height, &image, WTexture::Type::EGL);
-        eglDestroyImage (WBackend::getEGLDisplay(), image);
-    }
-    else
-    {
-        wl_shm_buffer *shm_buffer = wl_shm_buffer_get(surface->buffer);
-        wl_shm_buffer_begin_access(shm_buffer);
-        UInt32 width = wl_shm_buffer_get_width(shm_buffer);
-        UInt32 height = wl_shm_buffer_get_height(shm_buffer);
-        void *data = wl_shm_buffer_get_data(shm_buffer);
-        //surface->getCompositor()->addTextureToRingBuffer(surface,width,height,data,WTexture::Type::SHM);
-
-        surface->_texture->setData(width, height, data);
-        wl_shm_buffer_end_access(shm_buffer);
-    }
-
-    //eventfd_write(surface->getCompositor()->compositorFd,1);
-    //surface->getCompositor()->cv.notify_one();
-
-
-
-    wl_buffer_send_release(surface->buffer);
-
-    if (surface->frame_callback != nullptr)
-    {
-
-        wl_callback_send_done(surface->frame_callback,surface->getCompositor()->getMilliseconds());
-        wl_resource_destroy(surface->frame_callback);
-        surface->frame_callback = nullptr;
-    }
+    surface->_isDamaged = true;
 
     surface->getCompositor()->repaint();
 
@@ -193,7 +147,7 @@ void Globals::Surface::damage_buffer(wl_client *client, wl_resource *resource, I
     //eventfd_write(surface->getCompositor()->compositorFd,surface->getCompositor()->val);
     //surface->getCompositor()->val++;
 
-    printf("damage_buffer:X%i,Y%i,W%i,H%i",x,y,width,height);
+    //printf("damage_buffer:X%i,Y%i,W%i,H%i",x,y,width,height);
 
     /*
     if (surface->buffer == nullptr)
@@ -218,9 +172,12 @@ void Globals::Surface::set_buffer_scale(wl_client *client, wl_resource *resource
     //eventfd_write(surface->getCompositor()->compositorFd,surface->getCompositor()->val);
     //surface->getCompositor()->val++;
     surface->setBufferScale(scale);
+
+    /*
     if (surface->buffer == nullptr)
     {
         surface->sendConfigureEvent(0,0,SurfaceState::Activated);
         return;
     }
+    */
 }

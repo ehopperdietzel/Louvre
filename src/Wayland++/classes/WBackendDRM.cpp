@@ -135,9 +135,13 @@ static int init_drm(void)
         return -1;
     }
 
+    printf("Total modes: %i\n",connector->count_modes);
+
     // find prefered mode or the highest resolution mode:
     for (i = 0, area = 0; i < connector->count_modes; i++) {
         drmModeModeInfo *current_mode = &connector->modes[i];
+
+        printf("Mode %i: %i x %i\n",i,current_mode->hdisplay,current_mode->vdisplay);
 
         if (current_mode->type & DRM_MODE_TYPE_PREFERRED) {
             drm.mode = current_mode;
@@ -281,6 +285,7 @@ static struct drm_fb * drm_fb_get_from_bo(struct gbm_bo *bo)
 {
     struct drm_fb *fb = (struct drm_fb*)gbm_bo_get_user_data(bo);
     uint32_t width, height, stride, handle;
+
     int ret;
 
     if (fb)
@@ -343,8 +348,16 @@ void WBackend::paintDRM()
         return;
     }
 
+
     while (waiting_for_flip)
     {
+
+        /*
+        FD_ZERO(&fds);
+        FD_SET(0, &fds);
+        FD_SET(drm.fd, &fds);
+        */
+
         ret = select(drm.fd + 1, &fds, NULL, NULL, NULL);
         if (ret < 0)
         {
@@ -362,12 +375,15 @@ void WBackend::paintDRM()
             break;
         }
         drmHandleEvent(drm.fd, &evctx);
+
     }
 
-    // release last buffer to render on again:
-    gbm_surface_release_buffer(gbm.surface, bo);
-    bo = next_bo;
 
+    // release last buffer to render on again:
+    //if (gbm.surface)
+    gbm_surface_release_buffer(gbm.surface, bo);
+
+    bo = next_bo;
 
 }
 void WBackend::initBackend(WCompositor *compositor)
@@ -403,7 +419,7 @@ void WBackend::initBackend(WCompositor *compositor)
         return;
     }
 
-    compositor->initializeGL();
+    //compositor->initializeGL();
 
     // clear the color buffer
     eglSwapBuffers(gl.display, gl.surface);
@@ -438,4 +454,62 @@ EGLDisplay WBackend::getEGLDisplay()
     return gl.display;
 }
 
+void WaylandPlus::WBackend::setHWCursor()
+{
+    gbm_bo *m_bo = nullptr;
+    m_bo = gbm_bo_create(gbm.dev, 64, 64,GBM_FORMAT_ARGB8888, GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE);
+
+    unsigned char cursorPixels[4*64*64];
+    for(int i = 0; i < 4*64*64; i++)
+        cursorPixels[i] = 255;
+    gbm_bo_write(m_bo,cursorPixels, 4*64*64);
+    uint32_t handle = gbm_bo_get_handle(m_bo).u32;
+    drmModeSetCursor(drm.fd, drm.crtc_id, handle,64, 64);
+}
+
+void WBackend::setHWCursorPos(Int32 x, Int32 y)
+{
+    drmModeMoveCursor(drm.fd, drm.crtc_id,x,y);
+}
+
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

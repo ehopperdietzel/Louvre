@@ -36,8 +36,8 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
         }
         else
         {
-            //while(!damages.empty())
-                //damages.pop();
+            while(!damages.empty())
+                damages.pop();
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
             WOpenGL::checkGLError("Error creating texture from shared memory.");
         }
@@ -46,7 +46,7 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
     {
         glBindTexture(GL_TEXTURE_2D, _textureId);
 
-
+        //printf("TOTAL DAMAGES:%lu\n",damages.size());
         // If texture is not EGL
         while(!damages.empty())
         {
@@ -56,7 +56,7 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
             glPixelStorei(GL_UNPACK_SKIP_PIXELS,(GLint)damage.x);
             glPixelStorei(GL_UNPACK_SKIP_ROWS,(GLint)damage.y);
 
-            //printf("%i %i\n",width,height);
+            ////printf("%i %i\n",width,height);
 
             if(damage.x < 0)
                 damage.x = 0;
@@ -70,7 +70,7 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
 
 
 
-            printf("%i %i %i %i\n",damage.x,damage.y,damage.width,damage.height);
+            //printf("%i %i %i %i\n",damage.x,damage.y,damage.width,damage.height);
 
             glTexSubImage2D(GL_TEXTURE_2D,
                 0,

@@ -8,9 +8,10 @@
 class WaylandPlus::WWayland
 {
 public:
-    static int initWayland(WCompositor *comp, int libinputFd, wl_event_loop_fd_func_t *libinputFunc);
+    static int initWayland(WCompositor *comp);//, int libinputFd, wl_event_loop_fd_func_t *libinputFunc);
     static void terminateDisplay();
-    static void processWayland();
+    static void dispatchEvents();
+    static void flushClients();
 
 };
 

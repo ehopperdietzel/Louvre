@@ -1,6 +1,8 @@
 #include "WSurface.h"
 #include <WClient.h>
 #include <WCompositor.h>
+#include <WBackend.h>
+#include <WWayland.h>
 
 #include <time.h>
 #include <stdlib.h>
@@ -8,9 +10,23 @@
 
 #include <xdg-shell.h>
 
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+
 using namespace WaylandPlus;
 
 wl_array nullKeys;
+
+PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL = NULL;
+
+EGLint texture_format;
+
+void get_egl_func()
+{
+     eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
+}
+
 
 void createNullKeys()
 {
@@ -19,6 +35,7 @@ void createNullKeys()
 
 WSurface::WSurface(UInt32 id, wl_resource *res, WClient *client, GLuint textureUnit)
 {
+    get_egl_func();
     _texture = new WTexture(textureUnit);
     srand(time(NULL));
     _resource = res;
@@ -279,6 +296,57 @@ Int32 WSurface::getBufferScale()
 WTexture *WSurface::getTexture()
 {
     return _texture;
+}
+
+bool WSurface::isDamaged()
+{
+    return _isDamaged;
+}
+
+void WSurface::applyDamages()
+{
+
+    if(eglQueryWaylandBufferWL(WBackend::getEGLDisplay(), buffer, EGL_TEXTURE_FORMAT, &texture_format))
+    {
+        //printf("EGL buffer\n");
+        EGLint width, height;
+        eglQueryWaylandBufferWL(WBackend::getEGLDisplay(), buffer, EGL_WIDTH, &width);
+        eglQueryWaylandBufferWL(WBackend::getEGLDisplay(), buffer, EGL_HEIGHT, &height);
+        EGLAttrib attribs = EGL_NONE;
+        EGLImage image = eglCreateImage(WBackend::getEGLDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, buffer, &attribs);
+        _texture->setData(width, height, &image, WTexture::Type::EGL);
+        eglDestroyImage (WBackend::getEGLDisplay(), image);
+    }
+    else
+    {
+        wl_shm_buffer *shm_buffer = wl_shm_buffer_get(buffer);
+        wl_shm_buffer_begin_access(shm_buffer);
+        UInt32 width = wl_shm_buffer_get_width(shm_buffer);
+        UInt32 height = wl_shm_buffer_get_height(shm_buffer);
+        void *data = wl_shm_buffer_get_data(shm_buffer);
+        //surface->getCompositor()->addTextureToRingBuffer(surface,width,height,data,WTexture::Type::SHM);
+
+        _texture->setData(width, height, data);
+        wl_shm_buffer_end_access(shm_buffer);
+    }
+
+    //eventfd_write(surface->getCompositor()->compositorFd,1);
+    //surface->getCompositor()->cv.notify_one();
+
+
+
+    wl_buffer_send_release(buffer);
+
+    if (frame_callback != nullptr)
+    {
+
+        wl_callback_send_done(frame_callback,getCompositor()->getMilliseconds());
+        wl_resource_destroy(frame_callback);
+        frame_callback = nullptr;
+    }
+
+    _isDamaged = false;
+
 }
 
 void WSurface::setBufferScale(Int32 scale)
