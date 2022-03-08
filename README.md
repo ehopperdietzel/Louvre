@@ -5,7 +5,7 @@ A friendly C++ library to create Wayland compositors that run directly on top of
 Wayland++ uses **libinput** and **evdev** for input listening and devices discovering, **xkbcommon** for keyboard mapping and any version of **Open GL** or **Vulkan** for drawing (any **EGL** - compatible API).
 
 ## Libraries
-`sudo apt-get update & sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libinput-dev libegl-dev mesa-common-dev libgles2-mesa-dev libxkbcommon-dev`
+`sudo apt-get update & sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libinput-dev libegl-dev mesa-common-dev libgles2-mesa-dev libxkbcommon-dev libsoil-dev`
 
 ## Example
 

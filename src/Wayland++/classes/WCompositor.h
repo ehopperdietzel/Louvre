@@ -42,7 +42,6 @@ public:
     void setOutputScale(Int32 scale);
     Int32 getOutputScale();
 
-
     void repaint();
 
     Int32 screenWidth();
@@ -61,17 +60,17 @@ public:
     void clearPointerFocus();
     void clearKeyboardFocus();
 
-
     UInt32 getMilliseconds();
 
     list<WClient*>clients;
 
-    WSurface *cursorSurface = nullptr;
+
 private:
     friend class WSurface;
     friend class Globals::Surface;
+    friend class WaylandPlus::Globals::Pointer;
 
-    // Output
+    // Output scale
     Int32 _outputScale = 1;
 
     bool readyToDraw = false;
@@ -79,33 +78,13 @@ private:
 
     WSurface *_pointerFocusSurface = nullptr;
     WSurface *_keyboardFocusSurface = nullptr;
+    WSurface *_cursorSurface = nullptr;
 
     double _pointerX = 0.0;
     double _pointerY = 0.0;
 
-    timespec startTime;
-
-    // Texture processing queue
-    struct TextureRingBufferElement {
-        WSurface *surface;
-        Int32 width;
-        Int32 height;
-        void *data;
-        WTexture::Type textureType;
-    };
-
-    void addTextureToRingBuffer(WSurface *surface, Int32 width, Int32 height, void *data, WTexture::Type textureType);
-
-    std::queue<TextureRingBufferElement>texturesToProcess;
-    std::queue<WSurface*>surfacesToRelease;
-
-    std::condition_variable cv;
-
-    static void eglThread(WCompositor *comp);
-
     int compositorFd;
     eventfd_t val = 1;
-    UInt32 prevTime = 0;
 };
 
 #endif // WCOMPOSITOR_H

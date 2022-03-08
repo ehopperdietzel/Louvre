@@ -1,6 +1,8 @@
 #include "WOpenGL.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <GLES2/gl2.h>
+
 using namespace WaylandPlus;
 
 char *WOpenGL::openShader(const char *fname)
@@ -45,4 +47,41 @@ GLuint WOpenGL::getMaxTextureUnits()
     GLint maxUnits = 0;
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS,&maxUnits);
     return maxUnits;
+}
+
+GLuint WOpenGL::LoadShader(GLenum type, const char *shaderSrc)
+{
+    GLuint shader;
+    GLint compiled;
+
+    // Create the shader object
+    shader = glCreateShader(type);
+
+    // Load the shader source
+    glShaderSource(shader, 1, &shaderSrc, nullptr);
+
+    // Compile the shader
+    glCompileShader(shader);
+
+    // Check the compile status
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+
+    if (!compiled)
+    {
+        GLint infoLen = 0;
+
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
+
+        GLchar errorLog[infoLen];
+
+        glGetShaderInfoLog(shader, infoLen, &infoLen, errorLog);
+
+        printf("%s",errorLog);
+
+        glDeleteShader(shader);
+
+        return 0;
+    }
+
+    return shader;
 }

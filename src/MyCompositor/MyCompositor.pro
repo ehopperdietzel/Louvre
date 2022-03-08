@@ -3,7 +3,7 @@ CONFIG += console c++17
 CONFIG -= app_bundle
 CONFIG -= qt
 
-LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lxkbcommon
+LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lxkbcommon -lSOIL
 INCLUDEPATH += /usr/include/drm
 INCLUDEPATH += ../Wayland++/
 INCLUDEPATH += ../Wayland++/classes/

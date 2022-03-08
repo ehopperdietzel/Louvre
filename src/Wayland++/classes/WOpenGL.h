@@ -10,6 +10,7 @@ public:
     static char *openShader(const char *fname);
     static void checkGLError(const char *msg);
     static GLuint getMaxTextureUnits();
+    static GLuint LoadShader(GLenum type, const char *shaderSrc);
 };
 
 #endif // WOPENGL_H

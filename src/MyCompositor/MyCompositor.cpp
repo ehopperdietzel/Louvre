@@ -7,88 +7,47 @@
 #include <stdio.h>
 #include <MyClient.h>
 #include <WBackend.h>
+
+#include <SOIL/SOIL.h>
+
 MyCompositor::MyCompositor()
 {
-    /* Suggests the client to scale their buffers
+    /* *******************************************************************
+     * Suggests clients to scale their buffers.
      * 1 is the default ( 1 virtual pixel = 1 screen pixel )
      * 2 is for HDPi screens ( 1 virtual pixel = 2 screen pixels )
-     * Clients can ignore this suggestion and use a different scale
-     * Get the client's surface scale with the surface->getScale() method */
+     * Clients can ignore this suggestion and use a different scale.
+     * Get the client's surface scale with the surface->getScale() method.
+     * You can invoke this method at any time but only new clients will
+     * be notified.
+     *********************************************************************/
 
     setOutputScale(2);
 }
 
 
-GLuint LoadShader(GLenum type, const char *shaderSrc)
-{
-    GLuint shader;
-    GLint compiled;
-
-    // Create the shader object
-    shader = glCreateShader(type);
-    WOpenGL::checkGLError("21");
-
-    // Load the shader source
-    glShaderSource(shader, 1, &shaderSrc, nullptr);
-    WOpenGL::checkGLError("22");
-
-    // Compile the shader
-    glCompileShader(shader);
-    WOpenGL::checkGLError("23");
-
-    // Check the compile status
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-    WOpenGL::checkGLError("24");
-
-    if (!compiled)
-    {
-        GLint infoLen = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
-        WOpenGL::checkGLError("25");
-
-        GLchar *errorLog = new GLchar(infoLen);
-
-        glGetShaderInfoLog(shader, infoLen, &infoLen, errorLog);
-        WOpenGL::checkGLError("26");
-
-        printf("%s",errorLog);
-
-        delete errorLog;
-
-        glDeleteShader(shader);
-        WOpenGL::checkGLError("27");
-        return 0;
-    }
-
-    return shader;
-}
-
-
-
 void MyCompositor::initializeGL()
 {
     /*************************************************
-     * Here you initialize the OpenGL ES 2 context
+     * Here you initialize your OpenGL ES 2 context
      *************************************************/
-
-    GLchar *vShaderStr = WOpenGL::openShader("../MyCompositor/shaders/Vertex.glsl");
-
-    GLchar *fShaderStr = WOpenGL::openShader("../MyCompositor/shaders/Fragment.glsl");
 
     GLuint vertexShader,fragmentShader,programObject;
 
+    // Open the vertex/fragment shaders
+    GLchar *vShaderStr = WOpenGL::openShader("../MyCompositor/shaders/Vertex.glsl");
+    GLchar *fShaderStr = WOpenGL::openShader("../MyCompositor/shaders/Fragment.glsl");
+
     // Load the vertex/fragment shaders
-    vertexShader = LoadShader(GL_VERTEX_SHADER, vShaderStr);
-    fragmentShader = LoadShader(GL_FRAGMENT_SHADER, fShaderStr);
+    vertexShader = WOpenGL::LoadShader(GL_VERTEX_SHADER, vShaderStr);
+    fragmentShader = WOpenGL::LoadShader(GL_FRAGMENT_SHADER, fShaderStr);
 
     delete [] vShaderStr;
     delete [] fShaderStr;
 
     // Create the program object
     programObject = glCreateProgram(); 
-
     glAttachShader(programObject, vertexShader);
-
     glAttachShader(programObject, fragmentShader);
 
     // Bind vPosition to attribute 0
@@ -133,9 +92,7 @@ void MyCompositor::initializeGL()
 
     // Get Uniform Variables
     screenUniform = glGetUniformLocation(programObject, "screen"); // (width,height) Screen dimensions
-
     rectUniform = glGetUniformLocation(programObject, "rect");     // (left,top,with,height) App window pos and size
-
     activeTextureUniform = glGetUniformLocation(programObject, "application");
 
     // Set screen size
@@ -143,42 +100,61 @@ void MyCompositor::initializeGL()
 
     // Reserve unit 0 for cursor
     glActiveTexture(GL_TEXTURE0);
-    glUniform1i(activeTextureUniform,1);
+    glUniform1i(activeTextureUniform,0);
 
-    // Create cursor texture
-    unsigned char cursorPixels[4*32*32];
-    for(int i = 0; i < 4*32*32; i++)
-        cursorPixels[i] = 255;
+    // Create default cursor texture (64x64)
+    int w,h;
+    unsigned char * img = SOIL_load_image("../MyCompositor/Images/Cursor.png", &w, &h, 0, SOIL_LOAD_RGBA);
+    defaultCursorTexture->setData(w,h,img);
+    SOIL_free_image_data(img);
 
-    defaultCursorTexture = new WTexture();
-    defaultCursorTexture->setData(32,32,&cursorPixels);
+    img = SOIL_load_image("../MyCompositor/Images/Wallpaper.png", &w, &h, 0, SOIL_LOAD_RGBA);
+    backgroundTexture->setData(w,h,img);
+    SOIL_free_image_data(img);
 
-    maxTextureUnits = WOpenGL::getMaxTextureUnits();
-    freeTextureSlots = new bool[maxTextureUnits];
 }
-//float delt = 0;
+
 void MyCompositor::paintGL()
 {
     /*************************************************
-     *  Here you do your drawing
+     *  Here you do your OpenGL drawing.
+     *  Never invoke this method directly,
+     *  use WCompositor::repaint() instead
+     *  otherwise you may break the internal page
+     *  flipping mechanism.
      *************************************************/
 
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D,backgroundTexture->textureId());
+    glUniform1i(activeTextureUniform,0);
+    glUniform4f(rectUniform,0,0,screenWidth()/getOutputScale(),screenHeight()/getOutputScale());
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     for(list<MySurface*>::iterator surface = surfacesList.begin(); surface != surfacesList.end(); ++surface)
     {
         if((*surface)->getType() == SurfaceType::Undefined) continue;
 
-        //(*surface)->setX( 400 + sinf(delt)*400);
-        //delt+=0.01;
-
         if((*surface)->isDamaged())
             (*surface)->applyDamages();
         else
         {
-            // glActiveTexture(GL_TEXTURE0 + (*surface)->getTexture()->textureUnit());
-            // glBindTexture(GL_TEXTURE_2D,(*surface)->getTexture()->textureId());
+            glActiveTexture(GL_TEXTURE0 + (*surface)->getTexture()->textureUnit());
+            glBindTexture(GL_TEXTURE_2D,(*surface)->getTexture()->textureId());
+        }
+
+
+
+        if(resizingSurface == (*surface) && isLeftMouseButtonPressed)
+        {
+            Rect ir = resizeInitialSurfaceDecoration;
+
+            if(resizeEdge == ResizeEdge::Top || resizeEdge == ResizeEdge::TopLeft || resizeEdge == ResizeEdge::TopRight)
+                resizingSurface->setY(ir.y + ir.height - resizingSurface->getHeight());
+
+            if(resizeEdge == ResizeEdge::Left || resizeEdge == ResizeEdge::TopLeft || resizeEdge == ResizeEdge::BottomLeft)
+                resizingSurface->setX(ir.x + ir.width - resizingSurface->getWidth());
         }
 
 
@@ -340,9 +316,6 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
         }
     }
 
-    //paintGL();
-    //WBackend::paintDRM();
-
     repaint();
 }
 
@@ -384,12 +357,15 @@ void MyCompositor::pointerClickEvent(int x, int y, UInt32 button, UInt32 state, 
         }
     }
 
+    repaint();
 }
 
 void MyCompositor::keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
     if(getKeyboardFocusSurface())
         getKeyboardFocusSurface()->sendKeyModifiersEvent(depressed,latched,locked,group);
+
+    repaint();
 }
 
 void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds)
@@ -428,30 +404,31 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
             }
         }
     }
+
+    repaint();
 }
 
 void MyCompositor::drawCursor()
 {
-    glUniform1i(activeTextureUniform,0);
+
     if(cursorSurface != nullptr)
     {
-        MySurface *cursor = (MySurface*)getCursorSurface();
-        if(cursor->isDamaged())
-            cursor->applyDamages();
-        else
-        {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D,cursor->getTexture()->textureId());
-        }
+        glActiveTexture(GL_TEXTURE0+cursorSurface->getTexture()->textureUnit());
+        glUniform1i(activeTextureUniform,cursorSurface->getTexture()->textureUnit());
 
-        glUniform4f(rectUniform,getPointerX()-cursorXOffset,getPointerY()-cursorYOffset,cursor->getWidth(),cursor->getHeight());
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        if(cursorSurface->isDamaged())
+            cursorSurface->applyDamages();
+
+        glBindTexture(GL_TEXTURE_2D,cursorSurface->getTexture()->textureId());
+        glUniform4f(rectUniform,getPointerX()-cursorXOffset,getPointerY()-cursorYOffset,cursorSurface->getWidth(),cursorSurface->getHeight());
+
     }
     else
     {
         glActiveTexture(GL_TEXTURE0);
+        glUniform1i(activeTextureUniform,0);
         glBindTexture(GL_TEXTURE_2D,defaultCursorTexture->textureId());
-        glUniform4f(rectUniform,getPointerX(),getPointerY(),5,5);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glUniform4f(rectUniform,getPointerX(),getPointerY(),24,24);
     }
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }

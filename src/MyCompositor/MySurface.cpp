@@ -40,36 +40,17 @@ void MySurface::resizeStartRequest(ResizeEdge edge)
     comp->resizingSurface = this;
     comp->resizeEdge = edge;
 
-    comp->resizeInitialMousePos.x = comp->getPointerX();
-    comp->resizeInitialMousePos.y = comp->getPointerY();
+    comp->resizeInitialMousePos = { comp->getPointerX(), comp->getPointerY() };
 
-    Rect dRect = getRectWithoutDecoration();
-    comp->resizeInitialSurfaceRect.x = dRect.x;
-    comp->resizeInitialSurfaceRect.y = dRect.y;
-    comp->resizeInitialSurfaceRect.width = dRect.width;
-    comp->resizeInitialSurfaceRect.height = dRect.height;
+    Rect dr = getRectWithoutDecoration();
+    comp->resizeInitialSurfaceRect = {(double)dr.x,(double)dr.y,(double)dr.width,(double)dr.height};
+    comp->resizeInitialSurfaceDecoration = {getX(),getY(),getWidth(),getHeight()};
 }
 
 void MySurface::geometryChangeRequest()
 {
     /* Geometry of the surface without client decorations
      * x and y represent the decoration margin */
-
-    Int32 width = getDecorationGeometry().width;
-    Int32 height = getDecorationGeometry().height;
-
-    MyCompositor *comp = (MyCompositor*)getCompositor();
-
-    if(comp->resizingSurface == this)
-    {
-        if(comp->resizeEdge == ResizeEdge::Top || comp->resizeEdge == ResizeEdge::TopLeft ||comp->resizeEdge == ResizeEdge::TopRight)
-            comp->resizingSurface->setYWithoutDecoration(int(comp->resizeInitialSurfaceRect.y) + int(comp->resizeInitialSurfaceRect.height - height));
-
-        if(comp->resizeEdge == ResizeEdge::Left || comp->resizeEdge == ResizeEdge::TopLeft || comp->resizeEdge == ResizeEdge::BottomLeft)
-            comp->resizingSurface->setXWithoutDecoration(int(comp->resizeInitialSurfaceRect.x) + int(comp->resizeInitialSurfaceRect.width - width));
-
-        comp->repaint();
-    }
 }
 
 void MySurface::typeChangeRequest()

@@ -53,6 +53,7 @@ public:
 
     // Resize surface initial rect
     RectD resizeInitialSurfaceRect;
+    Rect resizeInitialSurfaceDecoration;
 
     // Resize surface initial mouse pos
     PointD resizeInitialMousePos;
@@ -60,16 +61,15 @@ public:
     // Surfaces list ( orderer from back to front )
     list<MySurface*>surfacesList;
 
-    WTexture *defaultCursorTexture = nullptr;
-
-    bool *freeTextureSlots = nullptr;
+    WTexture *defaultCursorTexture = new WTexture();
+    WTexture *backgroundTexture = new WTexture();
+    Point backgroundPos;
 
     Int32 movingSurfaceInitialPosX,movingSurfaceInitialPosY,movingSurfaceInitialCursorPosX,movingSurfaceInitialCursorPosY = 0;
 
     bool isLeftMouseButtonPressed = false;
     void drawCursor();
 
-    GLuint maxTextureUnits;
 };
 
 #endif // MYCOMPOSITOR_H

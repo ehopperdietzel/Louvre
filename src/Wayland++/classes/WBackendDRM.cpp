@@ -204,8 +204,6 @@ static int init_gbm(void)
 static int init_gl(void)
 {
     EGLint major, minor, n;
-    GLuint vertex_shader, fragment_shader;
-    GLint ret;
 
     static const EGLint context_attribs[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -273,7 +271,6 @@ static int init_gl(void)
 static void drm_fb_destroy_callback(struct gbm_bo *bo, void *data)
 {
     struct drm_fb *fb = (struct drm_fb*)data;
-    struct gbm_device *gbm = gbm_bo_get_device(bo);
 
     if (fb->fb_id)
         drmModeRmFB(drm.fd, fb->fb_id);
@@ -317,6 +314,7 @@ static struct drm_fb * drm_fb_get_from_bo(struct gbm_bo *bo)
 
 static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data)
 {
+    (void)fd;(void)frame;(void)sec;(void)usec;
     int *waiting_for_flip = (int*)data;
     *waiting_for_flip = 0;
 }
@@ -418,8 +416,6 @@ void WBackend::initBackend(WCompositor *compositor)
         printf("failed to initialize EGL\n");
         return;
     }
-
-    //compositor->initializeGL();
 
     // clear the color buffer
     eglSwapBuffers(gl.display, gl.surface);

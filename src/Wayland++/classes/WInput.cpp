@@ -114,8 +114,6 @@ int WInput::processInput()
           update_modifiers();
       }
 
-
-
       // Sends event to the compositor
       comp->libinputEvent(ev);
       libinput_event_destroy(ev);
@@ -204,6 +202,7 @@ int WInput::initInput(WCompositor *compositor)//,wl_event_loop_fd_func_t *libinp
 
     printf("Libinput initialized.\n");
     //return libinput_get_fd(li);
+
     pollfd pfds[1];
 
     pfds[0].fd = libinput_get_fd(li);
@@ -216,4 +215,5 @@ int WInput::initInput(WCompositor *compositor)//,wl_event_loop_fd_func_t *libinp
         processInput();
     }
     return 0;
+
 }

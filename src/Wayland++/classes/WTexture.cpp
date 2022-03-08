@@ -24,7 +24,7 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
         _height = height;
         glGenTextures(1, &_textureId);
         glBindTexture (GL_TEXTURE_2D, _textureId);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);//GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         if(textureType == Type::EGL)
@@ -46,11 +46,9 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
     {
         glBindTexture(GL_TEXTURE_2D, _textureId);
 
-        //printf("TOTAL DAMAGES:%lu\n",damages.size());
         // If texture is not EGL
         while(!damages.empty())
         {
-            //WOpenGL::checkGLError("Error updating damage region.");
             Rect damage = damages.front();
             glPixelStorei(GL_UNPACK_ROW_LENGTH,_width);
             glPixelStorei(GL_UNPACK_SKIP_PIXELS,(GLint)damage.x);
@@ -67,11 +65,6 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
             if(damage.height + damage.y > _height || damage.height < 0)
                 damage.height = _height - damage.y;
 
-
-
-
-            //printf("%i %i %i %i\n",damage.x,damage.y,damage.width,damage.height);
-
             glTexSubImage2D(GL_TEXTURE_2D,
                 0,
                 (GLint)damage.x,
@@ -81,38 +74,17 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
                 GL_BGRA,
                 GL_UNSIGNED_BYTE,
                 data);
+
             WOpenGL::checkGLError("Error updating texture region.");
-
-
-
-
-
-
-
-
-
 
             damages.pop();
         }
 
-
-        /*
-        glTexSubImage2D(GL_TEXTURE_2D,
-                        0,
-                        0,
-                        0,
-                        width,
-                        height,
-                        GL_BGRA,
-                        GL_UNSIGNED_BYTE,
-                        data);
-        */
         glPixelStorei(GL_UNPACK_ROW_LENGTH,0);
         glPixelStorei(GL_UNPACK_SKIP_PIXELS,0);
         glPixelStorei(GL_UNPACK_SKIP_ROWS,0);
     }
 
-    //glBindTexture(GL_TEXTURE_2D,0);
     _type = textureType;
     _initialized = true;
 }
