@@ -15,8 +15,6 @@
 #include <condition_variable>
 #include <sys/eventfd.h>
 
-
-
 using namespace std;
 
 class WaylandPlus::WCompositor
@@ -36,7 +34,7 @@ public:
     virtual void pointerPosChanged(double x, double y, UInt32 milliseconds) = 0;
     virtual void pointerClickEvent(Int32 x, Int32 y, UInt32 button, UInt32 state, UInt32 milliseconds) = 0;
     virtual void keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) = 0;
-    virtual void keyEvent(UInt32 keyCode,UInt32 keyState,UInt32 milliseconds) = 0;
+    virtual void keyEvent(UInt32 keyCode,UInt32 keyState) = 0;
 
     // Output
     void setOutputScale(Int32 scale);
@@ -61,11 +59,13 @@ public:
     void clearKeyboardFocus();
 
     UInt32 getMilliseconds();
+    timespec getNanoseconds();
 
     list<WClient*>clients;
 
-
 private:
+    friend class WWayland;
+    friend class WInput;
     friend class WSurface;
     friend class Globals::Surface;
     friend class WaylandPlus::Globals::Pointer;
@@ -73,8 +73,11 @@ private:
     // Output scale
     Int32 _outputScale = 1;
 
-    bool readyToDraw = false;
+    bool scheduledDraw = false;
+    UInt64 lastDraw = 0;
     void mainLoop();
+    void flushClients();
+    static void renderLoop(WCompositor *comp);
 
     WSurface *_pointerFocusSurface = nullptr;
     WSurface *_keyboardFocusSurface = nullptr;
@@ -83,8 +86,8 @@ private:
     double _pointerX = 0.0;
     double _pointerY = 0.0;
 
-    int compositorFd;
-    eventfd_t val = 1;
+    int renderFd, libinputFd, waylandFd;
+    eventfd_t renderVal, libinputVal, waylandVal = 1;
 };
 
 #endif // WCOMPOSITOR_H

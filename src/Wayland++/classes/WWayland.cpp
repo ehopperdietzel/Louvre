@@ -25,6 +25,8 @@ WCompositor *compositor;
 static struct wl_display *display;
 struct wl_event_loop *event_loop;
 int wayland_fd;
+wl_event_source *renderTimer;
+
 
 int WWayland::initWayland(WCompositor *comp)
 {
@@ -81,11 +83,20 @@ int WWayland::initWayland(WCompositor *comp)
     wayland_fd = wl_event_loop_get_fd(event_loop);
 
 
-    //wl_event_loop_add_fd(event_loop,libinputFd,WL_EVENT_READABLE,*libinputFunc,NULL);
+    wl_event_loop_add_fd(event_loop,WInput::getLibinputFd(),WL_EVENT_READABLE,&WInput::processInput,NULL);
+    wl_event_loop_add_fd(event_loop,comp->libinputFd,WL_EVENT_READABLE,&WWayland::readFd,comp);
+
+    //wl_event_loop_signal_func_t
+
+    //wl_signal sig;
+    //sig.
+    //wl_event_loop_add_signal(event_loop,666,&WCompositor::render,comp);
 
     createNullKeys();
-
     printf("Wayland server initialized.\n");
+
+    comp->waylandFd = wl_event_loop_get_fd(event_loop);
+    wl_display_run(display);
 
     return wayland_fd;
 
@@ -105,4 +116,13 @@ void WWayland::dispatchEvents()
 void WWayland::flushClients()
 {
     wl_display_flush_clients(display);
+}
+
+int WWayland::readFd(int, unsigned int, void *d)
+{
+    WCompositor *comp = (WCompositor*)d;
+    flushClients();
+    WInput::processInput(0,0,comp);
+    eventfd_read(comp->libinputFd,&comp->libinputVal);
+
 }

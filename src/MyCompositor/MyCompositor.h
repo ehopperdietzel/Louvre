@@ -24,7 +24,7 @@ public:
     void pointerPosChanged(double x, double y, UInt32 milliseconds) override;
     void pointerClickEvent(int x, int y, UInt32 button, UInt32 state, UInt32 milliseconds) override;
     void keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) override;
-    void keyEvent(UInt32 keyCode,UInt32 keyState,UInt32 milliseconds) override;
+    void keyEvent(UInt32 keyCode, UInt32 keyState) override;
 
     // Square
     GLfloat square[16] =

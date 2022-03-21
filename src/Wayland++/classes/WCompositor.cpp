@@ -23,24 +23,35 @@ WCompositor::WCompositor()
 
 void WCompositor::start()
 {    
-    // Process libinput events in another thread
-    std::thread eglThrd(WInput::initInput, this);
-
-    // Init the EGL context for OpenGL
-    WBackend::initBackend(this);
 
     // Init wayland
+    libinputFd = eventfd(0,EFD_SEMAPHORE);
+
+    // Render loop
+    renderFd = eventfd(0,EFD_SEMAPHORE);
+    std::thread renderThrd(&WCompositor::renderLoop, this);
+
+    //WBackend::initBackend(this);
+    WInput::initInput(this);
+    WWayland::initWayland(this);
+
+    /*
     pfds[0].fd = WWayland::initWayland(this);
+    pfds[0].revents = 0;
     pfds[0].events = POLLIN;
-
-    // Unblock loop
-    compositorFd = eventfd(0,EFD_SEMAPHORE);
-
-    pfds[1].fd = compositorFd;
-    pfds[1].events = POLLIN;
+    pfds[1].fd = waylandFd;
     pfds[1].revents = 0;
+    pfds[1].events = POLLIN;
+
+
+
+
+    // Process libinput events in another thread
+    libinputFd = eventfd(0,EFD_SEMAPHORE);
+    std::thread eglThrd(WInput::initInput, this);
 
     mainLoop();
+    */
 }
 
 void WCompositor::setOutputScale(Int32 scale)
@@ -55,7 +66,8 @@ Int32 WCompositor::getOutputScale()
 
 void WCompositor::repaint()
 {
-    eventfd_write(compositorFd,1);
+    //WWayland::scheduleDraw(this);
+    eventfd_write(renderFd,1);
 }
 
 int WCompositor::screenWidth()
@@ -127,20 +139,28 @@ UInt32 WCompositor::getMilliseconds()
     return endTime.tv_sec*1000 + endTime.tv_nsec/1000000;
 }
 
-
-void WCompositor::mainLoop()
+timespec WCompositor::getNanoseconds()
 {
+    timespec endTime;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &endTime);
+    return endTime;
+}
+
+void WCompositor::renderLoop(WCompositor *comp)
+{
+    WBackend::initBackend(comp);
+
+    pollfd p;
+    p.fd = comp->renderFd;
+    p.revents = 0;
+    p.events = POLLIN;
+
     while(true)
     {
-        // Wait for events
-        poll(pfds, 2, -1);
-
-        if(pfds[0].revents & POLLIN)
-            WWayland::dispatchEvents();
-
-        paintGL();
-
+        poll(&p,1,-1);
+        comp->paintGL();
+        eventfd_read(comp->renderFd,&comp->renderVal);
+        eventfd_write(comp->libinputFd,1);
         WBackend::paintDRM();
-        WWayland::flushClients();
     }
 }

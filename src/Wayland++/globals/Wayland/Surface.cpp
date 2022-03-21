@@ -122,6 +122,7 @@ void Globals::Surface::damage(wl_client *client, wl_resource *resource, Int32 x,
 
     //printf("Damage (%i,%i,%i,%i)\n",damage.x,damage.y,damage.width,damage.height);
     surface->_texture->damages.push(damage);
+
 }
 
 void Globals::Surface::set_opaque_region(wl_client *client, wl_resource *resource, wl_resource *region)

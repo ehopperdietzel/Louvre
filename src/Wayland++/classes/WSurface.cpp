@@ -57,6 +57,7 @@ void WSurface::sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UIn
         pointerSerial++;
         if(_client->_wl_pointer_version >= 5)
             wl_pointer_send_frame(_client->getPointer());
+
     }
 }
 
@@ -72,6 +73,7 @@ void WSurface::sendPointerMotionEvent(double x, double y, UInt32 milliseconds)
 
         if(_client->_wl_pointer_version >= 5)
             wl_pointer_send_frame(_client->getPointer());
+
     }
 }
 
@@ -97,6 +99,7 @@ void WSurface::sendPointerEnterEvent(double x, double y)
             wl_pointer_send_frame(_client->getPointer());
         getCompositor()->_pointerFocusSurface = this;
     }
+
 }
 
 void WSurface::sendPointerLeaveEvent()
@@ -110,21 +113,28 @@ void WSurface::sendPointerLeaveEvent()
         pointerSerial++;
         if(_client->_wl_pointer_version >= 5)
             wl_pointer_send_frame(_client->getPointer());
+
     }
 
     getCompositor()->_pointerFocusSurface = nullptr;
 }
 
-void WSurface::sendKeyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds)
+void WSurface::sendKeyEvent(UInt32 keyCode, UInt32 keyState)
 {
     if(_client->getKeyboard())
-        wl_keyboard_send_key(_client->getKeyboard(),0,milliseconds,keyCode,keyState);
+    {
+        wl_keyboard_send_key(_client->getKeyboard(),keyboardSerial,getCompositor()->getMilliseconds(),keyCode,keyState);
+        keyboardSerial++;        
+    }
 }
 
 void WSurface::sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
     if(_client->getKeyboard())
-        wl_keyboard_send_modifiers(_client->getKeyboard(),0,depressed,latched,locked,group);
+    {
+        wl_keyboard_send_modifiers(_client->getKeyboard(),keyboardSerial,depressed,latched,locked,group);
+        keyboardSerial++;
+    }
 }
 
 void WSurface::sendKeyboardEnterEvent()
@@ -133,10 +143,12 @@ void WSurface::sendKeyboardEnterEvent()
         return;
 
     if(_client->getKeyboard())
-        wl_keyboard_send_enter(_client->getKeyboard(),0,_resource,&nullKeys);
+    {
+        wl_keyboard_send_enter(_client->getKeyboard(),keyboardSerial,_resource,&nullKeys);
+        keyboardSerial++;
+    }
 
     getCompositor()->_keyboardFocusSurface = this;
-
 }
 
 void WSurface::sendKeyboardLeaveEvent()
@@ -145,7 +157,10 @@ void WSurface::sendKeyboardLeaveEvent()
         return;
 
     if(_client->getKeyboard())
-        wl_keyboard_send_leave(_client->getKeyboard(),0,_resource);
+    {
+        wl_keyboard_send_leave(_client->getKeyboard(),keyboardSerial,_resource);
+        keyboardSerial++;
+    }
 
     getCompositor()->_keyboardFocusSurface = nullptr;
 }
@@ -347,6 +362,7 @@ void WSurface::applyDamages()
 
     _isDamaged = false;
 
+    //wl_client_flush(_client->_client);
 }
 
 void WSurface::setBufferScale(Int32 scale)

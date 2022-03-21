@@ -17,6 +17,9 @@
 #include <sys/mman.h>
 
 #include <sys/poll.h>
+#include <sys/eventfd.h>
+
+#include <WWayland.h>
 
 
 using namespace WaylandPlus;
@@ -58,7 +61,7 @@ void update_modifiers()
     modifier_state.group = xkb_state_serialize_layout (xkbState, XKB_STATE_LAYOUT_EFFECTIVE);
     comp->keyModifiersEvent(modifier_state.depressed,modifier_state.latched,modifier_state.locked,modifier_state.group);
 }
-int WInput::processInput()
+int WInput::processInput(int, unsigned int, void *)
 {
     while(true)
     {
@@ -106,8 +109,7 @@ int WInput::processInput()
 
           comp->keyEvent(
                       keyCode,
-                      keyState,
-                      comp->getMilliseconds());
+                      keyState);
                       // libinput_event_keyboard_get_time_usec(keyEvent));
 
           xkb_state_update_key(xkbState,keyCode+8,(xkb_key_direction)keyState);
@@ -122,6 +124,11 @@ int WInput::processInput()
 
     return 0;
     //libinput_unref(li);
+}
+
+int WInput::getLibinputFd()
+{
+    return libinput_get_fd(li);
 }
 
 void initXKB()
@@ -203,6 +210,7 @@ int WInput::initInput(WCompositor *compositor)//,wl_event_loop_fd_func_t *libinp
     printf("Libinput initialized.\n");
     //return libinput_get_fd(li);
 
+    /*
     pollfd pfds[1];
 
     pfds[0].fd = libinput_get_fd(li);
@@ -213,7 +221,10 @@ int WInput::initInput(WCompositor *compositor)//,wl_event_loop_fd_func_t *libinp
     {
         poll(pfds, 1, -1);
         processInput();
+        comp->repaint();
     }
+    */
+
     return 0;
 
 }

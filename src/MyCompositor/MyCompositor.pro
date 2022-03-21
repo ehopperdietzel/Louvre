@@ -18,6 +18,8 @@ SOURCES += \
         ../Wayland++/classes/WCompositor.cpp \
         ../Wayland++/classes/WInput.cpp \
         ../Wayland++/classes/WOpenGL.cpp \
+        ../Wayland++/classes/WOutput.cpp \
+        ../Wayland++/classes/WOutputManager.cpp \
         ../Wayland++/classes/WPositioner.cpp \
         ../Wayland++/classes/WRegion.cpp \
         ../Wayland++/classes/WSurface.cpp \
@@ -53,6 +55,8 @@ HEADERS += \
     ../Wayland++/classes/WInput.h \
     ../Wayland++/classes/WNamespaces.h \
     ../Wayland++/classes/WOpenGL.h \
+    ../Wayland++/classes/WOutput.h \
+    ../Wayland++/classes/WOutputManager.h \
     ../Wayland++/classes/WPositioner.h \
     ../Wayland++/classes/WRegion.h \
     ../Wayland++/classes/WSurface.h \

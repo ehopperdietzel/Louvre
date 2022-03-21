@@ -11,6 +11,8 @@ namespace WaylandPlus
     class WClient;
     class WCompositor;
     class WInput;
+    class WOutput;
+    class WOutputManager;
     class WOpenGL;
     class WPositioner;
     class WRegion;
@@ -23,6 +25,8 @@ namespace WaylandPlus
     // Types
     typedef uint32_t        UInt32;
     typedef int32_t         Int32;
+    typedef uint64_t        UInt64;
+    typedef int64_t         Int64;
     typedef unsigned char   SurfaceStateFlags;
     typedef xdg_positioner_anchor Anchor;
     typedef xdg_positioner_gravity Gravity;

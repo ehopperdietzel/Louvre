@@ -49,7 +49,7 @@ void WaylandPlus::Globals::Seat::get_keyboard (wl_client *client, wl_resource *r
     wl_resource *keyboard = wl_resource_create(client, &wl_keyboard_interface,version,id); // 7
     wl_resource_set_implementation(keyboard, &keyboard_implementation, NULL, NULL);
     wClient->setKeyboard(keyboard);
-    wl_keyboard_send_repeat_info(keyboard,200,500);
+    wl_keyboard_send_repeat_info(keyboard,20,1400);
 
     printf("Keyboard Version: %i\n",version);
 

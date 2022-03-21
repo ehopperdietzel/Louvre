@@ -37,6 +37,8 @@ public:
 private:
     friend class WSurface;
     friend class Globals::Seat;
+    friend class Globals::Compositor;
+
     WCompositor *_compositor = nullptr;
     wl_client *_client = nullptr;
     wl_resource *_keyboard = nullptr;

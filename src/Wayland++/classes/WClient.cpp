@@ -10,6 +10,7 @@ WClient::WClient(wl_client *client, WCompositor *compositor)
 
     // Append client to compositor
     _compositor->clients.push_back(this);
+
 }
 
 WClient::~WClient()
@@ -51,3 +52,4 @@ UInt32 WClient::getId()
 {
     return _id;
 }
+

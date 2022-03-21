@@ -5,8 +5,8 @@ MySurface::MySurface(UInt32 id, wl_resource *resource, WClient *client, GLuint t
 
 MySurface::~MySurface()
 {
-    setX(rand() % 50);
-    setY(rand() % 50);
+    setX(rand() % getCompositor()->screenWidth() - 200);
+    setY(rand() % getCompositor()->screenHeight() - 200);
 }
 
 // Event when window is grabbed (tipically by the topbar)

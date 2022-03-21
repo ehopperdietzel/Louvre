@@ -32,7 +32,7 @@ public:
     void sendPointerMotionEvent(double x, double y, UInt32 milliseconds);
     void sendPointerEnterEvent(double x, double y);
     void sendPointerLeaveEvent();
-    void sendKeyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds);
+    void sendKeyEvent(UInt32 keyCode, UInt32 keyState);
     void sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group);
     void sendKeyboardEnterEvent();
     void sendKeyboardLeaveEvent();
@@ -93,7 +93,7 @@ public:
 
     Int32 xdgShellVersion = -1;
 
-    UInt32 moveSerial, pointerSerial, configureSerial = 0;
+    UInt32 moveSerial, pointerSerial, keyboardSerial, configureSerial = 0;
 
     WClient *_client = nullptr;
     WPositioner *_positioner = nullptr;

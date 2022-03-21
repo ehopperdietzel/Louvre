@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <MyClient.h>
 #include <WBackend.h>
-
+#include <WOutputManager.h>
 #include <SOIL/SOIL.h>
 
 MyCompositor::MyCompositor()
@@ -21,6 +21,7 @@ MyCompositor::MyCompositor()
      * You can invoke this method at any time but only new clients will
      * be notified.
      *********************************************************************/
+    //WOutputManager *outputManager = new WOutputManager(this);
 
     setOutputScale(2);
 }
@@ -368,12 +369,15 @@ void MyCompositor::keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 lo
     repaint();
 }
 
-void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds)
+void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState)
 {
     if(getKeyboardFocusSurface())
-        getKeyboardFocusSurface()->sendKeyEvent(keyCode,keyState,milliseconds);
+    {
+        getKeyboardFocusSurface()->sendKeyEvent(keyCode,keyState);
+        repaint();
+    }
 
-    printf("Key:%i\n",keyCode);
+    printf("Key:%i State:%i\n",keyCode,keyState);
 
     if(keyState == LIBINPUT_KEY_STATE_RELEASED)
     {
@@ -405,7 +409,6 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState, UInt32 milliseconds
         }
     }
 
-    repaint();
 }
 
 void MyCompositor::drawCursor()

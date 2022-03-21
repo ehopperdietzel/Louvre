@@ -12,6 +12,8 @@ public:
     static void terminateDisplay();
     static void dispatchEvents();
     static void flushClients();
+    static int readFd(int, unsigned int, void*);
+    static void scheduleDraw(WCompositor *comp);
 
 };
 

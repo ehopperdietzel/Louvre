@@ -107,21 +107,43 @@ static int init_drm(void)
 
     drm.fd = open("/dev/dri/card0", O_RDWR);
 
-    if (drm.fd < 0) {
+    if (drm.fd < 0)
+    {
         printf("could not open drm device\n");
         return -1;
     }
 
     resources = drmModeGetResources(drm.fd);
-    if (!resources) {
+
+
+    if (!resources)
+    {
         printf("drmModeGetResources failed: %s\n", strerror(errno));
         return -1;
     }
 
+    /*
     // find a connected connector:
-    for (i = 0; i < resources->count_connectors; i++) {
+    for (i = 0; i < resources->count_connectors; i++)
+    {
         connector = drmModeGetConnector(drm.fd, resources->connectors[i]);
-        if (connector->connection == DRM_MODE_CONNECTED) {
+        if (connector->connection == DRM_MODE_CONNECTED)
+        {
+            printf("1 connected\n");
+        }
+        drmModeFreeConnector(connector);
+        connector = NULL;
+    }
+
+    exit(0);
+    */
+
+    // find a connected connector:
+    for (i = 0; i < resources->count_connectors; i++)
+    {
+        connector = drmModeGetConnector(drm.fd, resources->connectors[i]);
+        if (connector->connection == DRM_MODE_CONNECTED)
+        {
             // it's connected, let's use this!
             break;
         }
@@ -320,7 +342,7 @@ static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsi
 }
 
 
-drmEventContext evctx ={};
+drmEventContext evctx = {};
 struct gbm_bo *bo;
 struct drm_fb *fb;
 int ret;
@@ -393,6 +415,7 @@ void WBackend::initBackend(WCompositor *compositor)
     };
 
     ret = init_drm();
+
     if (ret)
     {
         printf("failed to initialize DRM\n");
@@ -404,6 +427,7 @@ void WBackend::initBackend(WCompositor *compositor)
     FD_SET(drm.fd, &fds);
 
     ret = init_gbm();
+
     if (ret)
     {
         printf("failed to initialize GBM\n");
