@@ -18,6 +18,7 @@
 
 #if W_BACKEND == 2
 
+
 using namespace WaylandPlus;
 
 #define WINDOW_WIDTH 1800
@@ -52,7 +53,7 @@ static void create_window ()
 
     EGLConfig config;
     EGLint num_configs_returned;
-    eglChooseConfig (egl_display, attribs, &config, 1, &num_configs_returned);
+    eglChooseConfig(egl_display, attribs, &config, 1, &num_configs_returned);
 
     // get the visual from the EGL config
     EGLint visual_id;
@@ -100,7 +101,7 @@ static void create_window ()
         exit(-1);
     }
 
-    eglMakeCurrent (egl_display, window.surface, window.surface, window.context);
+    eglMakeCurrent(egl_display, window.surface, window.surface, window.context);
 
     XFree (visual);
 
@@ -124,10 +125,10 @@ void WBackend::initBackend(WCompositor *compositor)
 {
     x_display = XOpenDisplay (NULL);
     egl_display = eglGetDisplay (x_display);
-    eglInitialize (egl_display, NULL, NULL);
+    eglInitialize(egl_display, NULL, NULL);
     create_window();
     printf("X11 backend initialized.\n");
-    compositor->initializeGL();
+    //compositor->initializeGL();
 }
 
 EGLDisplay WBackend::getEGLDisplay()
@@ -144,4 +145,5 @@ void WBackend::paintDRM()
 {
     eglSwapBuffers (egl_display, window.surface);
 }
+
 #endif

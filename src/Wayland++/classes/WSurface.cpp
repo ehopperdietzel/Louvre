@@ -13,6 +13,7 @@
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <WOutput.h>
 
 using namespace WaylandPlus;
 
@@ -79,13 +80,6 @@ void WSurface::sendPointerMotionEvent(double x, double y, UInt32 milliseconds)
 
 void WSurface::sendPointerEnterEvent(double x, double y)
 {
-    if(getCompositor()->_pointerFocusSurface == this)
-        return;
-
-    // Send previus surface a leave event
-    if(getCompositor()->getPointerFocusSurface())
-        getCompositor()->getPointerFocusSurface()->sendPointerLeaveEvent();
-
     if(_client->getPointer())
     {
         wl_pointer_send_enter(
@@ -97,16 +91,11 @@ void WSurface::sendPointerEnterEvent(double x, double y)
         pointerSerial++;
         if(_client->_wl_pointer_version >= 5)
             wl_pointer_send_frame(_client->getPointer());
-        getCompositor()->_pointerFocusSurface = this;
     }
-
 }
 
 void WSurface::sendPointerLeaveEvent()
 {
-    if(getCompositor()->_pointerFocusSurface != this)
-        return;
-
     if(_client->getPointer())
     {
         wl_pointer_send_leave(_client->getPointer(),pointerSerial,_resource);
@@ -115,8 +104,6 @@ void WSurface::sendPointerLeaveEvent()
             wl_pointer_send_frame(_client->getPointer());
 
     }
-
-    getCompositor()->_pointerFocusSurface = nullptr;
 }
 
 void WSurface::sendKeyEvent(UInt32 keyCode, UInt32 keyState)
@@ -139,30 +126,20 @@ void WSurface::sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 lo
 
 void WSurface::sendKeyboardEnterEvent()
 {
-    if(getCompositor()->_keyboardFocusSurface == this)
-        return;
-
     if(_client->getKeyboard())
     {
         wl_keyboard_send_enter(_client->getKeyboard(),keyboardSerial,_resource,&nullKeys);
         keyboardSerial++;
     }
-
-    getCompositor()->_keyboardFocusSurface = this;
 }
 
 void WSurface::sendKeyboardLeaveEvent()
 {
-    if(getCompositor()->_keyboardFocusSurface != this)
-        return;
-
     if(_client->getKeyboard())
     {
         wl_keyboard_send_leave(_client->getKeyboard(),keyboardSerial,_resource);
         keyboardSerial++;
     }
-
-    getCompositor()->_keyboardFocusSurface = nullptr;
 }
 
 void WSurface::sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags states)
@@ -321,16 +298,20 @@ bool WSurface::isDamaged()
 void WSurface::applyDamages()
 {
 
-    if(eglQueryWaylandBufferWL(WBackend::getEGLDisplay(), buffer, EGL_TEXTURE_FORMAT, &texture_format))
+    WOutput *output = getCompositor()->getOutputs().front();
+
+    if(eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
         //printf("EGL buffer\n");
-        EGLint width, height;
-        eglQueryWaylandBufferWL(WBackend::getEGLDisplay(), buffer, EGL_WIDTH, &width);
-        eglQueryWaylandBufferWL(WBackend::getEGLDisplay(), buffer, EGL_HEIGHT, &height);
+        EGLint width, height, format;
+        eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_WIDTH, &width);
+        eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_HEIGHT, &height);
+        eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_TEXTURE_FORMAT, &format);
+        _texture->_format = format;
         EGLAttrib attribs = EGL_NONE;
-        EGLImage image = eglCreateImage(WBackend::getEGLDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, buffer, &attribs);
+        EGLImage image = eglCreateImage(output->getDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, buffer, &attribs);
         _texture->setData(width, height, &image, WTexture::Type::EGL);
-        eglDestroyImage (WBackend::getEGLDisplay(), image);
+        eglDestroyImage (output->getDisplay(), image);
     }
     else
     {

@@ -45,6 +45,7 @@ SOURCES += \
         ../Wayland++/globals/XdgShell/xdg-shell.c \
         MyClient.cpp \
         MyCompositor.cpp \
+        MyOutputManager.cpp \
         MySurface.cpp \
         main.cpp
 
@@ -82,6 +83,7 @@ HEADERS += \
     ../Wayland++/globals/XdgShell/xdg-shell.h \
     MyClient.h \
     MyCompositor.h \
+    MyOutputManager.h \
     MySurface.h
 
 DISTFILES += \

@@ -28,12 +28,6 @@ void Globals::Surface::delete_surface(wl_resource *resource)
     // Notify from client
     surface->getClient()->surfaceDestroyRequest(surface);
 
-    if(surface->getCompositor()->getPointerFocusSurface() == surface)
-        surface->getCompositor()->clearPointerFocus();
-
-    if(surface->getCompositor()->getKeyboardFocusSurface() == surface)
-        surface->getCompositor()->clearKeyboardFocus();
-
     surface->_texture->deleteTexture();
 }
 
@@ -44,6 +38,7 @@ void Globals::Surface::attach(wl_client *client, wl_resource *resource, wl_resou
     (void)client;(void)x;(void)y;
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
     surface->buffer = buffer;
+
 }
 
 void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 callback)
@@ -84,8 +79,8 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
 
     surface->_isDamaged = true;
 
-    surface->getCompositor()->repaint();
-
+    // FALTA ENVIAR EVENTO
+    surface->getCompositor()->repaintAllOutputs();
 
 }
 

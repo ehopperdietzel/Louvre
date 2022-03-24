@@ -2,6 +2,7 @@
 #include <MySurface.h>
 #include <MyCompositor.h>
 #include <string.h>
+#include <WOutput.h>
 
 MyClient::MyClient(wl_client *client, WCompositor *compositor) : WClient::WClient(client,compositor){}
 
@@ -31,5 +32,5 @@ void MyClient::surfaceDestroyRequest(WSurface *surface)
     // Here you must delete your custon WSurface instance
     delete surface;
 
-    comp->repaint();
+    comp->repaintAllOutputs();
 }

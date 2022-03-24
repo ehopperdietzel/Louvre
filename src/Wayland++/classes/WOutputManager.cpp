@@ -1,4 +1,5 @@
-#include "WOutputManager.h"
+#include <WOutputManager.h>
+
 #include <libudev.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,6 +89,7 @@ WOutputManager::WOutputManager(WCompositor *compositor)
 
         // We need the DEVNAME property (Ej:/dev/dri/card0)
         const char *devName = udev_device_get_property_value(dev, "DEVNAME");
+        printf("DEVNAME: %s\n",devName);
 
         drmModeRes *resources;
         drmModeConnector *connector = NULL; // Y
@@ -177,7 +179,10 @@ WOutputManager::WOutputManager(WCompositor *compositor)
                 connector_id = connector->connector_id;
 
                 // SUCCESS! NEW AVALAIBLE OUTPUT!
-                _outputs.push_front(new WOutput(devName,connector,crtc_id));
+                WOutput *newOutput = new WOutput(devName,connector,crtc_id);
+                newOutput->_currentMode = defaultMode;
+                newOutput->_drmFd = drmDeviceFd;
+                _outputs.push_front(newOutput);
                 printf("New output with id: %i\n",crtc_id);
             }
             else
@@ -188,6 +193,7 @@ WOutputManager::WOutputManager(WCompositor *compositor)
         }
 
         udev_device_unref(dev);
+        //close(drmDeviceFd);
     }
     udev_enumerate_unref(enumerate);
 }
@@ -196,3 +202,9 @@ WCompositor *WOutputManager::getCompositor()
 {
     return _compositor;
 }
+
+const list<WOutput *> *WOutputManager::getOutputsList()
+{
+    return &_outputs;
+}
+

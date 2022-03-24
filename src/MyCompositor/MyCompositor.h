@@ -12,8 +12,8 @@ public:
     MyCompositor();
 
     // Virtual methods to override
-    void initializeGL() override;
-    void paintGL() override;
+    void initializeGL(WOutput *output) override;
+    void paintGL(WOutput *output) override;
 
     WClient *newClientRequest(wl_client *client) override;
     void clientDisconnectRequest(WClient *client) override;
@@ -21,10 +21,19 @@ public:
     void setCursorRequest(WSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY) override;
 
     void libinputEvent(libinput_event *ev) override;
-    void pointerPosChanged(double x, double y, UInt32 milliseconds) override;
-    void pointerClickEvent(int x, int y, UInt32 button, UInt32 state, UInt32 milliseconds) override;
+    void pointerMoveEvent(float dx, float dy) override;
+    void pointerClickEvent(UInt32 button, UInt32 state) override;
     void keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) override;
     void keyEvent(UInt32 keyCode, UInt32 keyState) override;
+
+
+    void setPointerPos(double x, double y);
+    WSurface *_pointerFocusSurface = nullptr;
+    WSurface *_keyboardFocusSurface = nullptr;
+    WSurface *_cursorSurface = nullptr;
+    Point cursorHotspot = {0,0};
+    PointD pointer;
+    WOutput *pointerOutput = nullptr;
 
     // Square
     GLfloat square[16] =

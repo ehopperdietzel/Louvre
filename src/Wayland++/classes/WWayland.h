@@ -3,6 +3,7 @@
 
 #include <wayland-server.h>
 #include <WNamespaces.h>
+#include <EGL/egl.h>
 
 
 class WaylandPlus::WWayland
@@ -14,6 +15,8 @@ public:
     static void flushClients();
     static int readFd(int, unsigned int, void*);
     static void scheduleDraw(WCompositor *comp);
+    static void bindEGLDisplay(EGLDisplay eglDisplay);
+    static void runLoop();
 
 };
 

@@ -1,24 +1,27 @@
 #include "MySurface.h"
 #include <MyCompositor.h>
-
-MySurface::MySurface(UInt32 id, wl_resource *resource, WClient *client, GLuint textureUnit):WSurface::WSurface(id,resource,client,textureUnit){}
+#include <WOutput.h>
+MySurface::MySurface(UInt32 id, wl_resource *resource, WClient *client, GLuint textureUnit):WSurface::WSurface(id,resource,client,textureUnit)
+{
+    comp = (MyCompositor*)getCompositor();
+    setX(rand() % comp->pointerOutput->getCurrentMode().hdisplay / 4);
+    setY(rand() % comp->pointerOutput->getCurrentMode().vdisplay / 4);
+}
 
 MySurface::~MySurface()
 {
-    setX(rand() % getCompositor()->screenWidth() - 200);
-    setY(rand() % getCompositor()->screenHeight() - 200);
+
 }
 
 // Event when window is grabbed (tipically by the topbar)
 void MySurface::moveStartRequest()
 {
-    MyCompositor *comp = (MyCompositor*)getCompositor();
     if(!comp->isLeftMouseButtonPressed)
         return;
     comp->movingSurfaceInitialPosX = getRectWithoutDecoration().x;
     comp->movingSurfaceInitialPosY = getRectWithoutDecoration().y;
-    comp->movingSurfaceInitialCursorPosX = comp->getPointerX();
-    comp->movingSurfaceInitialCursorPosY = comp->getPointerY();
+    comp->movingSurfaceInitialCursorPosX = comp->pointer.x;
+    comp->movingSurfaceInitialCursorPosY = comp->pointer.y;
     comp->movingSurface = this;
 }
 
@@ -32,15 +35,13 @@ void MySurface::minSizeChangeRequest()
 
 void MySurface::resizeStartRequest(ResizeEdge edge)
 {
-    MyCompositor *comp = (MyCompositor*)getCompositor();
-
     if(!comp->isLeftMouseButtonPressed)
         return;
 
     comp->resizingSurface = this;
     comp->resizeEdge = edge;
 
-    comp->resizeInitialMousePos = { comp->getPointerX(), comp->getPointerY() };
+    comp->resizeInitialMousePos = { comp->pointer.x, comp->pointer.y };
 
     Rect dr = getRectWithoutDecoration();
     comp->resizeInitialSurfaceRect = {(double)dr.x,(double)dr.y,(double)dr.width,(double)dr.height};
@@ -60,7 +61,7 @@ void MySurface::typeChangeRequest()
 
     printf("Surface changed type to %i.\n",getType());
 
-    getCompositor()->repaint();
+   comp->repaintAllOutputs();
 }
 
 void MySurface::positionerChangeRequest()
@@ -68,7 +69,7 @@ void MySurface::positionerChangeRequest()
     /* Internally updated, can be accessed with the getPositioner() menthod.
      * The positoner is only avaliable for surfaces with type Popup otherwise nullptr is returned */
 
-    getCompositor()->repaint();
+    comp->repaintAllOutputs();
 }
 
 void MySurface::parentChangeRequest()
@@ -76,7 +77,7 @@ void MySurface::parentChangeRequest()
     /* Internally updated, can be accessed with the getParent() menthod.
      * If the surface has no parent, nullptr is returned */
 
-    getCompositor()->repaint();
+    comp->repaintAllOutputs();
 }
 
 void MySurface::bufferScaleChangeRequest()
@@ -84,7 +85,7 @@ void MySurface::bufferScaleChangeRequest()
     /* Internally updated, can be accessed with the getBufferScale() menthod.
      * If the surface has no parent, nullptr is returned */
 
-    getCompositor()->repaint();
+    comp->repaintAllOutputs();
 }
 
 Int32 MySurface::mapXtoLocal(int xGlobal)

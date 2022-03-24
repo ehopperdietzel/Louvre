@@ -71,7 +71,6 @@ int WWayland::initWayland(WCompositor *comp)
     wl_global_create(display, &wl_data_device_manager_interface, 3, comp, &Globals::DataDeviceManager::bind);//3
 
     // Create xdg shell global
-    //wl_global_create(display, &zxdg_shell_v6_interface, 1, comp, &Extensions::XdgShell::ShellV6::bind);//4
     wl_global_create(display, &xdg_wm_base_interface, 4, comp, &Extensions::XdgShell::WmBase::bind);
 
     eglBindWaylandDisplayWL(WBackend::getEGLDisplay(), display);
@@ -82,21 +81,14 @@ int WWayland::initWayland(WCompositor *comp)
     event_loop = wl_display_get_event_loop(display);
     wayland_fd = wl_event_loop_get_fd(event_loop);
 
-
     wl_event_loop_add_fd(event_loop,WInput::getLibinputFd(),WL_EVENT_READABLE,&WInput::processInput,NULL);
     wl_event_loop_add_fd(event_loop,comp->libinputFd,WL_EVENT_READABLE,&WWayland::readFd,comp);
 
-    //wl_event_loop_signal_func_t
-
-    //wl_signal sig;
-    //sig.
-    //wl_event_loop_add_signal(event_loop,666,&WCompositor::render,comp);
-
     createNullKeys();
+
     printf("Wayland server initialized.\n");
 
     comp->waylandFd = wl_event_loop_get_fd(event_loop);
-    wl_display_run(display);
 
     return wayland_fd;
 
@@ -125,4 +117,14 @@ int WWayland::readFd(int, unsigned int, void *d)
     WInput::processInput(0,0,comp);
     eventfd_read(comp->libinputFd,&comp->libinputVal);
 
+}
+
+void WWayland::bindEGLDisplay(EGLDisplay eglDisplay)
+{
+    eglBindWaylandDisplayWL(eglDisplay, display);
+}
+
+void WWayland::runLoop()
+{
+    wl_display_run(display);
 }

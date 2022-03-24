@@ -7,27 +7,44 @@
 #include <stdio.h>
 #include <MyClient.h>
 #include <WBackend.h>
-#include <WOutputManager.h>
+#include <MyOutputManager.h>
+#include <WOutput.h>
 #include <SOIL/SOIL.h>
 
-MyCompositor::MyCompositor()
+MyCompositor::MyCompositor():WCompositor()
 {
-    /* *******************************************************************
-     * Suggests clients to scale their buffers.
-     * 1 is the default ( 1 virtual pixel = 1 screen pixel )
-     * 2 is for HDPi screens ( 1 virtual pixel = 2 screen pixels )
-     * Clients can ignore this suggestion and use a different scale.
-     * Get the client's surface scale with the surface->getScale() method.
-     * You can invoke this method at any time but only new clients will
-     * be notified.
-     *********************************************************************/
-    //WOutputManager *outputManager = new WOutputManager(this);
 
-    setOutputScale(2);
+    // Use the output manager to get connected displays
+    MyOutputManager *outputManager = new MyOutputManager(this);
+
+    if(outputManager->getOutputsList()->size() == 0)
+    {
+        // If there aren't currently any avaliable display, you should wait for the WOutputManager::outputPluggedEvent
+    }
+    else
+    {
+        // Use the first avaliable display
+        WOutput *output = outputManager->getOutputsList()->front();
+
+        /* *******************************************************************
+         * Suggests clients to scale their buffers.
+         * 1 is the default ( 1 virtual pixel = 1 screen pixel )
+         * 2 is for HDPi screens ( 1 virtual pixel = 2 screen pixels )
+         * Clients can ignore this suggestion and use a different scale.
+         * Get the client's surface scale with the surface->getScale() method.
+         * You can invoke this method at any time but only new clients will
+         * be notified.
+         *********************************************************************/
+
+        output->setOutputScale(2);
+        pointerOutput = output;
+        addOutput(output);
+    }
+
 }
 
 
-void MyCompositor::initializeGL()
+void MyCompositor::initializeGL(WOutput *output)
 {
     /*************************************************
      * Here you initialize your OpenGL ES 2 context
@@ -83,7 +100,7 @@ void MyCompositor::initializeGL()
     glUseProgram(programObject);
 
     // Set the viewport
-    glViewport(0, 0, screenWidth(), screenHeight());
+    glViewport(0, 0, output->getCurrentMode().hdisplay, output->getCurrentMode().vdisplay);
 
     // Load the vertex data
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, square);
@@ -97,7 +114,10 @@ void MyCompositor::initializeGL()
     activeTextureUniform = glGetUniformLocation(programObject, "application");
 
     // Set screen size
-    glUniform2f(screenUniform,screenWidth()/getOutputScale(),screenHeight()/getOutputScale());
+    glUniform2f(
+        screenUniform,
+        output->getCurrentMode().hdisplay/output->getOutputScale(),
+        output->getCurrentMode().vdisplay/output->getOutputScale());
 
     // Reserve unit 0 for cursor
     glActiveTexture(GL_TEXTURE0);
@@ -113,24 +133,24 @@ void MyCompositor::initializeGL()
     backgroundTexture->setData(w,h,img);
     SOIL_free_image_data(img);
 
+    printf("Initialize GL\n");
 }
 
-void MyCompositor::paintGL()
+void MyCompositor::paintGL(WOutput *output)
 {
     /*************************************************
      *  Here you do your OpenGL drawing.
+     *  Each output has its own OpenGL context.
      *  Never invoke this method directly,
-     *  use WCompositor::repaint() instead
-     *  otherwise you may break the internal page
-     *  flipping mechanism.
+     *  use WOutput::repaint() instead to schedule
+     *  the next frame.
      *************************************************/
 
     glClear(GL_COLOR_BUFFER_BIT);
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,backgroundTexture->textureId());
     glUniform1i(activeTextureUniform,0);
-    glUniform4f(rectUniform,0,0,screenWidth()/getOutputScale(),screenHeight()/getOutputScale());
+    glUniform4f(rectUniform,0,0,output->getCurrentMode().hdisplay/output->getOutputScale(),output->getCurrentMode().vdisplay/output->getOutputScale());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     for(list<MySurface*>::iterator surface = surfacesList.begin(); surface != surfacesList.end(); ++surface)
@@ -144,8 +164,6 @@ void MyCompositor::paintGL()
             glActiveTexture(GL_TEXTURE0 + (*surface)->getTexture()->textureUnit());
             glBindTexture(GL_TEXTURE_2D,(*surface)->getTexture()->textureId());
         }
-
-
 
         if(resizingSurface == (*surface) && isLeftMouseButtonPressed)
         {
@@ -194,7 +212,7 @@ void MyCompositor::clientDisconnectRequest(WClient *)
 
 void MyCompositor::setCursorRequest(WSurface *_cursorSurface, Int32 hotspotX, Int32 hotspotY)
 {
-    (void)hotspotX;(void)hotspotY;
+    cursorHotspot = {hotspotX,hotspotY};
     cursorSurface = (MySurface*)_cursorSurface;
 }
 
@@ -208,9 +226,15 @@ void MyCompositor::libinputEvent(libinput_event *)
     // libinput_event_type eventType = libinput_event_get_type(event);
 }
 
-void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
+void MyCompositor::pointerMoveEvent(float dx, float dy)
 {
     MySurface *surface;
+
+    pointer.x+=dx;
+    pointer.y+=dy;
+
+    float x = pointer.x;
+    float y = pointer.y;
 
     if(resizingSurface != nullptr)
     {
@@ -273,6 +297,7 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
         }
+
         return;
     }
 
@@ -280,7 +305,7 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
     {
         movingSurface->setXWithoutDecoration(movingSurfaceInitialPosX + int( x - movingSurfaceInitialCursorPosX ));
         movingSurface->setYWithoutDecoration(movingSurfaceInitialPosY + int( y - movingSurfaceInitialCursorPosY ));
-        repaint();
+        repaintAllOutputs();
         return;
     }
 
@@ -292,38 +317,45 @@ void MyCompositor::pointerPosChanged(double x, double y, UInt32 milliseconds)
         if(surface->getType() == SurfaceType::Undefined) continue;
 
         // Mouse move event
-        if(surface->containsPoint(x,y,false) && getPointerFocusSurface() == surface)
+        if(surface->containsPoint(x,y,false) && _pointerFocusSurface == surface)
         {
-            surface->sendPointerMotionEvent(surface->mapXtoLocal(x),surface->mapYtoLocal(y),milliseconds);
+            surface->sendPointerMotionEvent(surface->mapXtoLocal(x),surface->mapYtoLocal(y),getMilliseconds());
             break;
         }
 
         // Mouse leave surface
-        if(!surface->containsPoint(x,y,false) && getPointerFocusSurface() == surface)
+        if(!surface->containsPoint(x,y,false) && _pointerFocusSurface == surface)
         {
-            surface->sendPointerLeaveEvent();
+            _pointerFocusSurface->sendPointerLeaveEvent();
+            _pointerFocusSurface = nullptr;
             cursorSurface = nullptr;
             printf("Mouse left surface\n");
             continue;
         }
 
         // Mouse enter surface
-        if(surface->containsPoint(x,y,false) && getPointerFocusSurface() != surface)
+        if(surface->containsPoint(x,y,false) && _pointerFocusSurface != surface)
         {
 
+            if(_pointerFocusSurface != nullptr)
+                _pointerFocusSurface->sendPointerLeaveEvent();
+
             surface->sendPointerEnterEvent(surface->mapXtoLocal(x),surface->mapXtoLocal(y));
+
+            _pointerFocusSurface = surface;
+
             printf("Mouse entered surface\n");
+
             break;
         }
     }
 
-    repaint();
+    repaintAllOutputs();
 }
 
-void MyCompositor::pointerClickEvent(int x, int y, UInt32 button, UInt32 state, UInt32 milliseconds)
+
+void MyCompositor::pointerClickEvent(UInt32 button, UInt32 state)
 {
-    //printf("%i\n",button);
-    (void)x;(void)y;
 
     if(state == LIBINPUT_BUTTON_STATE_RELEASED && button == 272)
     {
@@ -340,41 +372,47 @@ void MyCompositor::pointerClickEvent(int x, int y, UInt32 button, UInt32 state, 
         movingSurface = nullptr;
     }
 
-    if(getPointerFocusSurface() != nullptr)
+    if(_pointerFocusSurface != nullptr)
     {
-        getPointerFocusSurface()->sendPointerButtonEvent(button,state,milliseconds);
+        _pointerFocusSurface->sendPointerButtonEvent(button,state,getMilliseconds());
 
         if(state == LIBINPUT_BUTTON_STATE_PRESSED && button == 272)
         {
             isLeftMouseButtonPressed = true;
 
-            if(getKeyboardFocusSurface() != getPointerFocusSurface())
-                getPointerFocusSurface()->sendKeyboardEnterEvent();
+            if(_keyboardFocusSurface != _pointerFocusSurface)
+            {
+                if(_keyboardFocusSurface != nullptr)
+                    _keyboardFocusSurface->sendKeyboardLeaveEvent();
+
+                _pointerFocusSurface->sendKeyboardEnterEvent();
+                _keyboardFocusSurface = _pointerFocusSurface;
+            }
 
             // Raise view
-            surfacesList.remove((MySurface*)getPointerFocusSurface());
-            surfacesList.push_back((MySurface*)getPointerFocusSurface());
+            surfacesList.remove((MySurface*)_pointerFocusSurface);
+            surfacesList.push_back((MySurface*)_pointerFocusSurface);
 
         }
     }
 
-    repaint();
+    repaintAllOutputs();
 }
 
 void MyCompositor::keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
-    if(getKeyboardFocusSurface())
-        getKeyboardFocusSurface()->sendKeyModifiersEvent(depressed,latched,locked,group);
+    if(_keyboardFocusSurface)
+        _keyboardFocusSurface->sendKeyModifiersEvent(depressed,latched,locked,group);
 
-    repaint();
+    repaintAllOutputs();
 }
 
 void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState)
 {
-    if(getKeyboardFocusSurface())
+    if(_keyboardFocusSurface)
     {
-        getKeyboardFocusSurface()->sendKeyEvent(keyCode,keyState);
-        repaint();
+        _keyboardFocusSurface->sendKeyEvent(keyCode,keyState);
+        repaintAllOutputs();
     }
 
     printf("Key:%i State:%i\n",keyCode,keyState);
@@ -423,7 +461,7 @@ void MyCompositor::drawCursor()
             cursorSurface->applyDamages();
 
         glBindTexture(GL_TEXTURE_2D,cursorSurface->getTexture()->textureId());
-        glUniform4f(rectUniform,getPointerX()-cursorXOffset,getPointerY()-cursorYOffset,cursorSurface->getWidth(),cursorSurface->getHeight());
+        glUniform4f(rectUniform,pointer.x - cursorHotspot.x, pointer.y - cursorHotspot.y,cursorSurface->getWidth(),cursorSurface->getHeight());
 
     }
     else
@@ -431,7 +469,26 @@ void MyCompositor::drawCursor()
         glActiveTexture(GL_TEXTURE0);
         glUniform1i(activeTextureUniform,0);
         glBindTexture(GL_TEXTURE_2D,defaultCursorTexture->textureId());
-        glUniform4f(rectUniform,getPointerX(),getPointerY(),24,24);
+        glUniform4f(rectUniform,pointer.x,pointer.y,24,24);
     }
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
+
+void MyCompositor::setPointerPos(double x, double y)
+{
+    float w = pointerOutput->getCurrentMode().hdisplay/pointerOutput->getOutputScale();
+    float h = pointerOutput->getCurrentMode().vdisplay/pointerOutput->getOutputScale();
+
+    if(x < 0.0)
+        x = 0.0;
+    if(y < 0.0)
+        y = 0.0;
+    if(x > w)
+        x = w;
+    if(y > h)
+        y = h;
+
+    pointer = { x, y };
+
+}
+

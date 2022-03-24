@@ -8,128 +8,48 @@
 #include <thread>
 #include <unistd.h>
 #include <signal.h>
-
+#include <WOutput.h>
 
 using namespace WaylandPlus;
-
-// Compositor and Wayland file descriptors
-pollfd pfds[2];
-
 
 WCompositor::WCompositor()
 {
     signal(SIGINT,SIG_IGN);
+    libinputFd = eventfd(0,EFD_SEMAPHORE);
+    WInput::initInput(this);
+    WWayland::initWayland(this);
 }
 
 void WCompositor::start()
 {    
+    if(_started)
+        return;
 
     // Init wayland
-    libinputFd = eventfd(0,EFD_SEMAPHORE);
-
-    // Render loop
-    renderFd = eventfd(0,EFD_SEMAPHORE);
-    std::thread renderThrd(&WCompositor::renderLoop, this);
-
-    //WBackend::initBackend(this);
-    WInput::initInput(this);
-    WWayland::initWayland(this);
-
-    /*
-    pfds[0].fd = WWayland::initWayland(this);
-    pfds[0].revents = 0;
-    pfds[0].events = POLLIN;
-    pfds[1].fd = waylandFd;
-    pfds[1].revents = 0;
-    pfds[1].events = POLLIN;
-
-
-
-
-    // Process libinput events in another thread
-    libinputFd = eventfd(0,EFD_SEMAPHORE);
-    std::thread eglThrd(WInput::initInput, this);
-
-    mainLoop();
-    */
+    _started = true;
+    WWayland::runLoop();
 }
 
-void WCompositor::setOutputScale(Int32 scale)
+void WCompositor::repaintAllOutputs()
 {
-    _outputScale = scale;
+    for(list<WOutput*>::iterator it = _outputs.begin(); it != _outputs.end(); ++it)
+        (*it)->repaint();
 }
 
-Int32 WCompositor::getOutputScale()
+void WCompositor::addOutput(WOutput *output)
 {
-    return _outputScale;
+    _outputs.push_back(output);
+    output->setCompositor(this);
 }
 
-void WCompositor::repaint()
+void WCompositor::removeOutput(WOutput *output)
 {
-    //WWayland::scheduleDraw(this);
-    eventfd_write(renderFd,1);
+
 }
 
-int WCompositor::screenWidth()
+const list<WOutput *> WCompositor::getOutputs()
 {
-    return WBackend::backendWidth();
-}
-
-int WCompositor::screenHeight()
-{
-    return WBackend::backendHeight();
-}
-
-double WCompositor::getPointerX()
-{
-    return _pointerX;
-}
-
-double WCompositor::getPointerY()
-{
-    return _pointerY;
-}
-
-void WCompositor::setPointerPos(double x, double y, UInt32 milliseconds)
-{
-    if(x < 0.0)
-        x = 0.0;
-    if(y < 0.0)
-        y = 0.0;
-    if(x > screenWidth()/getOutputScale())
-        x = screenWidth()/getOutputScale();
-    if(y > screenHeight()/getOutputScale())
-        y = screenHeight()/getOutputScale();
-
-    _pointerX = x;
-    _pointerY = y;
-
-    pointerPosChanged(x,y, milliseconds);
-}
-
-WSurface *WCompositor::getPointerFocusSurface()
-{
-    return _pointerFocusSurface;
-}
-
-WSurface *WCompositor::getKeyboardFocusSurface()
-{
-    return _keyboardFocusSurface;
-}
-
-WSurface *WCompositor::getCursorSurface()
-{
-    return _cursorSurface;
-}
-
-void WCompositor::clearPointerFocus()
-{
-    _pointerFocusSurface = nullptr;
-}
-
-void WCompositor::clearKeyboardFocus()
-{
-    _keyboardFocusSurface = nullptr;
+    return _outputs;
 }
 
 UInt32 WCompositor::getMilliseconds()
@@ -146,21 +66,4 @@ timespec WCompositor::getNanoseconds()
     return endTime;
 }
 
-void WCompositor::renderLoop(WCompositor *comp)
-{
-    WBackend::initBackend(comp);
 
-    pollfd p;
-    p.fd = comp->renderFd;
-    p.revents = 0;
-    p.events = POLLIN;
-
-    while(true)
-    {
-        poll(&p,1,-1);
-        comp->paintGL();
-        eventfd_read(comp->renderFd,&comp->renderVal);
-        eventfd_write(comp->libinputFd,1);
-        WBackend::paintDRM();
-    }
-}

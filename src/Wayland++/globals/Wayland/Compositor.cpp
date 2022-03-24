@@ -99,9 +99,6 @@ void Globals::Compositor::resource_destroy(wl_resource *resource)
     // Notify
     client->getCompositor()->clientDisconnectRequest(client);
 
-    // Update screen
-    client->getCompositor()->repaint();
-
     // Destroy client
     delete client;
 }

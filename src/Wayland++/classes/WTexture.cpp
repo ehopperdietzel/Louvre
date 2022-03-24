@@ -38,7 +38,7 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
         {
             while(!damages.empty())
                 damages.pop();
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, _format, GL_UNSIGNED_BYTE, data);
             WOpenGL::checkGLError("Error creating texture from shared memory.");
         }
     }
@@ -54,6 +54,7 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
             glPixelStorei(GL_UNPACK_SKIP_PIXELS,(GLint)damage.x);
             glPixelStorei(GL_UNPACK_SKIP_ROWS,(GLint)damage.y);
 
+
             ////printf("%i %i\n",width,height);
 
             if(damage.x < 0)
@@ -65,15 +66,18 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
             if(damage.height + damage.y > _height || damage.height < 0)
                 damage.height = _height - damage.y;
 
+
             glTexSubImage2D(GL_TEXTURE_2D,
                 0,
                 (GLint)damage.x,
                 (GLint)damage.y,
                 (GLsizei)damage.width,
                 (GLsizei)damage.height,
-                GL_BGRA,
+                _format,
                 GL_UNSIGNED_BYTE,
                 data);
+
+
 
             WOpenGL::checkGLError("Error updating texture region.");
 

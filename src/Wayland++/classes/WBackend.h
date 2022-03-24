@@ -1,11 +1,12 @@
 #ifndef WBACKEND
 #define WBACKEND
 
-#define W_BACKEND 1
+#define W_BACKEND 2
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <WNamespaces.h>
+
 
 class WaylandPlus::WBackend
 {

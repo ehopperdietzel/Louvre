@@ -22,41 +22,23 @@ class WaylandPlus::WCompositor
 public:
     WCompositor();
     void start();
-    virtual void initializeGL() = 0;
-    virtual void paintGL() = 0;
+    virtual void initializeGL(WOutput *output) = 0;
+    virtual void paintGL(WOutput *output) = 0;
 
     virtual WClient *newClientRequest(wl_client *client) = 0;
     virtual void clientDisconnectRequest(WClient *client) = 0;
-
     virtual void setCursorRequest(WSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY) = 0;
-
     virtual void libinputEvent(libinput_event *ev) = 0;
-    virtual void pointerPosChanged(double x, double y, UInt32 milliseconds) = 0;
-    virtual void pointerClickEvent(Int32 x, Int32 y, UInt32 button, UInt32 state, UInt32 milliseconds) = 0;
+    virtual void pointerMoveEvent(float dx, float dy) = 0;
+    virtual void pointerClickEvent(UInt32 button, UInt32 state) = 0;
     virtual void keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) = 0;
     virtual void keyEvent(UInt32 keyCode,UInt32 keyState) = 0;
 
     // Output
-    void setOutputScale(Int32 scale);
-    Int32 getOutputScale();
-
-    void repaint();
-
-    Int32 screenWidth();
-    Int32 screenHeight();
-
-    double getPointerX();
-    double getPointerY();
-
-    void setPointerPos(double x, double y, UInt32 milliseconds);
-
-    WSurface *getPointerFocusSurface();
-    WSurface *getKeyboardFocusSurface();
-    WSurface *getCursorSurface();
-    UInt32 cursorXOffset, cursorYOffset = 0;
-
-    void clearPointerFocus();
-    void clearKeyboardFocus();
+    void repaintAllOutputs();
+    void addOutput(WOutput *output);
+    void removeOutput(WOutput *output);
+    const list<WOutput*> getOutputs();
 
     UInt32 getMilliseconds();
     timespec getNanoseconds();
@@ -67,27 +49,17 @@ private:
     friend class WWayland;
     friend class WInput;
     friend class WSurface;
+    friend class WOutput;
     friend class Globals::Surface;
     friend class WaylandPlus::Globals::Pointer;
 
     // Output scale
-    Int32 _outputScale = 1;
+    list<WOutput*>_outputs;
 
-    bool scheduledDraw = false;
-    UInt64 lastDraw = 0;
-    void mainLoop();
-    void flushClients();
-    static void renderLoop(WCompositor *comp);
+    int libinputFd, waylandFd;
+    eventfd_t libinputVal, waylandVal = 1;
 
-    WSurface *_pointerFocusSurface = nullptr;
-    WSurface *_keyboardFocusSurface = nullptr;
-    WSurface *_cursorSurface = nullptr;
-
-    double _pointerX = 0.0;
-    double _pointerY = 0.0;
-
-    int renderFd, libinputFd, waylandFd;
-    eventfd_t renderVal, libinputVal, waylandVal = 1;
+    bool _started = false;
 };
 
 #endif // WCOMPOSITOR_H

@@ -9,11 +9,8 @@ void WaylandPlus::Globals::Pointer::set_cursor(wl_client *client, wl_resource *r
     WCompositor *compositor = (WCompositor*)wl_resource_get_user_data(resource);
     if(surface == nullptr)
         return;
-    compositor->_cursorSurface = (WSurface*)wl_resource_get_user_data(surface);
-    compositor->cursorXOffset = hotspot_x;
-    compositor->cursorYOffset = hotspot_y;
 
-    compositor->setCursorRequest(compositor->_cursorSurface,compositor->cursorXOffset,compositor->cursorYOffset);
+    compositor->setCursorRequest((WSurface*)wl_resource_get_user_data(surface),hotspot_x,hotspot_y);
 }
 
 void WaylandPlus::Globals::Pointer::release(wl_client *client, wl_resource *resource)

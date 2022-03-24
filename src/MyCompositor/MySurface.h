@@ -5,6 +5,8 @@
 
 using namespace WaylandPlus;
 
+class MyCompositor;
+
 class MySurface : public WSurface
 {
 public:
@@ -21,6 +23,8 @@ public:
     void positionerChangeRequest() override;
     void parentChangeRequest() override;
     void bufferScaleChangeRequest() override;
+
+    MyCompositor *comp = nullptr;
 
     Int32 mapXtoLocal(int xGlobal);
     Int32 mapYtoLocal(int yGlobal);

@@ -31,11 +31,14 @@ public:
 
 private:
     friend class WaylandPlus::Globals::Surface;
+    friend class WaylandPlus::WSurface;
+
     std::queue<Rect>damages;
     int _width,_height = 0;
     GLuint _textureId,_textureUnit = 0;
     bool _initialized = false;
     Type _type = SHM;
+    UInt32 _format = GL_RGBA;
 
 };
 
