@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['readfd_0',['readFd',['../class_wayland_plus_1_1_w_wayland.html#aa61249226548096d875154017aa37fe4',1,'WaylandPlus::WWayland']]],
+  ['rect_1',['Rect',['../struct_wayland_plus_1_1_rect.html',1,'WaylandPlus']]],
+  ['rectd_2',['RectD',['../struct_wayland_plus_1_1_rect_d.html',1,'WaylandPlus']]],
+  ['rects_3',['rects',['../class_wayland_plus_1_1_w_region.html#ab62a107aace3568be994799fc976ae72',1,'WaylandPlus::WRegion']]],
+  ['region_4',['Region',['../class_wayland_plus_1_1_globals_1_1_region.html',1,'WaylandPlus::Globals']]],
+  ['region_2ecpp_5',['Region.cpp',['../_region_8cpp.html',1,'']]],
+  ['region_2eh_6',['Region.h',['../_region_8h.html',1,'']]],
+  ['region_5fimplementation_7',['region_implementation',['../_compositor_8cpp.html#abb72bc0a56d84c28b970fc71a7d1d506',1,'Compositor.cpp']]],
+  ['regions_8',['regions',['../class_wayland_plus_1_1_w_client.html#ac27b601a7d5d6d43a3108aafe3b86cfb',1,'WaylandPlus::WClient']]],
+  ['release_9',['release',['../class_wayland_plus_1_1_globals_1_1_data_device.html#a4c82f524cbdc5c17623d65e47f2670e2',1,'WaylandPlus::Globals::DataDevice::release()'],['../class_wayland_plus_1_1_globals_1_1_keyboard.html#a5eb169ad981684a4876adf328d5bc491',1,'WaylandPlus::Globals::Keyboard::release()'],['../class_wayland_plus_1_1_globals_1_1_output.html#a746f21b4354589d523f1dd96729016fc',1,'WaylandPlus::Globals::Output::release()'],['../class_wayland_plus_1_1_globals_1_1_pointer.html#a7b7e94da0f6774df68d615bf4c2fbb86',1,'WaylandPlus::Globals::Pointer::release()'],['../class_wayland_plus_1_1_globals_1_1_seat.html#ae874f44a3c59df0a69b4ad81a986877c',1,'WaylandPlus::Globals::Seat::release()']]],
+  ['remove_10',['remove',['../class_wayland_plus_1_1_globals_1_1_region.html#ace8d8dd5d55b536f0ce599c09ae9dd63',1,'WaylandPlus::Globals::Region']]],
+  ['removeoutput_11',['removeOutput',['../class_wayland_plus_1_1_w_compositor.html#af8de2d90c1d3d814f7ef289f74d9dc97',1,'WaylandPlus::WCompositor']]],
+  ['rendertimer_12',['renderTimer',['../_w_wayland_8cpp.html#adec5ae54d1adecc039ee600a96b27dc9',1,'WWayland.cpp']]],
+  ['repaint_13',['repaint',['../class_wayland_plus_1_1_w_output.html#a19dd765ee67d1c903a6bb5fb551faf8a',1,'WaylandPlus::WOutput']]],
+  ['repaintalloutputs_14',['repaintAllOutputs',['../class_wayland_plus_1_1_w_compositor.html#a8d9eae8401e67bcb9f104fe6a55fc5ff',1,'WaylandPlus::WCompositor']]],
+  ['reposition_15',['reposition',['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_popup.html#a4141ba22502f6c3a5cc765d51631731e',1,'WaylandPlus::Extensions::XdgShell::Popup::reposition()'],['../structxdg__popup__interface.html#a243512a7a46723b60bf2cef7c316b772',1,'xdg_popup_interface::reposition()']]],
+  ['resize_16',['resize',['../structzxdg__toplevel__v6__interface.html#aae337f13dd39f4a37b41604b3c879adc',1,'zxdg_toplevel_v6_interface::resize()'],['../structxdg__toplevel__interface.html#aa812032e2b929fcb5fecb71680b80dc1',1,'xdg_toplevel_interface::resize()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_toplevel.html#a3c356e2fef4aac4b225b458c12eeb0c0',1,'WaylandPlus::Extensions::XdgShell::Toplevel::resize()']]],
+  ['resizeedge_17',['ResizeEdge',['../namespace_wayland_plus.html#a7d2ea423288402a5d924c7419ba64544',1,'WaylandPlus']]],
+  ['resizestartrequest_18',['resizeStartRequest',['../class_wayland_plus_1_1_w_surface.html#aacd59ad37c86c3fd8309a73afaa2e508',1,'WaylandPlus::WSurface']]],
+  ['resizing_19',['Resizing',['../namespace_wayland_plus.html#a0fcb74c5a20c087313aa9321464a6fa6a83aa30f149fccbc685afb76eebbba7a2',1,'WaylandPlus']]],
+  ['resource_5fdestroy_20',['resource_destroy',['../class_wayland_plus_1_1_globals_1_1_compositor.html#ada202a7744d5be770a01dc3ba8579b65',1,'WaylandPlus::Globals::Compositor::resource_destroy()'],['../class_wayland_plus_1_1_globals_1_1_data_device_manager.html#a2283c76d9a254a9a82694d2fb7ec6b9e',1,'WaylandPlus::Globals::DataDeviceManager::resource_destroy()'],['../class_wayland_plus_1_1_globals_1_1_output.html#a5c311096718134f9fba41b7658bc83b2',1,'WaylandPlus::Globals::Output::resource_destroy()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_wm_base.html#a2ef8c1e9094e7acd5c3202eb812ee903',1,'WaylandPlus::Extensions::XdgShell::WmBase::resource_destroy()']]],
+  ['right_21',['Right',['../namespace_wayland_plus.html#a7d2ea423288402a5d924c7419ba64544a3b488ecc06c2703e41f4fd384a985044',1,'WaylandPlus']]],
+  ['runloop_22',['runLoop',['../class_wayland_plus_1_1_w_wayland.html#a23b37c35eac4931258a4432ef995d45e',1,'WaylandPlus::WWayland']]]
+];

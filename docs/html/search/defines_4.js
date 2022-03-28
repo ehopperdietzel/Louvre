@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['xdg_5fpopup_5fconfigure_0',['XDG_POPUP_CONFIGURE',['../xdg-shell_8h.html#aa7d2a9bf5dc6897dba99b6745037f28f',1,'xdg-shell.h']]],
+  ['xdg_5fpopup_5ferror_5fenum_1',['XDG_POPUP_ERROR_ENUM',['../xdg-shell_8h.html#a26e350f041c31ab96c7c54880e4b65da',1,'xdg-shell.h']]],
+  ['xdg_5fpopup_5fpopup_5fdone_2',['XDG_POPUP_POPUP_DONE',['../xdg-shell_8h.html#a881ddb5f4a6e0323f2bd554f682cd552',1,'xdg-shell.h']]],
+  ['xdg_5fpopup_5frepositioned_3',['XDG_POPUP_REPOSITIONED',['../xdg-shell_8h.html#a5329c1fae656be6582b5f31ebaf3dbb7',1,'xdg-shell.h']]],
+  ['xdg_5fpositioner_5fanchor_5fenum_4',['XDG_POSITIONER_ANCHOR_ENUM',['../xdg-shell_8h.html#a54f8beb94be01231a80fa09137beb61a',1,'xdg-shell.h']]],
+  ['xdg_5fpositioner_5fconstraint_5fadjustment_5fenum_5',['XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_ENUM',['../xdg-shell_8h.html#a7c723287b147574d2e6ce2f6c34c46af',1,'xdg-shell.h']]],
+  ['xdg_5fpositioner_5ferror_5fenum_6',['XDG_POSITIONER_ERROR_ENUM',['../xdg-shell_8h.html#a00a7afc630f2e011cfb6ad63c49c270d',1,'xdg-shell.h']]],
+  ['xdg_5fpositioner_5fgravity_5fenum_7',['XDG_POSITIONER_GRAVITY_ENUM',['../xdg-shell_8h.html#afe56a2ad95eaa41b0077981e99bc21fd',1,'xdg-shell.h']]],
+  ['xdg_5fsurface_5fconfigure_8',['XDG_SURFACE_CONFIGURE',['../xdg-shell_8h.html#a1d2e1c31a5db48ae647c51b0326581f7',1,'xdg-shell.h']]],
+  ['xdg_5fsurface_5ferror_5fenum_9',['XDG_SURFACE_ERROR_ENUM',['../xdg-shell_8h.html#a6c52998c21d7a0b3c560db23e1a62424',1,'xdg-shell.h']]],
+  ['xdg_5ftoplevel_5fclose_10',['XDG_TOPLEVEL_CLOSE',['../xdg-shell_8h.html#a616c7295b2a2d2e1ca2d868fe3f66c09',1,'xdg-shell.h']]],
+  ['xdg_5ftoplevel_5fconfigure_11',['XDG_TOPLEVEL_CONFIGURE',['../xdg-shell_8h.html#a1b78e41a5af8554e1ddbfd452aed2b0b',1,'xdg-shell.h']]],
+  ['xdg_5ftoplevel_5fconfigure_5fbounds_12',['XDG_TOPLEVEL_CONFIGURE_BOUNDS',['../xdg-shell_8h.html#a8ec1b91adcfd3d85d0a3ee9cc1efaf19',1,'xdg-shell.h']]],
+  ['xdg_5ftoplevel_5ferror_5fenum_13',['XDG_TOPLEVEL_ERROR_ENUM',['../xdg-shell_8h.html#a8ca9a2707cf566978d20d35c7414437d',1,'xdg-shell.h']]],
+  ['xdg_5ftoplevel_5fresize_5fedge_5fenum_14',['XDG_TOPLEVEL_RESIZE_EDGE_ENUM',['../xdg-shell_8h.html#a78cbe854d2db7eea8af8b86e9279a681',1,'xdg-shell.h']]],
+  ['xdg_5ftoplevel_5fstate_5fenum_15',['XDG_TOPLEVEL_STATE_ENUM',['../xdg-shell_8h.html#a626b584b4036383dd4aba4e7e502416f',1,'xdg-shell.h']]],
+  ['xdg_5fwm_5fbase_5ferror_5fenum_16',['XDG_WM_BASE_ERROR_ENUM',['../xdg-shell_8h.html#a9df120e3c48abdd2913b3a7dab965814',1,'xdg-shell.h']]],
+  ['xdg_5fwm_5fbase_5fping_17',['XDG_WM_BASE_PING',['../xdg-shell_8h.html#a2d440ceea7e532db5f58086fc1cc8c6e',1,'xdg-shell.h']]]
+];
