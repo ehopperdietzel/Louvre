@@ -9,7 +9,6 @@ LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthrea
 INCLUDEPATH += /usr/include/drm ./classes ./globals/Wayland ./globals/XdgShell
 
 HEADERS += \
-    classes/MyOutputManager.h \
     classes/WBackend.h \
     classes/WClient.h \
     classes/WCompositor.h \
@@ -43,7 +42,6 @@ HEADERS += \
     globals/XdgShell/xdg-shell.h
 
 SOURCES += \
-    classes/MyOutputManager.cpp \
     classes/WBackendDRM.cpp \
     classes/WBackendX11.cpp \
     classes/WClient.cpp \

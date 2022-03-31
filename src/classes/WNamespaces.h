@@ -4,6 +4,9 @@
 #include <libinput.h>
 #include <xdg-shell.h>
 
+#define W_WIDTH 2880
+#define W_HEIGHT 1800
+
 namespace WaylandPlus
 {
     // API Classes

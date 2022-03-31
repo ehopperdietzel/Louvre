@@ -21,10 +21,10 @@ export(copydata.commands)
 QMAKE_EXTRA_TARGETS += first copydata
 
 copydata2.commands = $(COPY) $$PWD/../../src/build/* $$OUT_PWD
-first.depends = $(first) copydata2
+seccond.depends = $(seccond) copydata2
 export(first.depends)
 export(copydata2.commands)
-QMAKE_EXTRA_TARGETS += first copydata2
+QMAKE_EXTRA_TARGETS += seccond copydata2
 
 QMAKE_LFLAGS += -Wl,-rpath=.
 

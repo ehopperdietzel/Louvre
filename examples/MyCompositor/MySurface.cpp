@@ -4,8 +4,8 @@
 MySurface::MySurface(UInt32 id, wl_resource *resource, WClient *client, GLuint textureUnit):WSurface::WSurface(id,resource,client,textureUnit)
 {
     comp = (MyCompositor*)getCompositor();
-    setX(rand() % comp->pointerOutput->getCurrentMode().hdisplay / 4);
-    setY(rand() % comp->pointerOutput->getCurrentMode().vdisplay / 4);
+    setX(rand() % W_WIDTH / 4);
+    setY(rand() % W_HEIGHT / 4);
 }
 
 MySurface::~MySurface()

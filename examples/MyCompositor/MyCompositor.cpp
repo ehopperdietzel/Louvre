@@ -100,7 +100,7 @@ void MyCompositor::initializeGL(WOutput *output)
     glUseProgram(programObject);
 
     // Set the viewport
-    glViewport(0, 0, output->getCurrentMode().hdisplay, output->getCurrentMode().vdisplay);
+    glViewport(0, 0, W_WIDTH, W_HEIGHT);
 
     // Load the vertex data
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, square);
@@ -116,8 +116,8 @@ void MyCompositor::initializeGL(WOutput *output)
     // Set screen size
     glUniform2f(
         screenUniform,
-        output->getCurrentMode().hdisplay/output->getOutputScale(),
-        output->getCurrentMode().vdisplay/output->getOutputScale());
+        W_WIDTH/output->getOutputScale(),
+        W_HEIGHT/output->getOutputScale());
 
     // Reserve unit 0 for cursor
     glActiveTexture(GL_TEXTURE0);
@@ -150,7 +150,7 @@ void MyCompositor::paintGL(WOutput *output)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,backgroundTexture->textureId());
     glUniform1i(activeTextureUniform,0);
-    glUniform4f(rectUniform,0,0,output->getCurrentMode().hdisplay/output->getOutputScale(),output->getCurrentMode().vdisplay/output->getOutputScale());
+    glUniform4f(rectUniform,0,0,W_WIDTH/output->getOutputScale(),W_HEIGHT/output->getOutputScale());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     for(list<MySurface*>::iterator surface = surfacesList.begin(); surface != surfacesList.end(); ++surface)
@@ -476,8 +476,8 @@ void MyCompositor::drawCursor()
 
 void MyCompositor::setPointerPos(double x, double y)
 {
-    float w = pointerOutput->getCurrentMode().hdisplay/pointerOutput->getOutputScale();
-    float h = pointerOutput->getCurrentMode().vdisplay/pointerOutput->getOutputScale();
+    float w = W_WIDTH/pointerOutput->getOutputScale();
+    float h = W_HEIGHT/pointerOutput->getOutputScale();
 
     if(x < 0.0)
         x = 0.0;

@@ -73,7 +73,7 @@ int WWayland::initWayland(WCompositor *comp)
     // Create xdg shell global
     wl_global_create(display, &xdg_wm_base_interface, 4, comp, &Extensions::XdgShell::WmBase::bind);
 
-    eglBindWaylandDisplayWL(WBackend::getEGLDisplay(), display);
+    //eglBindWaylandDisplayWL(WBackend::getEGLDisplay(), display);
 
     wl_display_init_shm(display);
     //wl_data_device_manager_init(display);

@@ -22,13 +22,7 @@ class WaylandPlus::WOutput
 
 public:
 
-    struct drm_fb
-    {
-        gbm_bo *bo;
-        uint32_t fb_id;
-    };
-
-    WOutput(const char *drmDeviceName,drmModeConnector *connector,UInt32 crtcId);
+    WOutput();
     ~WOutput();
     void setOutputScale(Int32 scale);
     Int32 getOutputScale();
@@ -40,25 +34,22 @@ public:
 
 private:
 
+    friend class WBackend;
     friend class WOutputManager;
     friend class WCompositor;
+
+    // Data structure allocated by the backend
+    void *data = nullptr;
 
     // Setup Methods
     void setCompositor(WCompositor *compositor);
     void initialize();
-    void initializeGBM();
-    void initializeGL();
 
     // Paint
-    void flipPage();
     static void startRenderLoop(void *data);
 
-
-    drm_fb *drmGetFbFromBo(gbm_bo *bo);
-    static void drmFbDestroyCallback(struct gbm_bo *bo, void *data);
-
     // Compositor
-    WaylandPlus::WCompositor *_compositor = nullptr;
+    WCompositor *_compositor = nullptr;
 
     // Params
     char *_devName = nullptr;
@@ -66,26 +57,6 @@ private:
     UInt32 _crtc_id = 0;
     Int32 _outputScale = 1;
 
-    // DRM
-    int _drmFd;
-    drmModeModeInfo *_currentMode;
-    drm_fb *_drmFb = nullptr;
-
-    // DRM and GBM
-    drmEventContext evctx = {};
-    gbm_bo *bo;
-    int ret;
-    fd_set fds;
-
-    // GBM
-    gbm_device *_gbmDevice;
-    gbm_surface *_gbmSurface;
-
-    // GL
-    EGLDisplay eglDisplay;
-    EGLConfig eglConfig;
-    EGLContext eglContext;
-    EGLSurface eglSurface;
 
     // Render thread
     int _renderFd;
