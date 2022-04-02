@@ -19,13 +19,15 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
     // Prevent gen a new texture if the buffer size is the same
     if(width != _width || height != _height || textureType == Type::EGL)
     {
+
+        //printf("Resize: W %i, H %i\n",width,height);
         deleteTexture();
         _width = width;
         _height = height;
         glGenTextures(1, &_textureId);
         glBindTexture (GL_TEXTURE_2D, _textureId);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
         if(textureType == Type::EGL)
         {
@@ -46,16 +48,16 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
     {
         glBindTexture(GL_TEXTURE_2D, _textureId);
 
+        /*
         // If texture is not EGL
         while(!damages.empty())
         {
+
             Rect damage = damages.front();
-            glPixelStorei(GL_UNPACK_ROW_LENGTH,_width);
-            glPixelStorei(GL_UNPACK_SKIP_PIXELS,(GLint)damage.x);
-            glPixelStorei(GL_UNPACK_SKIP_ROWS,(GLint)damage.y);
 
+            printf("%i %i\n",width,height);
+            printf("Damage X:%i,Y:%i,W:%i,H:%i\n",damage.x,damage.y,damage.width,damage.height);
 
-            ////printf("%i %i\n",width,height);
 
             if(damage.x < 0)
                 damage.x = 0;
@@ -66,6 +68,16 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
             if(damage.height + damage.y > _height || damage.height < 0)
                 damage.height = _height - damage.y;
 
+            if(damage.x + damage.width > _width || damage.y + damage.height > _height)
+            {
+                damages.pop();
+                continue;
+            }
+
+
+            glPixelStorei(GL_UNPACK_ROW_LENGTH,_width);
+            glPixelStorei(GL_UNPACK_SKIP_PIXELS,(GLint)damage.x);
+            glPixelStorei(GL_UNPACK_SKIP_ROWS,(GLint)damage.y);
 
             glTexSubImage2D(GL_TEXTURE_2D,
                 0,
@@ -77,16 +89,30 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
                 GL_UNSIGNED_BYTE,
                 data);
 
-
-
             WOpenGL::checkGLError("Error updating texture region.");
 
             damages.pop();
         }
+        */
+
+        while(!damages.empty())
+            damages.pop();
 
         glPixelStorei(GL_UNPACK_ROW_LENGTH,0);
         glPixelStorei(GL_UNPACK_SKIP_PIXELS,0);
         glPixelStorei(GL_UNPACK_SKIP_ROWS,0);
+
+        glTexSubImage2D(GL_TEXTURE_2D,
+            0,
+            0,
+            0,
+            width,
+            height,
+            _format,
+            GL_UNSIGNED_BYTE,
+            data);
+
+        WOpenGL::checkGLError("Error updating texture region.");
     }
 
     _type = textureType;

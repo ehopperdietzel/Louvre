@@ -3,13 +3,16 @@
 #include <WRegion.h>
 #include <WClient.h>
 #include <stdio.h>
+#include <WCompositor.h>
 
 void WaylandPlus::Globals::Region::remove(wl_resource *resource)
 {
     WRegion *region = (WRegion*)wl_resource_get_user_data(resource);
+    region->getClient()->getCompositor()->renderMutex.lock();
     region->getClient()->regions.remove(region);
     //region->getClient()->regionDestroyed(region);
     delete region;
+    region->getClient()->getCompositor()->renderMutex.unlock();
 }
 
 void WaylandPlus::Globals::Region::destroy(wl_client *client, wl_resource *resource)

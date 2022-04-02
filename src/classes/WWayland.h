@@ -18,6 +18,9 @@ public:
     static void bindEGLDisplay(EGLDisplay eglDisplay);
     static void runLoop();
 
+    static wl_event_source *addTimer(wl_event_loop_timer_func_t func, void *data);
+
+
 };
 
 

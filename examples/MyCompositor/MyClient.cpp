@@ -20,9 +20,11 @@ WSurface *MyClient::newSurfaceRequest(UInt32 id, wl_resource *resource)
     return surface;
 }
 
-void MyClient::surfaceDestroyRequest(WSurface *surface)
+void MyClient::surfaceDestroyRequest(WSurface *surf)
 {
     MyCompositor *comp = (MyCompositor*)getCompositor();
+
+    MySurface *surface = (MySurface*)surf;
 
     if(comp->cursorSurface == surface)
         comp->cursorSurface = nullptr;
@@ -36,7 +38,9 @@ void MyClient::surfaceDestroyRequest(WSurface *surface)
     if(comp->movingSurface == surface)
         comp->movingSurface = nullptr;
 
-    comp->surfacesList.remove((MySurface*)surface);
+    printf("Remove surface:%lu\n",comp->surfacesList.size());
+    comp->surfacesList.remove(surface);
+    printf("Remove surface:%lu\n",comp->surfacesList.size());
 
     // Here you must delete your custon WSurface instance
     delete surface;

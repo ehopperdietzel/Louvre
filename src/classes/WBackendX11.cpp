@@ -15,25 +15,26 @@
 #include <stdio.h>
 #include <poll.h>
 #include <WCompositor.h>
+#include <WOutput.h>
 
 #if W_BACKEND == 2
 
-
 using namespace WaylandPlus;
 
-#define WINDOW_WIDTH 1800
-#define WINDOW_HEIGHT 1200
-
-static struct {
+struct X11_Window{
     Window window;
     EGLContext context;
     EGLSurface surface;
-} window;
+};
 
-static Display *x_display;
-static EGLDisplay egl_display;
+struct X11
+{
+    X11_Window window;
+    Display *x_display;
+    EGLDisplay egl_display;
+};
 
-static void create_window ()
+static void create_window(X11 *data)
 {
 
     static const EGLint attribs[] = {
@@ -53,25 +54,25 @@ static void create_window ()
 
     EGLConfig config;
     EGLint num_configs_returned;
-    eglChooseConfig(egl_display, attribs, &config, 1, &num_configs_returned);
+    eglChooseConfig(data->egl_display, attribs, &config, 1, &num_configs_returned);
 
     // get the visual from the EGL config
     EGLint visual_id;
-    eglGetConfigAttrib (egl_display, config, EGL_NATIVE_VISUAL_ID, &visual_id);
+    eglGetConfigAttrib(data->egl_display, config, EGL_NATIVE_VISUAL_ID, &visual_id);
     XVisualInfo visual_template;
     visual_template.visualid = visual_id;
     int num_visuals_returned;
-    XVisualInfo *visual = XGetVisualInfo (x_display, VisualIDMask, &visual_template, &num_visuals_returned);
+    XVisualInfo *visual = XGetVisualInfo(data->x_display, VisualIDMask, &visual_template, &num_visuals_returned);
 
     // create a window
     XSetWindowAttributes window_attributes;
     window_attributes.event_mask = ExposureMask | StructureNotifyMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterWindowMask | LeaveWindowMask | FocusChangeMask;
-    window_attributes.colormap = XCreateColormap (x_display, RootWindow(x_display,DefaultScreen(x_display)), visual->visual, AllocNone);
-    window.window = XCreateWindow (
-        x_display,
-        RootWindow(x_display, DefaultScreen(x_display)),
+    window_attributes.colormap = XCreateColormap (data->x_display, RootWindow(data->x_display,DefaultScreen(data->x_display)), visual->visual, AllocNone);
+    data->window.window = XCreateWindow (
+        data->x_display,
+        RootWindow(data->x_display, DefaultScreen(data->x_display)),
         0, 0,
-        WINDOW_WIDTH, WINDOW_HEIGHT,
+        W_WIDTH, W_HEIGHT,
         0, // border width
         visual->depth, // depth
         InputOutput, // class
@@ -87,63 +88,65 @@ static void create_window ()
         exit(-1);
     }
 
-    window.context = eglCreateContext (egl_display, config, EGL_NO_CONTEXT, context_attribs);
-    if(window.context == NULL)
+    data->window.context = eglCreateContext(data->egl_display, config, EGL_NO_CONTEXT, context_attribs);
+    if(data->window.context == NULL)
     {
         printf("Failed to create context\n");
         exit(-1);
     }
 
-    window.surface = eglCreateWindowSurface (egl_display, config, window.window, NULL);
-    if(window.surface == EGL_NO_SURFACE)
+    data->window.surface = eglCreateWindowSurface(data->egl_display, config, data->window.window, NULL);
+    if(data->window.surface == EGL_NO_SURFACE)
     {
         printf("Failed to create egl surface\n");
         exit(-1);
     }
 
-    eglMakeCurrent(egl_display, window.surface, window.surface, window.context);
+    eglMakeCurrent(data->egl_display, data->window.surface, data->window.surface, data->window.context);
 
     XFree (visual);
 
-    XMapWindow (x_display, window.window);
+    XMapWindow(data->x_display, data->window.window);
 
-    XMoveWindow(x_display,window.window,0,0);
+    XMoveWindow(data->x_display,data->window.window,0,0);
 
     printf("X11 Window created.\n");
 }
 
-int WBackend::backendWidth()
+
+
+std::list<WOutput*> WBackend::getAvaliableOutputs()
 {
-    return WINDOW_WIDTH;
-}
-int WBackend::backendHeight()
-{
-    return WINDOW_HEIGHT;
+    std::list<WOutput*>outputs;
+    WOutput *output = new WOutput();
+    output->data = malloc(sizeof(X11));
+    X11 *data = (X11*)output->data;
+    data->x_display = XOpenDisplay(NULL);
+    data->egl_display = eglGetDisplay(data->x_display);
+    outputs.push_back(output);
+    return outputs;
 }
 
-void WBackend::initBackend(WCompositor *compositor)
+EGLDisplay WBackend::getEGLDisplay(WOutput *output)
 {
-    x_display = XOpenDisplay (NULL);
-    egl_display = eglGetDisplay (x_display);
-    eglInitialize(egl_display, NULL, NULL);
-    create_window();
+    X11 *data = (X11*)output->data;
+    return data->egl_display;
+}
+
+void WBackend::createGLContext(WOutput *output)
+{
+
+    X11 *data = (X11*)output->data;
+    eglInitialize(data->egl_display, NULL, NULL);
+    create_window(data);
     printf("X11 backend initialized.\n");
     //compositor->initializeGL();
 }
 
-EGLDisplay WBackend::getEGLDisplay()
+void WBackend::flipPage(WOutput *output)
 {
-    return egl_display;
-}
-
-void WaylandPlus::WBackend::setHWCursor()
-{
-
-}
-
-void WBackend::paintDRM()
-{
-    eglSwapBuffers (egl_display, window.surface);
+    X11 *data = (X11*)output->data;
+    eglSwapBuffers(data->egl_display, data->window.surface);
 }
 
 #endif

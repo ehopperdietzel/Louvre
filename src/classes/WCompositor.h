@@ -15,6 +15,8 @@
 #include <condition_variable>
 #include <sys/eventfd.h>
 
+#include <mutex>
+
 using namespace std;
 
 class WaylandPlus::WCompositor
@@ -44,6 +46,9 @@ public:
     timespec getNanoseconds();
 
     list<WClient*>clients;
+
+
+    mutex renderMutex;
 
 private:
     friend class WWayland;

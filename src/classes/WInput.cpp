@@ -63,58 +63,59 @@ void update_modifiers()
 }
 int WInput::processInput(int, unsigned int, void *)
 {
-    while(true)
+
+    int ret = libinput_dispatch(li);
+
+    if (ret != 0)
+    {
+        printf("Failed to dispatch libinput: %s\n", strerror(-ret));
+        return 0;
+    }
+
+    libinput_event *ev;
+
+    while ((ev = libinput_get_event(li)))
     {
 
-      ev = libinput_get_event(li);
-
-      if(ev == NULL )
-      {
-          libinput_dispatch(li);
-          return 0;
-      }
-
-      libinput_event_type eventType = libinput_event_get_type(ev);
+        libinput_event_type eventType = libinput_event_get_type(ev);
 
 
-      if(eventType == LIBINPUT_EVENT_POINTER_MOTION)
-      {
-          libinput_event_pointer *pointerEvent = libinput_event_get_pointer_event(ev);
-          comp->pointerMoveEvent(
-                      libinput_event_pointer_get_dx(pointerEvent),
-                      libinput_event_pointer_get_dy(pointerEvent));
-                      // libinput_event_pointer_get_time_usec(pointerEvent));
-      }
-      else if(eventType == LIBINPUT_EVENT_POINTER_BUTTON)
-      {
-          libinput_event_pointer *pointerEvent = libinput_event_get_pointer_event(ev);
+        if(eventType == LIBINPUT_EVENT_POINTER_MOTION)
+        {
+            libinput_event_pointer *pointerEvent = libinput_event_get_pointer_event(ev);
+            comp->pointerMoveEvent(
+                        libinput_event_pointer_get_dx(pointerEvent),
+                        libinput_event_pointer_get_dy(pointerEvent));
+                        // libinput_event_pointer_get_time_usec(pointerEvent));
+        }
+        else if(eventType == LIBINPUT_EVENT_POINTER_BUTTON)
+        {
+            libinput_event_pointer *pointerEvent = libinput_event_get_pointer_event(ev);
 
-          uint32_t button = libinput_event_pointer_get_button(pointerEvent);
-          libinput_button_state state = libinput_event_pointer_get_button_state(pointerEvent);
+            uint32_t button = libinput_event_pointer_get_button(pointerEvent);
+            libinput_button_state state = libinput_event_pointer_get_button_state(pointerEvent);
 
-          comp->pointerClickEvent(
-                      button,
-                      state);
-                      // libinput_event_pointer_get_time_usec(pointerEvent));
-      }
-      else if(eventType == LIBINPUT_EVENT_KEYBOARD_KEY)
-      {
-          libinput_event_keyboard *keyEvent = libinput_event_get_keyboard_event(ev);
-          libinput_key_state keyState = libinput_event_keyboard_get_key_state(keyEvent);
-          int keyCode = libinput_event_keyboard_get_key(keyEvent);
+            comp->pointerClickEvent(
+                        button,
+                        state);
+                        // libinput_event_pointer_get_time_usec(pointerEvent));
+        }
+        else if(eventType == LIBINPUT_EVENT_KEYBOARD_KEY)
+        {
+            libinput_event_keyboard *keyEvent = libinput_event_get_keyboard_event(ev);
+            libinput_key_state keyState = libinput_event_keyboard_get_key_state(keyEvent);
+            int keyCode = libinput_event_keyboard_get_key(keyEvent);
 
-          comp->keyEvent(
-                      keyCode,
-                      keyState);
+            comp->keyEvent(
+                        keyCode,
+                        keyState);
 
-          xkb_state_update_key(xkbState,keyCode+8,(xkb_key_direction)keyState);
-          update_modifiers();
-      }
+            xkb_state_update_key(xkbState,keyCode+8,(xkb_key_direction)keyState);
+            update_modifiers();
+        }
 
-      // Sends event to the compositor
-      comp->libinputEvent(ev);
-      libinput_event_destroy(ev);
-      libinput_dispatch(li);
+        comp->libinputEvent(ev);
+        libinput_event_destroy(ev);
     }
 
     return 0;

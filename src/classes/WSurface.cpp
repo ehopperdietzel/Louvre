@@ -302,14 +302,16 @@ void WSurface::applyDamages()
 
     WOutput *output = getCompositor()->getOutputs().front();
 
+    surfaceMutex.lock();
+
     if(eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
-        printf("EGL buffer\n");
-        EGLint width, height, format;
+        //printf("EGL buffer\n");
+        EGLint width, height;
         eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_WIDTH, &width);
         eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_HEIGHT, &height);
-        eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_TEXTURE_FORMAT, &format);
-        _texture->_format = format;
+        //eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_TEXTURE_FORMAT, &format);
+        _texture->_format = texture_format;
         EGLAttrib attribs = EGL_NONE;
         EGLImage image = eglCreateImage(output->getDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, buffer, &attribs);
         _texture->setData(width, height, &image, WTexture::Type::EGL);
@@ -317,10 +319,11 @@ void WSurface::applyDamages()
     }
     else
     {
+        //printf("SHM buffer\n");
         wl_shm_buffer *shm_buffer = wl_shm_buffer_get(buffer);
         wl_shm_buffer_begin_access(shm_buffer);
-        UInt32 width = wl_shm_buffer_get_width(shm_buffer);
-        UInt32 height = wl_shm_buffer_get_height(shm_buffer);
+        Int32 width = wl_shm_buffer_get_width(shm_buffer);
+        Int32 height = wl_shm_buffer_get_height(shm_buffer);
         void *data = wl_shm_buffer_get_data(shm_buffer);
         UInt32 format =  wl_shm_buffer_get_format(shm_buffer);
         if( format == WL_SHM_FORMAT_XRGB8888 )
@@ -332,12 +335,8 @@ void WSurface::applyDamages()
         wl_shm_buffer_end_access(shm_buffer);
     }
 
-    //eventfd_write(surface->getCompositor()->compositorFd,1);
-    //surface->getCompositor()->cv.notify_one();
-
-
-
     wl_buffer_send_release(buffer);
+    _isDamaged = false;
 
     if (frame_callback != nullptr)
     {
@@ -347,9 +346,8 @@ void WSurface::applyDamages()
         frame_callback = nullptr;
     }
 
-    _isDamaged = false;
+    surfaceMutex.unlock();
 
-    //wl_client_flush(_client->_client);
 }
 
 void WSurface::setBufferScale(Int32 scale)

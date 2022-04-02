@@ -82,6 +82,7 @@ int WWayland::initWayland(WCompositor *comp)
     wayland_fd = wl_event_loop_get_fd(event_loop);
 
     wl_event_loop_add_fd(event_loop,WInput::getLibinputFd(),WL_EVENT_READABLE,&WInput::processInput,NULL);
+
     wl_event_loop_add_fd(event_loop,comp->libinputFd,WL_EVENT_READABLE,&WWayland::readFd,comp);
 
     createNullKeys();
@@ -112,11 +113,14 @@ void WWayland::flushClients()
 
 int WWayland::readFd(int, unsigned int, void *d)
 {
-    WCompositor *comp = (WCompositor*)d;
-    flushClients();
-    WInput::processInput(0,0,comp);
-    eventfd_read(comp->libinputFd,&comp->libinputVal);
 
+    WCompositor *comp = (WCompositor*)d;
+    //WInput::processInput(0,0,comp);
+    eventfd_read(comp->libinputFd,&comp->libinputVal);
+    /*
+    dispatchEvents();
+    flushClients();
+    */
 }
 
 void WWayland::bindEGLDisplay(EGLDisplay eglDisplay)
@@ -127,4 +131,9 @@ void WWayland::bindEGLDisplay(EGLDisplay eglDisplay)
 void WWayland::runLoop()
 {
     wl_display_run(display);
+}
+
+wl_event_source *WWayland::addTimer(wl_event_loop_timer_func_t func, void *data)
+{
+    return wl_event_loop_add_timer(event_loop,func,data);
 }

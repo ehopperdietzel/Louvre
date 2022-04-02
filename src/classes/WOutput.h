@@ -38,6 +38,10 @@ private:
     friend class WOutputManager;
     friend class WCompositor;
 
+    wl_event_source *timer;
+    timespec lastDrawTime;
+    pollfd timerPoll;
+
     // Data structure allocated by the backend
     void *data = nullptr;
 
@@ -63,6 +67,8 @@ private:
     eventfd_t _renderValue = 1;
     std::thread *_renderThread;
     pollfd _renderPoll;
+
+    bool scheduledRepaint = false;
 
     // Setup
 

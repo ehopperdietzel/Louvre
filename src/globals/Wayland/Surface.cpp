@@ -14,13 +14,15 @@
 
 using namespace WaylandPlus;
 
-
 void Globals::Surface::delete_surface(wl_resource *resource)
 {
     //printf("DESTROY SURFACE.\n");
 
     // Get surface
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+
+    WCompositor *comp = surface->getCompositor();
+    comp->renderMutex.lock();
 
     // Remove surface from its client list
     surface->getClient()->surfaces.remove(surface);
@@ -29,6 +31,8 @@ void Globals::Surface::delete_surface(wl_resource *resource)
     surface->getClient()->surfaceDestroyRequest(surface);
 
     surface->_texture->deleteTexture();
+
+    comp->renderMutex.unlock();
 }
 
 // SURFACE
@@ -36,8 +40,10 @@ void Globals::Surface::attach(wl_client *client, wl_resource *resource, wl_resou
 {
     //printf("SURFACE ATTACH: X %i, Y %i\n", x, y);
     (void)client;(void)x;(void)y;
-    WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    surface->surfaceMutex.lock();
     surface->buffer = buffer;
+    surface->surfaceMutex.unlock();
 
 }
 
@@ -50,8 +56,10 @@ void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 ca
     //printf("Frame version: %i\n",version);
 
     // Get surface reference
-    WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    surface->surfaceMutex.lock();
     surface->frame_callback = wl_resource_create(client, &wl_callback_interface, version, callback); // 1
+    surface->surfaceMutex.unlock();
 }
 
 void Globals::Surface::destroy(wl_client *client, wl_resource *resource)
@@ -69,11 +77,14 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
      * (this means that the current buffer already contains all the damages and transformations) */
 
     // Get surface reference
-    WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+
+    surface->surfaceMutex.lock();
 
     if (surface->buffer == nullptr)
     {
         surface->sendConfigureEvent(0,0,SurfaceState::Activated);
+        surface->surfaceMutex.unlock();
         return;
     }
 
@@ -81,6 +92,8 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
 
     // FALTA ENVIAR EVENTO
     surface->getCompositor()->repaintAllOutputs();
+
+    surface->surfaceMutex.unlock();
 
 }
 
@@ -90,7 +103,8 @@ void Globals::Surface::damage(wl_client *client, wl_resource *resource, Int32 x,
     (void)client;
 
     /* The client tells the server that has updated a region of the current buffer */
-    WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+
     //surface->getCompositor()->val++;
     //eventfd_write(surface->getCompositor()->compositorFd,surface->getCompositor()->val);
 
@@ -116,7 +130,10 @@ void Globals::Surface::damage(wl_client *client, wl_resource *resource, Int32 x,
         //return;
 
     //printf("Damage (%i,%i,%i,%i)\n",damage.x,damage.y,damage.width,damage.height);
-    surface->_texture->damages.push(damage);
+
+    surface->surfaceMutex.lock();
+    surface->getTexture()->damages.push(damage);
+    surface->surfaceMutex.unlock();
 
 }
 
@@ -156,7 +173,9 @@ void Globals::Surface::damage_buffer(wl_client *client, wl_resource *resource, I
     //if(x+width > surface->_texture->width() || y+height > surface->_texture->height())
         //return;
 
-    surface->_texture->damages.push({x, y, width, height});
+    surface->surfaceMutex.lock();
+    surface->getTexture()->damages.push({x, y, width, height});
+    surface->surfaceMutex.unlock();
 
 }
 
@@ -167,7 +186,9 @@ void Globals::Surface::set_buffer_scale(wl_client *client, wl_resource *resource
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     //eventfd_write(surface->getCompositor()->compositorFd,surface->getCompositor()->val);
     //surface->getCompositor()->val++;
+    surface->surfaceMutex.lock();
     surface->setBufferScale(scale);
+    surface->surfaceMutex.unlock();
 
     /*
     if (surface->buffer == nullptr)

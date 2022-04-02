@@ -15,13 +15,8 @@ public:
     static EGLDisplay getEGLDisplay(WOutput *output);
     static void createGLContext(WOutput *output);
     static void flipPage(WOutput *output);
-    /*
-    static void initBackend(WCompositor *compositor);
-    static void paintDRM();
-    static int backendWidth();
-    static int backendHeight();
-    static EGLDisplay getEGLDisplay();
 
+    /*
     static void setHWCursor();
     static void setHWCursorPos(Int32 x, Int32 y);
     */

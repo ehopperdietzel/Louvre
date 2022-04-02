@@ -2,10 +2,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/timerfd.h>
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <errno.h>
 
 #include <xf86drm.h>
@@ -19,10 +21,10 @@
 #include <WBackend.h>
 #include <WCompositor.h>
 #include <WWayland.h>
+#include <WInput.h>
 
 using namespace WaylandPlus;
 
-WOutput *o;
 WOutput::WOutput(){}
 
 WOutput::~WOutput()
@@ -35,6 +37,7 @@ void WOutput::setCompositor(WCompositor *compositor)
 {
     _compositor = compositor;
     _renderThread = new std::thread(&WOutput::startRenderLoop,this);
+    //WOutput::startRenderLoop(this);
 }
 
 void WOutput::setOutputScale(Int32 scale)
@@ -52,19 +55,20 @@ void WOutput::initialize()
     // Initialize the backend
     WBackend::createGLContext(this);
 
-    // Fd for repaint event
+    // Repaint FD
     _renderFd = eventfd(0,EFD_SEMAPHORE);
     _renderPoll.fd = _renderFd;
     _renderPoll.revents = 0;
     _renderPoll.events = POLLIN;
 
+    // Timer FD
+    timerPoll.events = POLLIN;
+    timerPoll.fd = timerfd_create(CLOCK_MONOTONIC,0);
 
     WWayland::bindEGLDisplay(WBackend::getEGLDisplay(this));
 
     _compositor->initializeGL(this);
 
-
-    return;
 }
 
 void WOutput::startRenderLoop(void *data)
@@ -74,28 +78,53 @@ void WOutput::startRenderLoop(void *data)
     output->initialize();
     output->repaint();
 
+    uint64_t res;
+    itimerspec ts;
+    ts.it_interval.tv_sec = 0;
+    ts.it_interval.tv_nsec = 0;
+    ts.it_value.tv_sec = 0;
+    ts.it_value.tv_nsec = 1000000000/70;
+    timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
+
     while(true)
     {
-        // Listen for the repaint event
+
+        // Wait for a repaint request
         poll(&output->_renderPoll,1,-1);
 
-        // Let user do his drawing
-        output->_compositor->paintGL(output);
-
         // Block the render
+        output->scheduledRepaint = false;
         eventfd_read(output->_renderFd,&output->_renderValue);
+
+        // Let the user do his painting
+        output->_compositor->renderMutex.lock();
+        output->_compositor->paintGL(output);
+        output->_compositor->renderMutex.unlock();
 
         // Tell the input loop to process events
         eventfd_write(output->_compositor->libinputFd,1);
 
+        // Wait for the next frame
+        poll(&output->timerPoll,1,-1);
+
+        read(output->timerPoll.fd, &res, sizeof(res));
+        timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
+
         // Show buffer on screen
         WBackend::flipPage(output);
+
+
+        //usleep(20000);
     }
 }
 
 void WOutput::repaint()
 {
-    eventfd_write(_renderFd,1);
+    if(!scheduledRepaint)
+    {
+        scheduledRepaint = true;
+        eventfd_write(_renderFd,1);
+    }
 }
 
 EGLDisplay WOutput::getDisplay()

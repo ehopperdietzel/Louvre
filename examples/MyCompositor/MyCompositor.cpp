@@ -143,27 +143,44 @@ void MyCompositor::paintGL(WOutput *output)
      *  Each output has its own OpenGL context.
      *  Never invoke this method directly,
      *  use WOutput::repaint() instead to schedule
-     *  the next frame.
+     *  the next frame for a specific output.
      *************************************************/
 
+    //printf("Outputs count:%lu\n",getOutputs().size());
+
+
     glClear(GL_COLOR_BUFFER_BIT);
+
+    /*
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,backgroundTexture->textureId());
     glUniform1i(activeTextureUniform,0);
     glUniform4f(rectUniform,0,0,W_WIDTH/output->getOutputScale(),W_HEIGHT/output->getOutputScale());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    */
 
     for(list<MySurface*>::iterator surface = surfacesList.begin(); surface != surfacesList.end(); ++surface)
     {
-        if((*surface)->getType() == SurfaceType::Undefined) continue;
+
+
+        //printf("CHECKPOINT A\n");
+        if((*surface)->getType() == SurfaceType::Undefined)
+            continue;
+
+        //printf("CHECKPOINT B\n");
+
+        //renderMutex.lock();
 
         if((*surface)->isDamaged())
+        {
             (*surface)->applyDamages();
+        }
         else
         {
             glActiveTexture(GL_TEXTURE0 + (*surface)->getTexture()->textureUnit());
             glBindTexture(GL_TEXTURE_2D,(*surface)->getTexture()->textureId());
         }
+
 
         if(resizingSurface == (*surface) && isLeftMouseButtonPressed)
         {
@@ -176,10 +193,13 @@ void MyCompositor::paintGL(WOutput *output)
                 resizingSurface->setX(ir.x + ir.width - resizingSurface->getWidth());
         }
 
+        //renderMutex.unlock();
 
         glUniform1i(activeTextureUniform,(*surface)->getTexture()->textureUnit());
 
         glUniform4f(rectUniform,(*surface)->getX(),(*surface)->getY(),(*surface)->getWidth(),(*surface)->getHeight());
+
+
 
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
@@ -212,6 +232,11 @@ void MyCompositor::clientDisconnectRequest(WClient *)
 
 void MyCompositor::setCursorRequest(WSurface *_cursorSurface, Int32 hotspotX, Int32 hotspotY)
 {
+    if(_cursorSurface == nullptr)
+    {
+        cursorSurface = nullptr;
+        return;
+    }
     cursorHotspot = {hotspotX,hotspotY};
     cursorSurface = (MySurface*)_cursorSurface;
 }
@@ -232,6 +257,11 @@ void MyCompositor::pointerMoveEvent(float dx, float dy)
 
     pointer.x+=dx;
     pointer.y+=dy;
+
+    if(pointer.x < 0)
+        pointer.x = 0;
+    if(pointer.y < 0)
+        pointer.y = 0;
 
     float x = pointer.x;
     float y = pointer.y;
@@ -452,7 +482,7 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState)
 void MyCompositor::drawCursor()
 {
 
-    if(cursorSurface != nullptr)
+    if(false)//cursorSurface != nullptr)
     {
         glActiveTexture(GL_TEXTURE0+cursorSurface->getTexture()->textureUnit());
         glUniform1i(activeTextureUniform,cursorSurface->getTexture()->textureUnit());

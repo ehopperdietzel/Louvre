@@ -5,6 +5,7 @@
 #include <WTexture.h>
 #include <WNamespaces.h>
 #include <list>
+#include <mutex>
 
 using namespace std;
 
@@ -42,7 +43,7 @@ public:
     const char *getAppId();
     const char *getTitle();
     UInt32 getId();
-    SurfaceType getType();
+    WaylandPlus::SurfaceType getType();
 
     // Size in surface coordinates
     Int32 getWidth();
@@ -71,9 +72,11 @@ public:
     WSurface *getParent();
     const list<WSurface*>getChildren();
 
+    mutex surfaceMutex;
 
  private:
     friend class WCompositor;
+    friend class WOutput;
     friend class Globals::Surface;
     friend class Extensions::XdgShell::WmBase;
     friend class Extensions::XdgShell::Surface;
@@ -101,7 +104,10 @@ public:
 
     wl_resource *_resource = nullptr;
     wl_resource *frame_callback = nullptr;
+
     wl_resource *buffer = nullptr;
+    wl_resource *pending_buffer = nullptr;
+
     wl_resource *xdg_shell = nullptr;
     wl_resource *xdg_toplevel = nullptr;
     wl_resource *xdg_popup = nullptr;
