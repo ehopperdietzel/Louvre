@@ -1,7 +1,8 @@
 #include "MySurface.h"
 #include <MyCompositor.h>
 #include <WOutput.h>
-MySurface::MySurface(UInt32 id, wl_resource *resource, WClient *client, GLuint textureUnit):WSurface::WSurface(id,resource,client,textureUnit)
+MySurface::MySurface(wl_resource *surfaceResource, WClient *client, GLuint textureUnit)
+          :WSurface::WSurface(surfaceResource,client,textureUnit)
 {
     comp = (MyCompositor*)getCompositor();
     setX(rand() % W_WIDTH / 4);
@@ -10,7 +11,7 @@ MySurface::MySurface(UInt32 id, wl_resource *resource, WClient *client, GLuint t
 
 MySurface::~MySurface()
 {
-
+    // printf("Surface destoyed from child class\n");
 }
 
 // Event when window is grabbed (tipically by the topbar)

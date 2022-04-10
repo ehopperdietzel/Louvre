@@ -7,15 +7,11 @@ WClient::WClient(wl_client *client, WCompositor *compositor)
 {
     _client = client;
     _compositor = compositor;
-
-    // Append client to compositor
-    _compositor->clients.push_back(this);
-
 }
 
 WClient::~WClient()
 {
-
+    printf("CLIENT DELETEDDDDDD\n");
 }
 
 WCompositor *WClient::getCompositor()

@@ -7,7 +7,7 @@
 class WaylandPlus::Globals::Surface
 {
 public:
-    static void delete_surface(wl_resource *resource);
+    static void resource_destroy(wl_resource *resource);
     static void attach(wl_client *client, wl_resource *resource, wl_resource *buffer, Int32 x, Int32 y);
     static void frame(wl_client *client, wl_resource *resource, UInt32 callback);
     static void destroy(wl_client *client, wl_resource *resource);

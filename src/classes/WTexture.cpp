@@ -48,7 +48,6 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
     {
         glBindTexture(GL_TEXTURE_2D, _textureId);
 
-        /*
         // If texture is not EGL
         while(!damages.empty())
         {
@@ -93,15 +92,18 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
 
             damages.pop();
         }
-        */
+
+        /*
 
         while(!damages.empty())
             damages.pop();
+        */
 
         glPixelStorei(GL_UNPACK_ROW_LENGTH,0);
         glPixelStorei(GL_UNPACK_SKIP_PIXELS,0);
         glPixelStorei(GL_UNPACK_SKIP_ROWS,0);
 
+        /*
         glTexSubImage2D(GL_TEXTURE_2D,
             0,
             0,
@@ -111,7 +113,7 @@ void WTexture::setData(int width, int height, void *data, Type textureType)
             _format,
             GL_UNSIGNED_BYTE,
             data);
-
+        */
         WOpenGL::checkGLError("Error updating texture region.");
     }
 

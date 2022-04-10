@@ -41,13 +41,13 @@ static struct xdg_wm_base_interface xdg_wm_base_implementation =
 void Extensions::XdgShell::WmBase::resource_destroy(wl_resource *resource)
 {
     (void)resource;
-    printf("Xdg shell resource destroyed.\n");
+   printf("XDG WM DESTROYED.\n");
 }
 
 void Extensions::XdgShell::WmBase::destroy(wl_client *client, wl_resource *resource)
 {
     (void)client;(void)resource;
-    printf("Xdg shell destroyed.\n");
+    Extensions::XdgShell::WmBase::resource_destroy(resource);
 }
 
 void Extensions::XdgShell::WmBase::create_positioner(wl_client *client, wl_resource *resource, UInt32 id)
@@ -72,7 +72,7 @@ void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resourc
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data(_surface);
     surface->xdg_shell = wl_resource_create(client, &xdg_surface_interface, version, id);// 4
-    wl_resource_set_implementation(surface->xdg_shell, &xdg_surface_implementation, surface, NULL);
+    wl_resource_set_implementation(surface->xdg_shell, &xdg_surface_implementation, surface, &WaylandPlus::Extensions::XdgShell::Surface::resource_destroy);
     xdg_surface_send_configure(surface->xdg_shell, 0);
 }
 void Extensions::XdgShell::WmBase::pong(wl_client *client, wl_resource *resource, UInt32 serial)
@@ -96,9 +96,6 @@ void Extensions::XdgShell::WmBase::bind (wl_client *client, void *data, UInt32 v
             wClient = (*c);
             break;
         }
-
-    if(wClient == nullptr)
-        wClient = compositor->newClientRequest(client);
 
     wl_resource *resource = wl_resource_create (client, &xdg_wm_base_interface, version, id);
     wl_resource_set_implementation (resource, &xdg_wm_base_implementation, wClient, &WmBase::resource_destroy);

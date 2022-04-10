@@ -7,6 +7,7 @@
 class WaylandPlus::Globals::Keyboard
 {
 public:
+    static void resource_destroy(wl_resource *resource);
     static void release(wl_client *client, wl_resource *resource);
 };
 

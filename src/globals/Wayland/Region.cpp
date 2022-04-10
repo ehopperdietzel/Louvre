@@ -5,20 +5,18 @@
 #include <stdio.h>
 #include <WCompositor.h>
 
-void WaylandPlus::Globals::Region::remove(wl_resource *resource)
+void WaylandPlus::Globals::Region::resource_destroy(wl_resource *resource)
 {
     WRegion *region = (WRegion*)wl_resource_get_user_data(resource);
-    region->getClient()->getCompositor()->renderMutex.lock();
     region->getClient()->regions.remove(region);
     //region->getClient()->regionDestroyed(region);
-    delete region;
-    region->getClient()->getCompositor()->renderMutex.unlock();
+    //delete region;
 }
 
 void WaylandPlus::Globals::Region::destroy(wl_client *client, wl_resource *resource)
 {
     (void)client;
-    Region::remove(resource);
+    Region::resource_destroy(resource);
 }
 
 void WaylandPlus::Globals::Region::add(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)

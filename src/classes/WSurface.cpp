@@ -34,14 +34,13 @@ void createNullKeys()
     wl_array_init(&nullKeys);
 }
 
-WSurface::WSurface(UInt32 id, wl_resource *res, WClient *client, GLuint textureUnit)
+WSurface::WSurface(wl_resource *surface, WClient *client, GLuint textureUnit)
 {
     get_egl_func();
     _texture = new WTexture(textureUnit);
     srand(time(NULL));
-    _resource = res;
+    _resource = surface;
     _client = client;
-    _id = id;
 }
 
 WSurface::~WSurface()
@@ -52,7 +51,7 @@ WSurface::~WSurface()
 
 void WSurface::sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UInt32 milliseconds)
 {
-    if(_client->getPointer())
+    if(_client->getPointer() != nullptr)
     {
         wl_pointer_send_button(_client->getPointer(),pointerSerial,milliseconds,buttonCode,buttonState);
         pointerSerial++;
@@ -64,7 +63,7 @@ void WSurface::sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UIn
 
 void WSurface::sendPointerMotionEvent(double x, double y, UInt32 milliseconds)
 {
-    if(_client->getPointer())
+    if(_client->getPointer() != nullptr)
     {
         wl_pointer_send_motion(
                     _client->getPointer(),
@@ -80,7 +79,7 @@ void WSurface::sendPointerMotionEvent(double x, double y, UInt32 milliseconds)
 
 void WSurface::sendPointerEnterEvent(double x, double y)
 {
-    if(_client->getPointer())
+    if(_client->getPointer() != nullptr)
     {
         wl_pointer_send_enter(
                     _client->getPointer(),
@@ -96,7 +95,7 @@ void WSurface::sendPointerEnterEvent(double x, double y)
 
 void WSurface::sendPointerLeaveEvent()
 {
-    if(_client->getPointer())
+    if(_client->getPointer() != nullptr)
     {
         wl_pointer_send_leave(_client->getPointer(),pointerSerial,_resource);
         pointerSerial++;
@@ -108,7 +107,7 @@ void WSurface::sendPointerLeaveEvent()
 
 void WSurface::sendKeyEvent(UInt32 keyCode, UInt32 keyState)
 {
-    if(_client->getKeyboard())
+    if(_client->getKeyboard() != nullptr)
     {
         wl_keyboard_send_key(_client->getKeyboard(),keyboardSerial,getCompositor()->getMilliseconds(),keyCode,keyState);
         keyboardSerial++;        
@@ -117,7 +116,7 @@ void WSurface::sendKeyEvent(UInt32 keyCode, UInt32 keyState)
 
 void WSurface::sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
-    if(_client->getKeyboard())
+    if(_client->getKeyboard() != nullptr)
     {
         wl_keyboard_send_modifiers(_client->getKeyboard(),keyboardSerial,depressed,latched,locked,group);
         keyboardSerial++;
@@ -126,7 +125,7 @@ void WSurface::sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 lo
 
 void WSurface::sendKeyboardEnterEvent()
 {
-    if(_client->getKeyboard())
+    if(_client->getKeyboard() != nullptr)
     {
         wl_keyboard_send_enter(_client->getKeyboard(),keyboardSerial,_resource,&nullKeys);
         keyboardSerial++;
@@ -135,7 +134,7 @@ void WSurface::sendKeyboardEnterEvent()
 
 void WSurface::sendKeyboardLeaveEvent()
 {
-    if(_client->getKeyboard())
+    if(_client->getKeyboard() != nullptr)
     {
         wl_keyboard_send_leave(_client->getKeyboard(),keyboardSerial,_resource);
         keyboardSerial++;
@@ -144,7 +143,7 @@ void WSurface::sendKeyboardLeaveEvent()
 
 void WSurface::sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags states)
 {
-    if(xdg_toplevel != nullptr) //xdgShellVersion >= 2
+    if(xdg_toplevel != nullptr && xdg_shell != nullptr) //xdgShellVersion >= 2
     {
         wl_array dummy;
         wl_array_init(&dummy);
@@ -297,30 +296,27 @@ bool WSurface::isDamaged()
 
 void WSurface::applyDamages()
 {
-    if(!_isDamaged)
+    if(!_isDamaged || getResource() == nullptr )
         return;
 
     WOutput *output = getCompositor()->getOutputs().front();
 
-    surfaceMutex.lock();
-
-    if(eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_TEXTURE_FORMAT, &texture_format))
+    if(eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
         //printf("EGL buffer\n");
         EGLint width, height;
-        eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_WIDTH, &width);
-        eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_HEIGHT, &height);
-        //eglQueryWaylandBufferWL(output->getDisplay(), buffer, EGL_TEXTURE_FORMAT, &format);
+        eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_WIDTH, &width);
+        eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_HEIGHT, &height);
         _texture->_format = texture_format;
         EGLAttrib attribs = EGL_NONE;
-        EGLImage image = eglCreateImage(output->getDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, buffer, &attribs);
+        EGLImage image = eglCreateImage(output->getDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, committedBuffer, &attribs);
         _texture->setData(width, height, &image, WTexture::Type::EGL);
         eglDestroyImage (output->getDisplay(), image);
     }
     else
     {
         //printf("SHM buffer\n");
-        wl_shm_buffer *shm_buffer = wl_shm_buffer_get(buffer);
+        wl_shm_buffer *shm_buffer = wl_shm_buffer_get(committedBuffer);
         wl_shm_buffer_begin_access(shm_buffer);
         Int32 width = wl_shm_buffer_get_width(shm_buffer);
         Int32 height = wl_shm_buffer_get_height(shm_buffer);
@@ -335,7 +331,10 @@ void WSurface::applyDamages()
         wl_shm_buffer_end_access(shm_buffer);
     }
 
-    wl_buffer_send_release(buffer);
+    //WWayland::apply_damage_emit(this);
+
+
+    wl_buffer_send_release(committedBuffer);
     _isDamaged = false;
 
     if (frame_callback != nullptr)
@@ -345,8 +344,6 @@ void WSurface::applyDamages()
         wl_resource_destroy(frame_callback);
         frame_callback = nullptr;
     }
-
-    surfaceMutex.unlock();
 
 }
 
@@ -372,7 +369,7 @@ WCompositor *WSurface::getCompositor()
 
 UInt32 WSurface::getId()
 {
-    return _id;
+    return wl_resource_get_id(_resource);
 }
 
 SurfaceType WSurface::getType()

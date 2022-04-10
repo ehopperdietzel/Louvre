@@ -4,6 +4,14 @@
 #include <libinput.h>
 #include <xdg-shell.h>
 
+#include <wayland-server-core.h>
+#include <wayland-server-protocol.h>
+#include <wayland-server.h>
+#include <wayland-util.h>
+#include <wayland-version.h>
+#include <wayland-egl-core.h>
+#include <wayland-egl.h>
+
 #define W_WIDTH 2880
 #define W_HEIGHT 1800
 
@@ -108,7 +116,8 @@ namespace WaylandPlus
         Undefined = 0,
         Toplevel = 1,
         Popup = 2,
-        Subsurface = 3
+        Subsurface = 3,
+        Cursor = 4
     };
 
 

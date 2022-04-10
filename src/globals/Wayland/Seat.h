@@ -8,6 +8,7 @@
 class WaylandPlus::Globals::Seat
 {
 public:
+    static void resource_destroy(wl_resource *resource);
     static void get_pointer(wl_client *client, wl_resource *resource, UInt32 id);
     static void get_keyboard(wl_client *client, wl_resource *resource, UInt32 id);
     static void get_touch(wl_client *client, wl_resource *resource, UInt32 id);

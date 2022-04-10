@@ -38,5 +38,5 @@ void WaylandPlus::Globals::DataDeviceManager::bind(wl_client *client, void *data
     WCompositor *compositor = (WCompositor*)data;
     printf("Bind data device.\n");
     wl_resource *resource = wl_resource_create(client, &wl_data_device_manager_interface, version, id);
-    wl_resource_set_implementation(resource, &dataDeviceManager_implementation, compositor, &resource_destroy);
+    wl_resource_set_implementation(resource, &dataDeviceManager_implementation, compositor, &DataDeviceManager::resource_destroy);
 }

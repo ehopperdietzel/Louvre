@@ -9,8 +9,8 @@ class MyClient : public WClient
 {
 public:
     MyClient(wl_client *client, WCompositor *compositor);
-
-    WSurface *newSurfaceRequest(UInt32 id, wl_resource *resource) override;
+    ~MyClient();
+    WSurface *newSurfaceRequest(wl_resource *surfaceResource) override;
     void surfaceDestroyRequest(WSurface *surface) override;
     //void newRegionRequest(WRegion *region) = 0;
     //void regionDestroyRequest(WRegion *region) = 0;

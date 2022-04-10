@@ -6,13 +6,20 @@
 
 MyClient::MyClient(wl_client *client, WCompositor *compositor) : WClient::WClient(client,compositor){}
 
-WSurface *MyClient::newSurfaceRequest(UInt32 id, wl_resource *resource)
+MyClient::~MyClient()
 {
-    MyCompositor *comp = (MyCompositor*)getCompositor();
 
-    // Get a free texture slot
-    MySurface *surface = new MySurface(id,resource,this,1);
-    comp->surfacesList.push_back(surface);
+}
+
+WSurface *MyClient::newSurfaceRequest(wl_resource *surfaceResource)
+{
+    MyCompositor *compositor = (MyCompositor*)getCompositor();
+
+    // Create your own surface instance
+    MySurface *surface = new MySurface(surfaceResource,this,1);
+
+    // Store it for later use
+    compositor->surfacesList.push_back(surface);
 
     /* Initially all surfaces have undefined type (surface->getType()).
      * You should wait for the WSurface::typeChangeRequest before drawing it.*/
@@ -38,12 +45,11 @@ void MyClient::surfaceDestroyRequest(WSurface *surf)
     if(comp->movingSurface == surface)
         comp->movingSurface = nullptr;
 
-    printf("Remove surface:%lu\n",comp->surfacesList.size());
     comp->surfacesList.remove(surface);
-    printf("Remove surface:%lu\n",comp->surfacesList.size());
 
-    // Here you must delete your custon WSurface instance
-    delete surface;
+    /* Afer this method the compositor will call delete "YourSurface",
+     * so make sure to implement all the cleaning up logic in your
+     * surface destructor. */
 
     comp->repaintAllOutputs();
 }

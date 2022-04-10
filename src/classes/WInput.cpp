@@ -74,11 +74,13 @@ int WInput::processInput(int, unsigned int, void *)
 
     libinput_event *ev;
 
-    while ((ev = libinput_get_event(li)))
+    while ((ev = libinput_get_event(li)) != NULL)
     {
 
         libinput_event_type eventType = libinput_event_get_type(ev);
 
+
+        //libinput_device_config_dwt_set_enabled(libinput_event_get_device(ev),LIBINPUT_CONFIG_DWT_DISABLED);
 
         if(eventType == LIBINPUT_EVENT_POINTER_MOTION)
         {
@@ -116,6 +118,7 @@ int WInput::processInput(int, unsigned int, void *)
 
         comp->libinputEvent(ev);
         libinput_event_destroy(ev);
+        libinput_dispatch(li);
     }
 
     return 0;
@@ -200,7 +203,6 @@ int WInput::initInput(WCompositor *compositor)
     li = libinput_udev_create_context(&interface, NULL, udev);
     libinput_udev_assign_seat(li, "seat0");
     libinput_dispatch(li);
-
     printf("Libinput initialized.\n");
 
     return 0;

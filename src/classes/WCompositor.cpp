@@ -15,6 +15,7 @@ using namespace WaylandPlus;
 WCompositor::WCompositor()
 {
     signal(SIGINT,SIG_IGN);
+    //signal(SIGABRT,SIG_IGN);
     libinputFd = eventfd(0,EFD_SEMAPHORE);
     WInput::initInput(this);
     WWayland::initWayland(this);

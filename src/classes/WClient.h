@@ -20,7 +20,7 @@ public:
     wl_resource *getPointer();
 
     // Requests
-    virtual WSurface *newSurfaceRequest(UInt32 id, wl_resource *res) = 0;
+    virtual WSurface *newSurfaceRequest(wl_resource *surface) = 0;
     virtual void surfaceDestroyRequest(WSurface *surface) = 0;
     //virtual void newRegionRequest(WRegion *region) = 0;
     //virtual void regionDestroyRequest(WRegion *region) = 0;

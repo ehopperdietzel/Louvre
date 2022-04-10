@@ -14,7 +14,7 @@ void createNullKeys();
 class WaylandPlus::WSurface
 {
 public:
-    WSurface(UInt32 id, wl_resource *res, WClient *client, GLuint textureUnit = 0);
+    WSurface(wl_resource *surface, WClient *client, GLuint textureUnit = 0);
     virtual ~WSurface() = 0;
 
     // Requests
@@ -72,12 +72,14 @@ public:
     WSurface *getParent();
     const list<WSurface*>getChildren();
 
-    mutex surfaceMutex;
+    //mutex surfaceMutex;
 
  private:
+    friend class WWayland;
     friend class WCompositor;
     friend class WOutput;
     friend class Globals::Surface;
+    friend class WaylandPlus::Globals::Pointer;
     friend class Extensions::XdgShell::WmBase;
     friend class Extensions::XdgShell::Surface;
     friend class Extensions::XdgShell::Toplevel;
@@ -105,8 +107,8 @@ public:
     wl_resource *_resource = nullptr;
     wl_resource *frame_callback = nullptr;
 
-    wl_resource *buffer = nullptr;
-    wl_resource *pending_buffer = nullptr;
+    wl_resource *committedBuffer = nullptr;
+    wl_resource *pendingBuffer = nullptr;
 
     wl_resource *xdg_shell = nullptr;
     wl_resource *xdg_toplevel = nullptr;
@@ -115,7 +117,6 @@ public:
     Size _maxSize = {1,1};
     Size _minSize = {1,1};
     Int32 _bufferScale = 1;
-    UInt32 _id;
     char *_appId = new char[1];
     char *_title = new char[1];
 

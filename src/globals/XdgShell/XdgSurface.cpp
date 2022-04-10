@@ -33,18 +33,24 @@ static struct xdg_popup_interface xdg_popup_implementation =
 };
 
 // xdg surface
+void Extensions::XdgShell::Surface::resource_destroy(wl_resource *resource)
+{
+    printf("XDG SURFACE DESTROYED\n");
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    surface->xdg_shell = nullptr;
+}
+
 void Extensions::XdgShell::Surface::destroy (wl_client *client, wl_resource *resource)
 {
-    (void)client;(void)resource;
+    (void)client;
+    Extensions::XdgShell::Surface::resource_destroy(resource);
 }
 void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *resource, UInt32 id)
 {
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
 
-    surface->getCompositor()->renderMutex.lock();
     surface->_type = SurfaceType::Toplevel;
-    surface->getCompositor()->renderMutex.unlock();
     wl_resource_set_implementation(surface->xdg_toplevel, &xdg_toplevel_implementation, surface, NULL);
     surface->sendConfigureEvent(0,0,SurfaceState::Activated);
     surface->typeChangeRequest();
@@ -54,9 +60,7 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
     (void)parent;(void)positioner;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
-    surface->getCompositor()->renderMutex.lock();
     surface->_type = SurfaceType::Popup;
-    surface->getCompositor()->renderMutex.unlock();
     if(parent != NULL)
     {
         WSurface *parentSurface = (WSurface*)wl_resource_get_user_data(resource);

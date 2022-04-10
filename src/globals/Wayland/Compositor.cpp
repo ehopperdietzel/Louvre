@@ -39,26 +39,22 @@ void Globals::Compositor::create_surface(wl_client *client, wl_resource *resourc
 {
     Int32 version = wl_resource_get_version(resource);
 
-    printf("Surface version: %i\n",version);
+    //printf("Surface version: %i\n",version);
 
     // New surface resource
-    wl_resource *surface = wl_resource_create (client, &wl_surface_interface, version, id); // 4
+    wl_resource *surface = wl_resource_create(client, &wl_surface_interface, version, id); // 4
 
     // Find client
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
 
-    wClient->getCompositor()->renderMutex.lock();
-
     // Create surface
-    WSurface *wSurface = wClient->newSurfaceRequest(id,surface);
+    WSurface *wSurface = wClient->newSurfaceRequest(surface);
 
     // Append surface
     wClient->surfaces.push_back(wSurface);
 
     // Implement surface
-    wl_resource_set_implementation(surface, &surface_implementation, wSurface, NULL);
-
-    wClient->getCompositor()->renderMutex.unlock();
+    wl_resource_set_implementation(surface, &surface_implementation, wSurface, &Surface::resource_destroy);
 
 }
 
@@ -70,8 +66,6 @@ void Globals::Compositor::create_region (wl_client *client, wl_resource *resourc
     // Find client
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
 
-    wClient->getCompositor()->renderMutex.lock();
-
     // Create region
     WRegion *wRegion = new WRegion(id,region,wClient);
 
@@ -79,24 +73,18 @@ void Globals::Compositor::create_region (wl_client *client, wl_resource *resourc
     wClient->regions.push_back(wRegion);
 
     // Implement region
-    wl_resource_set_implementation(region, &region_implementation, wRegion, NULL);
-
-    wClient->getCompositor()->renderMutex.unlock();
+    wl_resource_set_implementation(region, &region_implementation, wRegion, &Region::resource_destroy);
 }
 
 void Globals::Compositor::resource_destroy(wl_resource *resource)
 {
+
+    printf("COMPOSITOR DESTROYED.\n");
+
     // Find client
     WClient *client = (WClient*)wl_resource_get_user_data(resource);
 
-    WCompositor *compositor = client->getCompositor();
-
-    compositor->renderMutex.lock();
-
-    // Remove client from compositor list
-    client->getCompositor()->clients.remove(client);
-
-    compositor->renderMutex.unlock();
+    /*
 
     // Destroy surfaces ( when client crashes )
     while(!client->surfaces.empty())
@@ -108,13 +96,18 @@ void Globals::Compositor::resource_destroy(wl_resource *resource)
     while(!client->regions.empty())
         Globals::Region::remove(client->regions.back()->getResource());
 
-    //client->regions.clear();
+    client->regions.clear();
+    */
+
+
+
+
 
     // Notify
-    client->getCompositor()->clientDisconnectRequest(client);
+    //11client->getCompositor()->clientDisconnectRequest(client);
 
     // Destroy client
-    delete client;
+    //delete client;
 
 
 }
@@ -127,17 +120,19 @@ void Globals::Compositor::bind(wl_client *client, void *data, UInt32 version, UI
 
     WClient *wClient = nullptr;
 
-    // Check if client already exists
+    // Search for the client object
     for(list<WClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
+    {
         if((*c)->getClient() == client)
         {
             wClient = (*c);
             break;
         }
+    }
 
+    if(wClient == nullptr)
+        return;
 
     wl_resource *resource = wl_resource_create(client, &wl_compositor_interface, version, id);
-    if(wClient == nullptr)
-        wClient = compositor->newClientRequest(client);
     wl_resource_set_implementation(resource, &compositor_implementation, wClient, &Compositor::resource_destroy);
 }

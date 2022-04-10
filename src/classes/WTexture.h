@@ -34,7 +34,7 @@ private:
     friend class WaylandPlus::WSurface;
 
     std::queue<Rect>damages;
-    std::queue<Rect>pending_damages;
+    std::queue<Rect>pendingDamages;
     int _width,_height = 0;
     GLuint _textureId,_textureUnit = 0;
     bool _initialized = false;

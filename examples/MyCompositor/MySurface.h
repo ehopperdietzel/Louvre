@@ -10,7 +10,7 @@ class MyCompositor;
 class MySurface : public WSurface
 {
 public:
-    MySurface(UInt32 id, wl_resource *resource, WClient *client, GLuint textureUnit);
+    MySurface(wl_resource *surfaceResource, WClient *client, GLuint textureUnit);
     ~MySurface();
 
     // Requests

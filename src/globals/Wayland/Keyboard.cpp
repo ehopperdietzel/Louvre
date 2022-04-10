@@ -2,10 +2,15 @@
 #include <WClient.h>
 #include <stdio.h>
 
+void WaylandPlus::Globals::Keyboard::resource_destroy(wl_resource *resource)
+{
+    printf("KEYBOARD RELEASED\n");
+    WClient *client = (WClient*)wl_resource_get_user_data(resource);
+    client->setKeyboard(nullptr);
+}
+
 void WaylandPlus::Globals::Keyboard::release(wl_client *client, wl_resource *resource)
 {
-    //printf("KEYBOARD RELEASED\n");
     (void)client;
-    WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
-    wClient->setKeyboard(nullptr);
+    Keyboard::resource_destroy(resource);
 }

@@ -164,7 +164,7 @@ void MyCompositor::paintGL(WOutput *output)
 
 
         //printf("CHECKPOINT A\n");
-        if((*surface)->getType() == SurfaceType::Undefined)
+        if((*surface)->getType() == SurfaceType::Undefined || (*surface)->getType() == SurfaceType::Cursor)
             continue;
 
         //printf("CHECKPOINT B\n");
@@ -216,10 +216,10 @@ WClient *MyCompositor::newClientRequest(wl_client *client)
 
     printf("New client connected.\n");
 
-    return new MyClient(client,this);
+    return (WClient*)(new MyClient(client,this));
 }
 
-void MyCompositor::clientDisconnectRequest(WClient *)
+void MyCompositor::clientDisconnectRequest(WClient *client)
 {
     /*******************************************************************************
      * Notify a client disconnection, it's automatically removed from the internal
@@ -232,11 +232,6 @@ void MyCompositor::clientDisconnectRequest(WClient *)
 
 void MyCompositor::setCursorRequest(WSurface *_cursorSurface, Int32 hotspotX, Int32 hotspotY)
 {
-    if(_cursorSurface == nullptr)
-    {
-        cursorSurface = nullptr;
-        return;
-    }
     cursorHotspot = {hotspotX,hotspotY};
     cursorSurface = (MySurface*)_cursorSurface;
 }
@@ -461,7 +456,6 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState)
             if (pid==0)
             {
                 system("weston-terminal");
-                //system("terminology");
                 exit(0);
             }
         }
@@ -470,7 +464,6 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState)
             pid_t pid = fork();
             if (pid==0)
             {
-                //system("gedit");
                 system("falkon --platform wayland");
                 exit(0);
             }
@@ -482,7 +475,7 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState)
 void MyCompositor::drawCursor()
 {
 
-    if(false)//cursorSurface != nullptr)
+    if(cursorSurface != nullptr)
     {
         glActiveTexture(GL_TEXTURE0+cursorSurface->getTexture()->textureUnit());
         glUniform1i(activeTextureUniform,cursorSurface->getTexture()->textureUnit());

@@ -28,6 +28,13 @@ static struct wl_seat_interface seat_implementation =
 };
 
 // SEAT
+void WaylandPlus::Globals::Seat::resource_destroy(wl_resource *resource)
+{
+    (void)resource;
+    printf("SEAT DESTROYED.\n");
+    //WClient *client = (WClient*)wl_resource_get_user_data(resource);
+}
+
 void WaylandPlus::Globals::Seat::get_pointer (wl_client *client, wl_resource *resource, UInt32 id)
 {
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
@@ -36,7 +43,7 @@ void WaylandPlus::Globals::Seat::get_pointer (wl_client *client, wl_resource *re
 
     printf("Pointer Version: %i\n",version);
     wl_resource *pointer = wl_resource_create(client, &wl_pointer_interface, version, id); // 7
-    wl_resource_set_implementation (pointer, &pointer_implementation, wClient->getCompositor(),NULL);
+    wl_resource_set_implementation(pointer, &pointer_implementation, wClient,&Pointer::resource_destroy);
     wClient->setPointer(pointer);
     wClient->_wl_pointer_version = version;
 }
@@ -47,7 +54,7 @@ void WaylandPlus::Globals::Seat::get_keyboard (wl_client *client, wl_resource *r
 
     Int32 version = wl_resource_get_version(resource);
     wl_resource *keyboard = wl_resource_create(client, &wl_keyboard_interface,version,id); // 7
-    wl_resource_set_implementation(keyboard, &keyboard_implementation, NULL, NULL);
+    wl_resource_set_implementation(keyboard, &keyboard_implementation, wClient, &Keyboard::resource_destroy);
     wClient->setKeyboard(keyboard);
     wl_keyboard_send_repeat_info(keyboard,32,512);
 
@@ -60,7 +67,7 @@ void WaylandPlus::Globals::Seat::get_keyboard (wl_client *client, wl_resource *r
 
 }
 
-void WaylandPlus::Globals::Seat::get_touch (wl_client *client, wl_resource *resource, UInt32 id)
+void WaylandPlus::Globals::Seat::get_touch(wl_client *client, wl_resource *resource, UInt32 id)
 {
     (void)client;(void)resource;(void)id;
 }
@@ -68,8 +75,8 @@ void WaylandPlus::Globals::Seat::get_touch (wl_client *client, wl_resource *reso
 void WaylandPlus::Globals::Seat::release( wl_client *client, wl_resource *resource)
 {
     (void)client;
-    //printf("SEAT RELEASED\n");
-    wl_resource_destroy(resource);
+    printf("SEAT RELEASED\n");
+    Seat::resource_destroy(resource);
 }
 
 void WaylandPlus::Globals::Seat::bind(wl_client *client, void *data, UInt32 version, UInt32 id)
@@ -80,7 +87,7 @@ void WaylandPlus::Globals::Seat::bind(wl_client *client, void *data, UInt32 vers
 
     wl_resource *seat = wl_resource_create(client, &wl_seat_interface,version,id);
     WClient *wClient = *find_if(compositor->clients.begin(),compositor->clients.end(),[client](WClient *x) { return x->getClient() == client;});
-    wl_resource_set_implementation(seat, &seat_implementation, wClient, NULL);
-    wl_seat_send_capabilities (seat, WL_SEAT_CAPABILITY_POINTER|WL_SEAT_CAPABILITY_KEYBOARD);
+    wl_resource_set_implementation(seat, &seat_implementation, wClient, &Seat::resource_destroy);
+    wl_seat_send_capabilities(seat, WL_SEAT_CAPABILITY_POINTER | WL_SEAT_CAPABILITY_KEYBOARD);
 
 }
