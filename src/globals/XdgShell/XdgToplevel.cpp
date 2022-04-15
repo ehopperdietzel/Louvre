@@ -4,7 +4,7 @@
 #include <WCompositor.h>
 #include <xdg-shell.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 void Extensions::XdgShell::Toplevel::destroy (wl_client *client, wl_resource *resource)
 {

@@ -22,7 +22,7 @@
 #include <WWayland.h>
 
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 WCompositor *comp;
 libinput *li;

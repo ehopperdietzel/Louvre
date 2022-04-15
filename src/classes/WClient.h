@@ -8,7 +8,7 @@
 
 using namespace std;
 
-class WaylandPlus::WClient
+class Wpp::WClient
 {
 public:
     WClient(wl_client *client, WCompositor *compositor);

@@ -15,7 +15,7 @@
 #define W_WIDTH 2880
 #define W_HEIGHT 1800
 
-namespace WaylandPlus
+namespace Wpp
 {
     // API Classes
     class WBackend;
@@ -33,6 +33,10 @@ namespace WaylandPlus
     class WView;
     class WWayland;
 
+    class WPoint;
+    class WPointF;
+    class WRect;
+
     // Types
     typedef uint32_t        UInt32;
     typedef int32_t         Int32;
@@ -42,6 +46,7 @@ namespace WaylandPlus
     typedef xdg_positioner_anchor Anchor;
     typedef xdg_positioner_gravity Gravity;
     typedef xdg_positioner_constraint_adjustment ConstraintAdjustment;
+    typedef WPoint WSize;
 
     struct Point
     {

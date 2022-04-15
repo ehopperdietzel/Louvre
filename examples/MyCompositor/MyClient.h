@@ -3,7 +3,7 @@
 
 #include <WClient.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 class MyClient : public WClient
 {

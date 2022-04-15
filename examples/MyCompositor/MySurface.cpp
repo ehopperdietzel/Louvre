@@ -4,9 +4,9 @@
 MySurface::MySurface(wl_resource *surfaceResource, WClient *client, GLuint textureUnit)
           :WSurface::WSurface(surfaceResource,client,textureUnit)
 {
-    comp = (MyCompositor*)getCompositor();
-    setX(rand() % W_WIDTH / 4);
-    setY(rand() % W_HEIGHT / 4);
+    comp = (MyCompositor*)compositor();
+    //pos.setX(rand() % W_WIDTH / 4);
+    //pos.setY(rand() % W_HEIGHT / 4);
 }
 
 MySurface::~MySurface()
@@ -19,10 +19,8 @@ void MySurface::moveStartRequest()
 {
     if(!comp->isLeftMouseButtonPressed)
         return;
-    comp->movingSurfaceInitialPosX = getRectWithoutDecoration().x;
-    comp->movingSurfaceInitialPosY = getRectWithoutDecoration().y;
-    comp->movingSurfaceInitialCursorPosX = comp->pointer.x;
-    comp->movingSurfaceInitialCursorPosY = comp->pointer.y;
+    comp->movingSurfaceInitPos = getRectWithoutDecoration().topLeft();
+    comp->movingSurfaceInitCursorPos = comp->pointer;
     comp->movingSurface = this;
 }
 
@@ -41,12 +39,9 @@ void MySurface::resizeStartRequest(ResizeEdge edge)
 
     comp->resizingSurface = this;
     comp->resizeEdge = edge;
-
-    comp->resizeInitialMousePos = { comp->pointer.x, comp->pointer.y };
-
-    Rect dr = getRectWithoutDecoration();
-    comp->resizeInitialSurfaceRect = {(double)dr.x,(double)dr.y,(double)dr.width,(double)dr.height};
-    comp->resizeInitialSurfaceDecoration = {getX(),getY(),getWidth(),getHeight()};
+    comp->resizeInitMousePos = comp->pointer;
+    comp->resizeInitSurfaceRect = getRectWithoutDecoration();
+    comp->resizeInitSurfaceDecoration = WRect(pos.x(),pos.y(),width(),height());
 }
 
 void MySurface::geometryChangeRequest()
@@ -57,25 +52,25 @@ void MySurface::geometryChangeRequest()
 
 void MySurface::typeChangeRequest()
 {
-    /* Internally updated, can be accessed with the getType() menthod.
+    /* Internally updated, can be accessed with the type() menthod.
      * You should only draw surfaces with type different to Undefined */
 
-    printf("Surface changed type to %i.\n",getType());
+    printf("Surface changed type to %i.\n",type());
 
    comp->repaintAllOutputs();
 }
 
 void MySurface::positionerChangeRequest()
 {
-    /* Internally updated, can be accessed with the getPositioner() menthod.
-     * The positoner is only avaliable for surfaces with type Popup otherwise nullptr is returned */
+    /* Internally updated, can be accessed with the positioner() menthod.
+     * The positoner is only avaliable if the surface type is Popup otherwise nullptr is returned */
 
     comp->repaintAllOutputs();
 }
 
 void MySurface::parentChangeRequest()
 {
-    /* Internally updated, can be accessed with the getParent() menthod.
+    /* Internally updated, can be accessed with the parent() menthod.
      * If the surface has no parent, nullptr is returned */
 
     comp->repaintAllOutputs();
@@ -91,100 +86,73 @@ void MySurface::bufferScaleChangeRequest()
 
 Int32 MySurface::mapXtoLocal(int xGlobal)
 {
-    return xGlobal - getX();
+    return xGlobal - pos.x();
 }
 
 Int32 MySurface::mapYtoLocal(int yGlobal)
 {
-    return yGlobal - getY();
+    return yGlobal - pos.y();
 }
 
 bool MySurface::containsPoint(Int32 x, Int32 y, bool withoutDecoration)
 {
     if(withoutDecoration)
     {
-        Rect r = getRectWithoutDecoration();
+        WRect r = getRectWithoutDecoration();
 
-        if(r.x > x)
+        if(r.x() > x)
             return false;
-        if(r.x + r.width < x)
+        if(r.x() + r.w() < x)
             return false;
-        if(r.y> y)
+        if(r.y() > y)
             return false;
-        if(r.y + r.height < y)
+        if(r.y() + r.h() < y)
             return false;
 
         return true;
     }
     else
     {
-        if(_posX > x)
+        if(pos.x() > x)
             return false;
-        if(_posX + getWidth() < x)
+        if(pos.x() + width() < x)
             return false;
-        if(_posY > y)
+        if(pos.y() > y)
             return false;
-        if(_posY + getHeight() < y)
+        if(pos.y() + height() < y)
             return false;
 
         return true;
     }
 }
 
-Rect MySurface::getRectWithoutDecoration()
+WRect MySurface::getRectWithoutDecoration()
 {
-    Rect rect;
-    Rect decorationGeometry = getDecorationGeometry();
-    if(getType() != SurfaceType::Undefined)
+    WRect rect;
+    WRect decoration = decorationGeometry();
+    if(type() != SurfaceType::Undefined)
     {
-        rect.x = getX() + decorationGeometry.x;
-        rect.y = getY() + decorationGeometry.y;
-        rect.width = decorationGeometry.width;
-        rect.height = decorationGeometry.height;
+        rect = WRect(
+            pos.x() + decoration.x(),
+            pos.y() + decoration.y(),
+            decoration.w(),
+            decoration.h());
     }
     else
     {
-        rect.x = getX();
-        rect.y = getY();
-        rect.width = getWidth();
-        rect.height = getHeight();
+        rect = WRect(pos.x(),pos.y(),width(),height());
     }
     return rect;
 }
 
 
-void MySurface::setPos(int x, int y)
-{
-    _posX = x;
-    _posY = y;
-}
-
-void MySurface::setX(int x)
-{
-    _posX = x;
-}
-
-void MySurface::setY(int y)
-{
-    _posY = y;
-}
-
 void MySurface::setXWithoutDecoration(Int32 x)
 {
-    setX(x-getDecorationGeometry().x);
+    pos.setX(x-decorationGeometry().x());
 }
 
 void MySurface::setYWithoutDecoration(Int32 y)
 {
-    setY(y-getDecorationGeometry().y);
+    pos.setY(y-decorationGeometry().y());
 }
 
-int MySurface::getX()
-{
-    return _posX;
-}
-
-int MySurface::getY()
-{
-    return _posY;
-}

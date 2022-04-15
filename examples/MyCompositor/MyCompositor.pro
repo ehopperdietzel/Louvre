@@ -6,7 +6,7 @@ CONFIG += ordered
 TARGET = MyCompositor
 
 LIBS += -lGLESv2 -lSOIL
-LIBS += -L../../src/build -lWaylandPlus
+LIBS += -L../../src/build -lWpp
 INCLUDEPATH += /usr/include/drm
 INCLUDEPATH += ../../src/
 INCLUDEPATH += ../../src/classes/

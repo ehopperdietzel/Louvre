@@ -2,7 +2,7 @@
 #include <Subsurface.h>
 #include <stdio.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 struct wl_subsurface_interface subsurface_implementation =
 {

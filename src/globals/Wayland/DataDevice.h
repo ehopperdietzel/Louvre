@@ -4,7 +4,7 @@
 #include <wayland-server.h>
 #include <WNamespaces.h>
 
-class WaylandPlus::Globals::DataDevice
+class Wpp::Globals::DataDevice
 {
 public:
     static void start_drag(wl_client *client, wl_resource *resource, wl_resource *source, wl_resource *origin, wl_resource *icon, UInt32 serial);

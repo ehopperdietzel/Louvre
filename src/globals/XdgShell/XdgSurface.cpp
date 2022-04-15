@@ -5,7 +5,7 @@
 #include <WSurface.h>
 #include <WCompositor.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 static struct xdg_toplevel_interface xdg_toplevel_implementation =
 {

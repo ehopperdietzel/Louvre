@@ -5,7 +5,7 @@
 #include <Surface.h>
 
 using namespace std;
-using namespace WaylandPlus;
+using namespace Wpp;
 
 struct wl_surface_interface surface_implementation =
 {

@@ -6,9 +6,9 @@
 #include <GL/gl.h>
 #include <queue>
 #include <WNamespaces.h>
+#include <WSize.h>
 
-
-class WaylandPlus::WTexture
+class Wpp::WTexture
 {
 
 public:
@@ -20,22 +20,21 @@ public:
     };
 
     WTexture(GLuint textureUnit = 0);
-    void setData(int width, int height, void *data, Type textureType = SHM);
+    void setData(Int32 width, Int32 height, void *data, Type textureType = SHM);
     void deleteTexture();
-    int height(){return _height;}
-    int width(){return _width;}
+    WSize size(){ return _size; }
     bool isInitialized(){ return _initialized;}
     GLuint textureId(){return _textureId;}
     GLuint textureUnit(){return _textureUnit;}
     Type type(){return _type;}
 
 private:
-    friend class WaylandPlus::Globals::Surface;
-    friend class WaylandPlus::WSurface;
+    friend class Wpp::Globals::Surface;
+    friend class Wpp::WSurface;
 
     std::queue<Rect>damages;
     std::queue<Rect>pendingDamages;
-    int _width,_height = 0;
+    WSize _size;
     GLuint _textureId,_textureUnit = 0;
     bool _initialized = false;
     Type _type = SHM;

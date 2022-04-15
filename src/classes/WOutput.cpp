@@ -23,7 +23,7 @@
 #include <WWayland.h>
 #include <WInput.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 WOutput::WOutput(){}
 

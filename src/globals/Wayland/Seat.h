@@ -5,7 +5,7 @@
 #include <WNamespaces.h>
 
 
-class WaylandPlus::Globals::Seat
+class Wpp::Globals::Seat
 {
 public:
     static void resource_destroy(wl_resource *resource);

@@ -31,7 +31,7 @@
 
 #if W_BACKEND == 1
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 
 struct GL_CONF
@@ -526,7 +526,7 @@ std::list<WOutput *> WBackend::getAvaliableOutputs()
 }
 
 /*
-void WaylandPlus::WBackend::setHWCursor()
+void Wpp::WBackend::setHWCursor()
 {
 
     gbm_bo *m_bo = nullptr;

@@ -3,7 +3,7 @@
 
 #include <WNamespaces.h>
 
-class WaylandPlus::WInput
+class Wpp::WInput
 {
 public:
     static int initInput(WCompositor *compositor);//, wl_event_loop_fd_func_t *libinputFunc);

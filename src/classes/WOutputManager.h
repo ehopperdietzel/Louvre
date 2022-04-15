@@ -6,7 +6,7 @@
 
 using namespace std;
 
-class WaylandPlus::WOutputManager
+class Wpp::WOutputManager
 {
 public:
     WOutputManager(WCompositor *compositor);

@@ -17,7 +17,7 @@
 #include <sys/poll.h>
 
 
-class WaylandPlus::WOutput
+class Wpp::WOutput
 {
 
 public:

@@ -109,13 +109,15 @@ void MyCompositor::initializeGL(WOutput *output)
     glEnableVertexAttribArray(0);
 
     // Get Uniform Variables
-    screenUniform = glGetUniformLocation(programObject, "screen"); // (width,height) Screen dimensions
-    rectUniform = glGetUniformLocation(programObject, "rect");     // (left,top,with,height) App window pos and size
-    activeTextureUniform = glGetUniformLocation(programObject, "application");
+    screenSizeUniform = glGetUniformLocation(programObject, "screenSize");
+    texSizeUniform = glGetUniformLocation(programObject, "texSize");
+    srcRectUniform = glGetUniformLocation(programObject, "srcRect");
+    dstRectUniform = glGetUniformLocation(programObject, "dstRect");
+    activeTextureUniform = glGetUniformLocation(programObject, "tex");
 
     // Set screen size
     glUniform2f(
-        screenUniform,
+        screenSizeUniform,
         W_WIDTH/output->getOutputScale(),
         W_HEIGHT/output->getOutputScale());
 
@@ -159,49 +161,31 @@ void MyCompositor::paintGL(WOutput *output)
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     */
 
-    for(list<MySurface*>::iterator surface = surfacesList.begin(); surface != surfacesList.end(); ++surface)
+    for(list<MySurface*>::iterator s = surfacesList.begin(); s != surfacesList.end(); s++)
     {
 
+        MySurface *surface = *s;
 
-        //printf("CHECKPOINT A\n");
-        if((*surface)->getType() == SurfaceType::Undefined || (*surface)->getType() == SurfaceType::Cursor)
+        if( surface->type() == SurfaceType::Undefined || surface->type() == SurfaceType::Cursor)
             continue;
 
-        //printf("CHECKPOINT B\n");
+        if( surface->isDamaged() )
+            surface->applyDamages();
 
-        //renderMutex.lock();
-
-        if((*surface)->isDamaged())
+        if(resizingSurface == surface && isLeftMouseButtonPressed)
         {
-            (*surface)->applyDamages();
-        }
-        else
-        {
-            glActiveTexture(GL_TEXTURE0 + (*surface)->getTexture()->textureUnit());
-            glBindTexture(GL_TEXTURE_2D,(*surface)->getTexture()->textureId());
-        }
-
-
-        if(resizingSurface == (*surface) && isLeftMouseButtonPressed)
-        {
-            Rect ir = resizeInitialSurfaceDecoration;
+            WRect ir = resizeInitSurfaceDecoration;
 
             if(resizeEdge == ResizeEdge::Top || resizeEdge == ResizeEdge::TopLeft || resizeEdge == ResizeEdge::TopRight)
-                resizingSurface->setY(ir.y + ir.height - resizingSurface->getHeight());
+                resizingSurface->pos.setY(ir.y() + ir.h() - resizingSurface->height());
 
             if(resizeEdge == ResizeEdge::Left || resizeEdge == ResizeEdge::TopLeft || resizeEdge == ResizeEdge::BottomLeft)
-                resizingSurface->setX(ir.x + ir.width - resizingSurface->getWidth());
+                resizingSurface->pos.setX(ir.x() + ir.w() - resizingSurface->width());
         }
 
-        //renderMutex.unlock();
-
-        glUniform1i(activeTextureUniform,(*surface)->getTexture()->textureUnit());
-
-        glUniform4f(rectUniform,(*surface)->getX(),(*surface)->getY(),(*surface)->getWidth(),(*surface)->getHeight());
-
-
-
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        drawQuad(surface->texture(),
+                 WRect(0,0,surface->texture()->size().w(),surface->texture()->size().h()),
+                 WRect(surface->pos,surface->size()/surface->bufferScale()));
     }
 
     drawCursor();
@@ -215,8 +199,7 @@ WClient *MyCompositor::newClientRequest(wl_client *client)
      *******************************************************************************/
 
     printf("New client connected.\n");
-
-    return (WClient*)(new MyClient(client,this));
+    return new MyClient(client,this);
 }
 
 void MyCompositor::clientDisconnectRequest(WClient *client)
@@ -227,12 +210,13 @@ void MyCompositor::clientDisconnectRequest(WClient *client)
      * All destroy events from resources related to the client (like surfaces, regions, etc)
      * are prevously notified.
      *******************************************************************************/
+    (void)client;
     printf("Client disconnected.\n");
 }
 
 void MyCompositor::setCursorRequest(WSurface *_cursorSurface, Int32 hotspotX, Int32 hotspotY)
 {
-    cursorHotspot = {hotspotX,hotspotY};
+    cursorHotspot = WPoint(hotspotX, hotspotY);
     cursorSurface = (MySurface*)_cursorSurface;
 }
 
@@ -250,16 +234,15 @@ void MyCompositor::pointerMoveEvent(float dx, float dy)
 {
     MySurface *surface;
 
-    pointer.x+=dx;
-    pointer.y+=dy;
+    pointer += WPointF(dx,dy);
 
-    if(pointer.x < 0)
-        pointer.x = 0;
-    if(pointer.y < 0)
-        pointer.y = 0;
+    if(pointer.x() < 0)
+        pointer.setX(0);
+    if(pointer.y() < 0)
+        pointer.setY(0);
 
-    float x = pointer.x;
-    float y = pointer.y;
+    float x = pointer.x();
+    float y = pointer.y();
 
     if(resizingSurface != nullptr)
     {
@@ -268,57 +251,57 @@ void MyCompositor::pointerMoveEvent(float dx, float dy)
             case ResizeEdge::Bottom:
             {
                 resizingSurface->sendConfigureEvent(
-                            resizeInitialSurfaceRect.width,
-                            resizeInitialSurfaceRect.height + (y - resizeInitialMousePos.y),
+                            resizeInitSurfaceRect.w(),
+                            resizeInitSurfaceRect.h() + (y - resizeInitMousePos.y()),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::Right:
             {
                 resizingSurface->sendConfigureEvent(
-                            resizeInitialSurfaceRect.width + (x - resizeInitialMousePos.x),
-                            resizeInitialSurfaceRect.height,
+                            resizeInitSurfaceRect.w() + (x - resizeInitMousePos.x()),
+                            resizeInitSurfaceRect.h(),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::BottomRight:
             {
                 resizingSurface->sendConfigureEvent(
-                            resizeInitialSurfaceRect.width + (x - resizeInitialMousePos.x),
-                            resizeInitialSurfaceRect.height + (y - resizeInitialMousePos.y),
+                            resizeInitSurfaceRect.w() + (x - resizeInitMousePos.x()),
+                            resizeInitSurfaceRect.h() + (y - resizeInitMousePos.y()),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::Top:
             {
                 resizingSurface->sendConfigureEvent(
-                            resizeInitialSurfaceRect.width,
-                            resizeInitialSurfaceRect.height + (resizeInitialMousePos.y - y),
+                            resizeInitSurfaceRect.w(),
+                            resizeInitSurfaceRect.h() + (resizeInitMousePos.y() - y),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::Left:
             {
                 resizingSurface->sendConfigureEvent(
-                            resizeInitialSurfaceRect.width + (resizeInitialMousePos.x - x),
-                            resizeInitialSurfaceRect.height,
+                            resizeInitSurfaceRect.w() + (resizeInitMousePos.x() - x),
+                            resizeInitSurfaceRect.h(),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::TopLeft:
             {
                 resizingSurface->sendConfigureEvent(
-                            resizeInitialSurfaceRect.width + (resizeInitialMousePos.x - x),
-                            resizeInitialSurfaceRect.height + (resizeInitialMousePos.y - y),
+                            resizeInitSurfaceRect.w() + (resizeInitMousePos.x() - x),
+                            resizeInitSurfaceRect.h() + (resizeInitMousePos.y() - y),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::BottomLeft:
             {
                 resizingSurface->sendConfigureEvent(
-                            resizeInitialSurfaceRect.width + (resizeInitialMousePos.x - x),
-                            resizeInitialSurfaceRect.height + (y - resizeInitialMousePos.y),
+                            resizeInitSurfaceRect.w() + (resizeInitMousePos.x() - x),
+                            resizeInitSurfaceRect.h() + (y - resizeInitMousePos.y()),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::TopRight:
             {
                 resizingSurface->sendConfigureEvent(
-                            resizeInitialSurfaceRect.width + (x - resizeInitialMousePos.x),
-                            resizeInitialSurfaceRect.height + (resizeInitialMousePos.y - y),
+                            resizeInitSurfaceRect.w() + (x - resizeInitMousePos.x()),
+                            resizeInitSurfaceRect.h() + (resizeInitMousePos.y() - y),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
         }
@@ -328,18 +311,18 @@ void MyCompositor::pointerMoveEvent(float dx, float dy)
 
     if(movingSurface != nullptr)
     {
-        movingSurface->setXWithoutDecoration(movingSurfaceInitialPosX + int( x - movingSurfaceInitialCursorPosX ));
-        movingSurface->setYWithoutDecoration(movingSurfaceInitialPosY + int( y - movingSurfaceInitialCursorPosY ));
+        movingSurface->setXWithoutDecoration(movingSurfaceInitPos.x() + int( x - movingSurfaceInitCursorPos.x() ));
+        movingSurface->setYWithoutDecoration(movingSurfaceInitPos.y() + int( y - movingSurfaceInitCursorPos.y() ));
         repaintAllOutputs();
         return;
     }
 
-    for(list<MySurface*>::reverse_iterator surfaceIt = surfacesList.rbegin(); surfaceIt != surfacesList.rend(); ++surfaceIt)
+    for(list<MySurface*>::reverse_iterator s = surfacesList.rbegin(); s != surfacesList.rend(); s++)
     {
 
-        surface =*surfaceIt;
+        surface =*s;
 
-        if(surface->getType() == SurfaceType::Undefined) continue;
+        if(surface->type() == SurfaceType::Undefined) continue;
 
         // Mouse move event
         if(surface->containsPoint(x,y,false) && _pointerFocusSurface == surface)
@@ -389,8 +372,8 @@ void MyCompositor::pointerClickEvent(UInt32 button, UInt32 state)
         if(resizingSurface != nullptr)
         {
             resizingSurface->sendConfigureEvent(
-                        resizingSurface->getRectWithoutDecoration().width,
-                        resizingSurface->getRectWithoutDecoration().height,
+                        resizingSurface->getRectWithoutDecoration().w(),
+                        resizingSurface->getRectWithoutDecoration().h(),
                         SurfaceState::Activated);
             resizingSurface = nullptr;
         }
@@ -474,26 +457,31 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState)
 
 void MyCompositor::drawCursor()
 {
-
     if(cursorSurface != nullptr)
     {
-        glActiveTexture(GL_TEXTURE0+cursorSurface->getTexture()->textureUnit());
-        glUniform1i(activeTextureUniform,cursorSurface->getTexture()->textureUnit());
-
         if(cursorSurface->isDamaged())
             cursorSurface->applyDamages();
 
-        glBindTexture(GL_TEXTURE_2D,cursorSurface->getTexture()->textureId());
-        glUniform4f(rectUniform,pointer.x - cursorHotspot.x, pointer.y - cursorHotspot.y,cursorSurface->getWidth(),cursorSurface->getHeight());
-
+        drawQuad(cursorSurface->texture(),
+                 WRect(0,0,cursorSurface->texture()->size().w(),cursorSurface->texture()->size().h()),
+                 WRect(pointer-cursorHotspot,cursorSurface->size()/cursorSurface->bufferScale()));
     }
     else
     {
-        glActiveTexture(GL_TEXTURE0);
-        glUniform1i(activeTextureUniform,0);
-        glBindTexture(GL_TEXTURE_2D,defaultCursorTexture->textureId());
-        glUniform4f(rectUniform,pointer.x,pointer.y,24,24);
+        drawQuad(defaultCursorTexture,
+                 WRect(0,0,defaultCursorTexture->size().w(),defaultCursorTexture->size().h()),
+                 WRect(pointer,WSize(24,24)));
     }
+}
+
+void MyCompositor::drawQuad(WTexture *tex, WRect src, WRect dst)
+{
+    glActiveTexture(GL_TEXTURE0+tex->textureUnit());
+    glBindTexture (GL_TEXTURE_2D,tex->textureId());
+    glUniform1i(activeTextureUniform,tex->textureUnit());
+    glUniform2f(texSizeUniform,tex->size().w(), tex->size().h());
+    glUniform4f(srcRectUniform,src.x(), src.y(), src.w(), src.h());
+    glUniform4f(dstRectUniform,dst.x(), dst.y(), dst.w(), dst.h());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
@@ -511,7 +499,7 @@ void MyCompositor::setPointerPos(double x, double y)
     if(y > h)
         y = h;
 
-    pointer = { x, y };
+    pointer = WPointF(x, y);
 
 }
 

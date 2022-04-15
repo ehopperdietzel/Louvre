@@ -3,8 +3,9 @@
 
 #include <WCompositor.h>
 #include <MySurface.h>
+#include <WPointF.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 class MyCompositor : public WCompositor
 {
@@ -31,8 +32,8 @@ public:
     WSurface *_pointerFocusSurface = nullptr;
     WSurface *_keyboardFocusSurface = nullptr;
     WSurface *_cursorSurface = nullptr;
-    Point cursorHotspot = {0,0};
-    PointD pointer;
+    WPointF cursorHotspot;
+    WPointF pointer;
     WOutput *pointerOutput = nullptr;
 
     // Square
@@ -46,12 +47,10 @@ public:
 
     // Uniform variables
     GLuint
-    screenUniform,              // Tamaño de la pantalla (width,height)
-    rectUniform,                // Posición y tamaño del cuadrado a dibujar
-    borderRadiusUniform,        // Radio de los bordes redondeados
-    borderRadiusCornersUniform, // Esquinas activas del border radius (TL,TR,BL,BR)
-    shadowCornerUniform,        // Indica la sombra a dibujar -1=Para no dibujar 0 = TL
-    shadowConfUniform,          // Indica el xOffset, yOffsety radio de la sombra
+    screenSizeUniform,          // Screen size (width,height)
+    texSizeUniform,             // Texture size (width,height)
+    dstRectUniform,             // Dest quad position and size (x,y,width,height)
+    srcRectUniform,             // Src tex rect (x,y,width,height)
     activeTextureUniform;       // glActiveTexture
 
     // Active surfaces
@@ -61,23 +60,26 @@ public:
     ResizeEdge resizeEdge;
 
     // Resize surface initial rect
-    RectD resizeInitialSurfaceRect;
-    Rect resizeInitialSurfaceDecoration;
+    WRect resizeInitSurfaceRect;
+    WRect resizeInitSurfaceDecoration;
 
     // Resize surface initial mouse pos
-    PointD resizeInitialMousePos;
+    WPoint resizeInitMousePos;
 
     // Surfaces list ( orderer from back to front )
     list<MySurface*>surfacesList;
 
     WTexture *defaultCursorTexture = new WTexture();
     WTexture *backgroundTexture = new WTexture();
-    Point backgroundPos;
+    WPoint backgroundPos;
 
-    Int32 movingSurfaceInitialPosX,movingSurfaceInitialPosY,movingSurfaceInitialCursorPosX,movingSurfaceInitialCursorPosY = 0;
+    WPoint movingSurfaceInitPos, movingSurfaceInitCursorPos;
 
     bool isLeftMouseButtonPressed = false;
+
     void drawCursor();
+
+    void drawQuad(WTexture *tex,WRect src, WRect dst);
 
 };
 

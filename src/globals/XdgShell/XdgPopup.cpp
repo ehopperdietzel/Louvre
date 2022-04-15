@@ -2,16 +2,16 @@
 #include <WSurface.h>
 #include <WClient.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 void Extensions::XdgShell::Popup::destroy_resource(wl_resource *resource)
 {
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    if(surface->getParent() != nullptr)
-        surface->getParent()->_children.remove(surface);
+    if(surface->parent() != nullptr)
+        surface->parent()->_children.remove(surface);
 
-    surface->getClient()->surfaceDestroyRequest(surface);
+    surface->client()->surfaceDestroyRequest(surface);
 
 }
 

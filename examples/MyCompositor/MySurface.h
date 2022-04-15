@@ -3,7 +3,7 @@
 
 #include <WSurface.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 class MyCompositor;
 
@@ -30,17 +30,12 @@ public:
     Int32 mapYtoLocal(int yGlobal);
 
     bool containsPoint(Int32 x, Int32 y, bool withoutDecoration = false);
-    Rect getRectWithoutDecoration();
-    void setPos(int x, int y);
-    void setX(int x);
-    void setY(int y);
+    WRect getRectWithoutDecoration();
     void setXWithoutDecoration(Int32 x);
     void setYWithoutDecoration(Int32 y);
-    int getX();
-    int getY();
 
-    Int32 _posX = 0;
-    Int32 _posY = 0;
+    // Surface position
+    WPoint pos;
 };
 
 #endif // MYSURFACE_H

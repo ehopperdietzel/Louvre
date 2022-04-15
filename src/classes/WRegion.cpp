@@ -1,6 +1,6 @@
 #include "WRegion.h"
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 WRegion::WRegion(UInt32 id, wl_resource *resource, WClient *client)
 {

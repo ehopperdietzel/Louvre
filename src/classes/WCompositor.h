@@ -19,7 +19,7 @@
 
 using namespace std;
 
-class WaylandPlus::WCompositor
+class Wpp::WCompositor
 {
 public:
     WCompositor();
@@ -56,7 +56,7 @@ private:
     friend class WSurface;
     friend class WOutput;
     friend class Globals::Surface;
-    friend class WaylandPlus::Globals::Pointer;
+    friend class Wpp::Globals::Pointer;
 
     // Output scale
     list<WOutput*>_outputs;

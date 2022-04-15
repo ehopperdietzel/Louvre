@@ -2,7 +2,7 @@ TEMPLATE = lib
 CONFIG += console c++17
 CONFIG -= app_bundle
 CONFIG -= qt
-TARGET = WaylandPlus
+TARGET = Wpp
 DESTDIR = $$PWD/build
 
 LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lxkbcommon
@@ -17,8 +17,12 @@ HEADERS += \
     classes/WOpenGL.h \
     classes/WOutput.h \
     classes/WOutputManager.h \
+    classes/WPoint.h \
+    classes/WPointF.h \
     classes/WPositioner.h \
+    classes/WRect.h \
     classes/WRegion.h \
+    classes/WSize.h \
     classes/WSurface.h \
     classes/WTexture.h \
     classes/WView.h \
@@ -50,6 +54,8 @@ SOURCES += \
     classes/WOpenGL.cpp \
     classes/WOutput.cpp \
     classes/WOutputManager.cpp \
+    classes/WPoint.cpp \
+    classes/WPointF.cpp \
     classes/WPositioner.cpp \
     classes/WRegion.cpp \
     classes/WSurface.cpp \

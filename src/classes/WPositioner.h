@@ -3,7 +3,7 @@
 
 #include <WNamespaces.h>
 
-class WaylandPlus::WPositioner
+class Wpp::WPositioner
 {
 public:
     WPositioner(WClient *client);
@@ -21,9 +21,9 @@ public:
 
     ConstraintAdjustment getConstraintAdjustment();
 private:
-    friend class WaylandPlus::Extensions::XdgShell::WmBase;
-    friend class WaylandPlus::Extensions::XdgShell::Popup;
-    friend class WaylandPlus::Extensions::XdgShell::Positioner;
+    friend class Wpp::Extensions::XdgShell::WmBase;
+    friend class Wpp::Extensions::XdgShell::Popup;
+    friend class Wpp::Extensions::XdgShell::Positioner;
 
     wl_resource *_resource = nullptr;
     WClient *_client = nullptr;

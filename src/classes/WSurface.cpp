@@ -15,7 +15,7 @@
 #include <EGL/eglext.h>
 #include <WOutput.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 wl_array nullKeys;
 
@@ -109,7 +109,7 @@ void WSurface::sendKeyEvent(UInt32 keyCode, UInt32 keyState)
 {
     if(_client->getKeyboard() != nullptr)
     {
-        wl_keyboard_send_key(_client->getKeyboard(),keyboardSerial,getCompositor()->getMilliseconds(),keyCode,keyState);
+        wl_keyboard_send_key(_client->getKeyboard(),keyboardSerial,compositor()->getMilliseconds(),keyCode,keyState);
         keyboardSerial++;        
     }
 }
@@ -228,63 +228,29 @@ void WSurface::setTitle(const char *title)
     strcpy(_title,title);
 }
 
-const char *WSurface::getAppId()
+const char *WSurface::appId()
 {
     return _appId;
 }
 
-const char *WSurface::getTitle()
+const char *WSurface::title()
 {
     return _title;
 }
 
-Int32 WSurface::getWidth()
-{
-    return _texture->width()/getBufferScale();
-}
 
-Int32 WSurface::getHeight()
-{
-    return _texture->height()/getBufferScale();
-}
-
-
-WPositioner *WSurface::getPositioner()
+WPositioner *WSurface::positioner()
 {
     return _positioner;
 }
 
-const Rect WSurface::getDecorationGeometry()
-{
-    return _decorationGeometry;
-}
 
-Int32 WSurface::getMinWidth()
-{
-    return _minSize.width;
-}
-
-Int32 WSurface::getMinHeight()
-{
-    return _minSize.height;
-}
-
-Int32 WSurface::getMaxWidth()
-{
-    return _maxSize.width;
-}
-
-Int32 WSurface::getMaxHeight()
-{
-    return _maxSize.height;
-}
-
-Int32 WSurface::getBufferScale()
+Int32 WSurface::bufferScale()
 {
     return _bufferScale;
 }
 
-WTexture *WSurface::getTexture()
+WTexture *WSurface::texture()
 {
     return _texture;
 }
@@ -296,10 +262,10 @@ bool WSurface::isDamaged()
 
 void WSurface::applyDamages()
 {
-    if(!_isDamaged || getResource() == nullptr )
+    if(!_isDamaged || resource() == nullptr )
         return;
 
-    WOutput *output = getCompositor()->getOutputs().front();
+    WOutput *output = compositor()->getOutputs().front();
 
     if(eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
@@ -340,7 +306,7 @@ void WSurface::applyDamages()
     if (frame_callback != nullptr)
     {
 
-        wl_callback_send_done(frame_callback,getCompositor()->getMilliseconds());
+        wl_callback_send_done(frame_callback,compositor()->getMilliseconds());
         wl_resource_destroy(frame_callback);
         frame_callback = nullptr;
     }
@@ -352,37 +318,32 @@ void WSurface::setBufferScale(Int32 scale)
     _bufferScale = scale;
 }
 
-wl_resource *WSurface::getResource()
+wl_resource *WSurface::resource()
 {
     return _resource;
 }
 
-WClient *WSurface::getClient()
+WClient *WSurface::client()
 {
     return _client;
 }
 
-WCompositor *WSurface::getCompositor()
+WCompositor *WSurface::compositor()
 {
     return _client->getCompositor();
 }
 
-UInt32 WSurface::getId()
-{
-    return wl_resource_get_id(_resource);
-}
-
-SurfaceType WSurface::getType()
+SurfaceType WSurface::type()
 {
     return _type;
 }
 
-WaylandPlus::WSurface *WSurface::getParent()
+Wpp::WSurface *WSurface::parent()
 {
     return _parent;
 }
 
-const list<WaylandPlus::WSurface *> WSurface::getChildren()
+const list<Wpp::WSurface *> WSurface::children()
 {
     return _children;
 }

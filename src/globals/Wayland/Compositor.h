@@ -4,7 +4,7 @@
 #include <wayland-server.h>
 #include <WNamespaces.h>
 
-class WaylandPlus::Globals::Compositor
+class Wpp::Globals::Compositor
 {
 public:
     static void resource_destroy(wl_resource *resource);

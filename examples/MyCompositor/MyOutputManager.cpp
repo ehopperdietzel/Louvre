@@ -1,11 +1,11 @@
 #include "MyOutputManager.h"
 #include <WCompositor.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
-MyOutputManager::MyOutputManager(WaylandPlus::WCompositor *compositor):WOutputManager::WOutputManager(compositor){}
+MyOutputManager::MyOutputManager(Wpp::WCompositor *compositor):WOutputManager::WOutputManager(compositor){}
 
-void MyOutputManager::outputPluggedEvent(WaylandPlus::WOutput *output)
+void MyOutputManager::outputPluggedEvent(Wpp::WOutput *output)
 {
     /* Here you can handle new displays connections.
      * Once added to the compositor with compositor->addOutput(output),
@@ -18,7 +18,7 @@ void MyOutputManager::outputPluggedEvent(WaylandPlus::WOutput *output)
 
 }
 
-void MyOutputManager::outputUnpluggedEvent(WaylandPlus::WOutput *output)
+void MyOutputManager::outputUnpluggedEvent(Wpp::WOutput *output)
 {
     /* Handle a display disconnection.
      * Here you could do some cleaning if needed

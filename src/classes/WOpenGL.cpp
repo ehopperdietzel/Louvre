@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <GLES2/gl2.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 char *WOpenGL::openShader(const char *fname)
 {

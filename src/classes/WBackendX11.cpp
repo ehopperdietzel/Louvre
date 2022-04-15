@@ -19,7 +19,7 @@
 
 #if W_BACKEND == 2
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 struct X11_Window{
     Window window;

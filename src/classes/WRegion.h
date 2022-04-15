@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class WaylandPlus::WRegion
+class Wpp::WRegion
 {
 public:
     WRegion(UInt32 id, wl_resource *resource, WClient *client);

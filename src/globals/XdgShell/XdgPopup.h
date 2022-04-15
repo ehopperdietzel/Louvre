@@ -5,7 +5,7 @@
 #include <WNamespaces.h>
 
 
-class WaylandPlus::Extensions::XdgShell::Popup
+class Wpp::Extensions::XdgShell::Popup
 {
 public:
     static void destroy_resource(wl_resource *resource);

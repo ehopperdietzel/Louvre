@@ -2,7 +2,7 @@
 #include <WOutput.h>
 #include <WBackend.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 WOutputManager::WOutputManager(WCompositor *compositor)
 {

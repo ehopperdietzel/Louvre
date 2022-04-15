@@ -21,7 +21,7 @@
 #include <WSurface.h>
 
 using namespace std;
-using namespace WaylandPlus;
+using namespace Wpp;
 
 PFNEGLBINDWAYLANDDISPLAYWL eglBindWaylandDisplayWL = NULL;
 

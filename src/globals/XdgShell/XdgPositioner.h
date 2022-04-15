@@ -4,7 +4,7 @@
 #include <wayland-server.h>
 #include <WNamespaces.h>
 
-class WaylandPlus::Extensions::XdgShell::Positioner
+class Wpp::Extensions::XdgShell::Positioner
 {
 public:
     static void destroy_resource(wl_resource *resource);

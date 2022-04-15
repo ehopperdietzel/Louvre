@@ -12,22 +12,22 @@
 #include <unistd.h>
 #include <sys/eventfd.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 void Globals::Surface::resource_destroy(wl_resource *resource)
 {
     // Get surface
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    WClient *client = surface->getClient();
+    WClient *client = surface->client();
 
     if(client != nullptr)
     {
         // Remove surface from its client list
-        surface->getClient()->surfaces.remove(surface);
+        surface->client()->surfaces.remove(surface);
 
         // Notify from client
-        surface->getClient()->surfaceDestroyRequest(surface);
+        surface->client()->surfaceDestroyRequest(surface);
     }
 
     delete surface;
@@ -69,10 +69,10 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
     surface->committedBuffer = surface->pendingBuffer;
-    surface->getTexture()->damages.swap(surface->getTexture()->pendingDamages);
+    surface->texture()->damages.swap(surface->texture()->pendingDamages);
 
-    while(!surface->getTexture()->pendingDamages.empty())
-        surface->getTexture()->pendingDamages.pop();
+    while(!surface->texture()->pendingDamages.empty())
+        surface->texture()->pendingDamages.pop();
 
     if (surface->committedBuffer == nullptr)
     {
@@ -83,7 +83,7 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     surface->_isDamaged = true;
 
     // FALTA ENVIAR EVENTO
-    surface->getCompositor()->repaintAllOutputs();
+    surface->compositor()->repaintAllOutputs();
 }
 
 
@@ -94,11 +94,11 @@ void Globals::Surface::damage(wl_client *client, wl_resource *resource, Int32 x,
     /* The client tells the server that has updated a region of the current buffer */
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    Int32 s = surface->getBufferScale();
+    Int32 s = surface->bufferScale();
 
-    WaylandPlus::Rect damage = {x*s, y*s, width*s, height*s};
+    Wpp::Rect damage = {x*s, y*s, width*s, height*s};
 
-    surface->getTexture()->pendingDamages.push(damage);
+    surface->texture()->pendingDamages.push(damage);
 }
 
 void Globals::Surface::set_opaque_region(wl_client *client, wl_resource *resource, wl_resource *region)
@@ -121,7 +121,7 @@ void Globals::Surface::damage_buffer(wl_client *client, wl_resource *resource, I
 {
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
-    surface->getTexture()->pendingDamages.push({x, y, width, height});
+    surface->texture()->pendingDamages.push({x, y, width, height});
 }
 
 void Globals::Surface::set_buffer_scale(wl_client *client, wl_resource *resource, Int32 scale)

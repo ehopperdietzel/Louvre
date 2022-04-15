@@ -2,7 +2,7 @@
 #include <WClient.h>
 #include <WCompositor.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 WPositioner::WPositioner(WClient *client)
 {

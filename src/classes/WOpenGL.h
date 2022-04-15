@@ -4,7 +4,7 @@
 #include <WNamespaces.h>
 #include <GL/gl.h>
 
-class WaylandPlus::WOpenGL
+class Wpp::WOpenGL
 {
 public:
     static char *openShader(const char *fname);

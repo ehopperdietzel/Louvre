@@ -4,21 +4,21 @@
 
 using namespace std;
 
-static struct wl_output_interface output_implementation = {&WaylandPlus::Globals::Output::release};
+static struct wl_output_interface output_implementation = {&Wpp::Globals::Output::release};
 
-void WaylandPlus::Globals::Output::release(wl_client *client,wl_resource *resource)
+void Wpp::Globals::Output::release(wl_client *client,wl_resource *resource)
 {
     (void)client;(void)resource;
     Output::resource_destroy(resource);
 }
 
-void WaylandPlus::Globals::Output::resource_destroy(wl_resource *resource)
+void Wpp::Globals::Output::resource_destroy(wl_resource *resource)
 {
     (void)resource;
     printf("OUTPUT DESTROYED.\n");
 }
 
-void WaylandPlus::Globals::Output::bind(wl_client *client, void *data, UInt32 version, UInt32 id)
+void Wpp::Globals::Output::bind(wl_client *client, void *data, UInt32 version, UInt32 id)
 {
     WCompositor *compositor = (WCompositor*)data;
 

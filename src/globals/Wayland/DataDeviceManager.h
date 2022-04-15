@@ -4,7 +4,7 @@
 #include <wayland-server.h>
 #include <WNamespaces.h>
 
-class WaylandPlus::Globals::DataDeviceManager
+class Wpp::Globals::DataDeviceManager
 {
 public:
     static void create_data_source(wl_client *client, wl_resource *resource, UInt32 id);

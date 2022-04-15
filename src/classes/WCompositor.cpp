@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <WOutput.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 WCompositor::WCompositor()
 {

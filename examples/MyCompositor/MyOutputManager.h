@@ -4,13 +4,13 @@
 #include <WNamespaces.h>
 #include <WOutputManager.h>
 
-class MyOutputManager : public WaylandPlus::WOutputManager
+class MyOutputManager : public Wpp::WOutputManager
 {
 public:
-    MyOutputManager(WaylandPlus::WCompositor*compositor);
+    MyOutputManager(Wpp::WCompositor*compositor);
 private:
-    void outputPluggedEvent(WaylandPlus::WOutput *output) override;
-    void outputUnpluggedEvent(WaylandPlus::WOutput *output) override;
+    void outputPluggedEvent(Wpp::WOutput *output) override;
+    void outputUnpluggedEvent(Wpp::WOutput *output) override;
 };
 
 #endif // MYOUTPUTMANAGER_H

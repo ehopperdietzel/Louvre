@@ -4,7 +4,7 @@
 #include <wayland-server.h>
 #include <WNamespaces.h>
 
-class WaylandPlus::Extensions::XdgShell::Surface
+class Wpp::Extensions::XdgShell::Surface
 {
 public:
     static void resource_destroy(wl_resource *resource);

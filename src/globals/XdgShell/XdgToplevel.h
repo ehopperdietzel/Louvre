@@ -5,7 +5,7 @@
 #include <WNamespaces.h>
 
 
-class WaylandPlus::Extensions::XdgShell::Toplevel
+class Wpp::Extensions::XdgShell::Toplevel
 {
 public:
     static void destroy(wl_client *client, wl_resource *resource);

@@ -7,11 +7,13 @@
 #include <list>
 #include <mutex>
 
+#include <WRect.h>
+
 using namespace std;
 
 void createNullKeys();
 
-class WaylandPlus::WSurface
+class Wpp::WSurface
 {
 public:
     WSurface(wl_resource *surface, WClient *client, GLuint textureUnit = 0);
@@ -40,37 +42,35 @@ public:
     void sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags states);
 
     // Surface info
-    const char *getAppId();
-    const char *getTitle();
-    UInt32 getId();
-    WaylandPlus::SurfaceType getType();
+    const char *appId();
+    const char *title();
+    Wpp::SurfaceType type();
 
     // Size in surface coordinates
-    Int32 getWidth();
-    Int32 getHeight();
-    Int32 getMinWidth();
-    Int32 getMinHeight();
-    Int32 getMaxWidth();
-    Int32 getMaxHeight();
-    const Rect getDecorationGeometry();
+    Int32 width() { return texture()->size().w(); }
+    Int32 height() { return texture()->size().h(); }
+    WSize size(){ return texture()->size(); }
+    WSize minSize(){ return _minSize; }
+    WSize maxSize(){ return _maxSize; }
+    WRect decorationGeometry(){ return _decorationGeometry; };
 
     // Popup positioner
-    WPositioner *getPositioner();
+    WPositioner *positioner();
 
     // Buffer
-    Int32 getBufferScale();
-    WTexture *getTexture();
+    Int32 bufferScale();
+    WTexture *texture();
     bool isDamaged();
     void applyDamages();
 
     // References
-    wl_resource *getResource();
-    WClient *getClient();
-    WCompositor *getCompositor();
+    wl_resource *resource();
+    WClient *client();
+    WCompositor *compositor();
 
     // Hierarchy
-    WSurface *getParent();
-    const list<WSurface*>getChildren();
+    WSurface *parent();
+    const list<WSurface*>children();
 
     //mutex surfaceMutex;
 
@@ -79,7 +79,7 @@ public:
     friend class WCompositor;
     friend class WOutput;
     friend class Globals::Surface;
-    friend class WaylandPlus::Globals::Pointer;
+    friend class Wpp::Globals::Pointer;
     friend class Extensions::XdgShell::WmBase;
     friend class Extensions::XdgShell::Surface;
     friend class Extensions::XdgShell::Toplevel;
@@ -114,13 +114,13 @@ public:
     wl_resource *xdg_toplevel = nullptr;
     wl_resource *xdg_popup = nullptr;
 
-    Size _maxSize = {1,1};
-    Size _minSize = {1,1};
+    WPoint _maxSize;
+    WPoint _minSize;
     Int32 _bufferScale = 1;
     char *_appId = new char[1];
     char *_title = new char[1];
 
-    Rect _decorationGeometry;
+    WRect _decorationGeometry;
 
     list<WSurface*>_children;
 

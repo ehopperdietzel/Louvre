@@ -4,7 +4,7 @@
 #include <wayland-server.h>
 #include <WNamespaces.h>
 
-class WaylandPlus::Globals::Output
+class Wpp::Globals::Output
 {
 public:
     static void release(wl_client *client,wl_resource *resource);

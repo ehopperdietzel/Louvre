@@ -6,7 +6,7 @@
 #include <EGL/egl.h>
 
 
-class WaylandPlus::WWayland
+class Wpp::WWayland
 {
 public:
     static int initWayland(WCompositor *comp);//, int libinputFd, wl_event_loop_fd_func_t *libinputFunc);

@@ -1,7 +1,7 @@
 #include "WClient.h"
 #include <WCompositor.h>
 
-using namespace WaylandPlus;
+using namespace Wpp;
 
 WClient::WClient(wl_client *client, WCompositor *compositor)
 {

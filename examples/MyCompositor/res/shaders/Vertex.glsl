@@ -1,16 +1,16 @@
 precision lowp float;
 precision lowp int;
 attribute vec4 vertexPosition;
-uniform vec2 screen;
-uniform vec4 rect;
+uniform vec2 screenSize;
+uniform vec4 dstRect;
 varying vec2 v_texcoord;
 
 void main()
 {
-    float width = rect.z/screen.x;
-    float height = rect.w/screen.y;
-    float left = rect.x/screen.x;
-    float top = rect.y/screen.y;
+    float width = dstRect.z/screenSize.x;
+    float height = dstRect.w/screenSize.y;
+    float left = dstRect.x/screenSize.x;
+    float top = dstRect.y/screenSize.y;
     float x = 2.0*(width*vertexPosition.x + left) -1.0;
     float y = 1.0  - 2.0*(height*vertexPosition.y + top);
     gl_Position = vec4(x,y,0.0,1.0);

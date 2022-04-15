@@ -5,7 +5,7 @@
 #include <wayland-server.h>
 #include <WNamespaces.h>
 
-class WaylandPlus::Globals::Subsurface
+class Wpp::Globals::Subsurface
 {
 public:
     static void destroy(wl_client *client, wl_resource *resource);

@@ -1,7 +1,7 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 
-SUBDIRS = $$PWD/../src/WaylandPlus.pro \
+SUBDIRS = $$PWD/../src/Wayland++.pro \
           $$PWD/MyCompositor/MyCompositor.pro
 
 
