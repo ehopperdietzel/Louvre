@@ -2,24 +2,25 @@
 #define WPOSITIONER_H
 
 #include <WNamespaces.h>
+#include <WRect.h>
 
 class Wpp::WPositioner
 {
 public:
     WPositioner(WClient *client);
 
-    WClient *getClient();
-    wl_resource *getResource();
+    WClient     *client()   { return _client; };
+    wl_resource *resource() { return _resource; };
 
-    const Size getSize();
-    Int32 getWidth();
-    Int32 getHeight();
-    const Rect getRect();
-    Anchor getAnchor();
-    Gravity getGravity();
-    const Point getOffset();
+    WSize   size()       { return _size; };
+    WRect   anchorRect() { return _anchorRect; };
+    Anchor  anchor()     { return _anchor; };
+    Gravity gravity()    { return _gravity; };
+    WPoint  offset()     { return _offset; };
+    bool    isReactive() { return _isReactive; }
 
-    ConstraintAdjustment getConstraintAdjustment();
+    ConstraintAdjustment constraintAdjustment() { return _constraintAdjustment; };
+
 private:
     friend class Wpp::Extensions::XdgShell::WmBase;
     friend class Wpp::Extensions::XdgShell::Popup;
@@ -28,15 +29,18 @@ private:
     wl_resource *_resource = nullptr;
     WClient *_client = nullptr;
 
-    Size _size = {0,0};
-    Rect _anchorRect;
+    WSize _size;
+    WSize _parentSize;
+    WRect _anchorRect;
+    WPoint _offset;
+
     Anchor _anchor;
     Gravity _gravity;
     ConstraintAdjustment _constraintAdjustment;
-    Point _offset;
-    Size _parentSize;
 
     WSurface *_linkedSurface = nullptr;
+
+    bool _isReactive = false;
 };
 
 #endif // WPOSITIONER_H

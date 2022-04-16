@@ -7,21 +7,21 @@
 void Wpp::Extensions::XdgShell::Positioner::destroy_resource(wl_resource *resource)
 {
     printf("Xdg Positioner resource destroyed.\n");
-    WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    delete positioner;
+    //WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
+    //delete positioner;
 }
 
 void Wpp::Extensions::XdgShell::Positioner::destroy(wl_client *client, wl_resource *resource)
 {
-    (void)client;(void)resource;
-    printf("Xdg Positioner resource destroyed.\n");
+    (void)client;
+    wl_resource_destroy(resource);
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_size(wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_size = {width,height};
+    positioner->_size = WSize(width,height);
     if(positioner->_linkedSurface != nullptr)
         positioner->_linkedSurface->positionerChangeRequest();
 }
@@ -30,7 +30,7 @@ void Wpp::Extensions::XdgShell::Positioner::set_anchor_rect(wl_client *client, w
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_anchorRect = {x,y,width,height};
+    positioner->_anchorRect = WRect(x,y,width,height);
     if(positioner->_linkedSurface != nullptr)
         positioner->_linkedSurface->positionerChangeRequest();
 }
@@ -66,7 +66,7 @@ void Wpp::Extensions::XdgShell::Positioner::set_offset(wl_client *client, wl_res
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_offset = {x,y};
+    positioner->_offset = WPoint(x,y);
     if(positioner->_linkedSurface != nullptr)
         positioner->_linkedSurface->positionerChangeRequest();
 }
@@ -75,15 +75,16 @@ void Wpp::Extensions::XdgShell::Positioner::set_reactive(wl_client *client, wl_r
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
+    positioner->_isReactive = true;
     if(positioner->_linkedSurface != nullptr)
         positioner->_linkedSurface->positionerChangeRequest();
 }
 
-void Wpp::Extensions::XdgShell::Positioner::set_parent_size(wl_client *client, wl_resource *resource, Int32 parent_width, Int32 parent_height)
+void Wpp::Extensions::XdgShell::Positioner::set_parent_size(wl_client *client, wl_resource *resource, Int32 parentWidth, Int32 parentHeight)
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_parentSize = {parent_width,parent_height};
+    positioner->_parentSize = WSize(parentWidth,parentHeight);
     if(positioner->_linkedSurface != nullptr)
         positioner->_linkedSurface->positionerChangeRequest();
 }

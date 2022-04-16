@@ -53,10 +53,9 @@ void Extensions::XdgShell::WmBase::destroy(wl_client *client, wl_resource *resou
 void Extensions::XdgShell::WmBase::create_positioner(wl_client *client, wl_resource *resource, UInt32 id)
 {
     (void)client;(void)resource;(void)id;
+    printf("NEW POSITIONER.\n");
 
     Int32 version = wl_resource_get_version(resource);
-    printf("Xdg Positioner version: %i\n",version);
-
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
     WPositioner *positioner = new WPositioner(wClient);
     positioner->_resource = wl_resource_create(client, &xdg_positioner_interface, version, id);

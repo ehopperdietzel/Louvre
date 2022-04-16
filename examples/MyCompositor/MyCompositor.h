@@ -77,8 +77,8 @@ public:
 
     bool isLeftMouseButtonPressed = false;
 
+    void drawSurfaceTree(MySurface *surface);
     void drawCursor();
-
     void drawQuad(WTexture *tex,WRect src, WRect dst);
 
 };

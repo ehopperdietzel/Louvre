@@ -228,49 +228,19 @@ void WSurface::setTitle(const char *title)
     strcpy(_title,title);
 }
 
-const char *WSurface::appId()
-{
-    return _appId;
-}
-
-const char *WSurface::title()
-{
-    return _title;
-}
-
-
-WPositioner *WSurface::positioner()
-{
-    return _positioner;
-}
-
-
-Int32 WSurface::bufferScale()
-{
-    return _bufferScale;
-}
-
-WTexture *WSurface::texture()
-{
-    return _texture;
-}
-
-bool WSurface::isDamaged()
-{
-    return _isDamaged;
-}
-
 void WSurface::applyDamages()
 {
     if(!_isDamaged || resource() == nullptr )
         return;
 
     WOutput *output = compositor()->getOutputs().front();
+    Int32 width, height;
+    WSize prevSize = size();
 
     if(eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
         //printf("EGL buffer\n");
-        EGLint width, height;
+
         eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_WIDTH, &width);
         eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_HEIGHT, &height);
         _texture->_format = texture_format;
@@ -284,8 +254,8 @@ void WSurface::applyDamages()
         //printf("SHM buffer\n");
         wl_shm_buffer *shm_buffer = wl_shm_buffer_get(committedBuffer);
         wl_shm_buffer_begin_access(shm_buffer);
-        Int32 width = wl_shm_buffer_get_width(shm_buffer);
-        Int32 height = wl_shm_buffer_get_height(shm_buffer);
+        width = wl_shm_buffer_get_width(shm_buffer);
+        height = wl_shm_buffer_get_height(shm_buffer);
         void *data = wl_shm_buffer_get_data(shm_buffer);
         UInt32 format =  wl_shm_buffer_get_format(shm_buffer);
         if( format == WL_SHM_FORMAT_XRGB8888 )
@@ -311,6 +281,8 @@ void WSurface::applyDamages()
         frame_callback = nullptr;
     }
 
+    if(prevSize != size())
+        bufferSizeChangeRequest();
 }
 
 void WSurface::setBufferScale(Int32 scale)
@@ -318,34 +290,12 @@ void WSurface::setBufferScale(Int32 scale)
     _bufferScale = scale;
 }
 
-wl_resource *WSurface::resource()
-{
-    return _resource;
-}
-
-WClient *WSurface::client()
-{
-    return _client;
-}
-
 WCompositor *WSurface::compositor()
 {
-    return _client->getCompositor();
-}
-
-SurfaceType WSurface::type()
-{
-    return _type;
-}
-
-Wpp::WSurface *WSurface::parent()
-{
-    return _parent;
-}
-
-const list<Wpp::WSurface *> WSurface::children()
-{
-    return _children;
+    if(_client != nullptr)
+        return _client->getCompositor();
+    else
+        return nullptr;
 }
 
 

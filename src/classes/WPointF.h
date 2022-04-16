@@ -19,6 +19,7 @@ public:
     Int32 h(){return _y;}
     Int32 width(){return _x;}
     Int32 height(){return _y;}
+    Int32 area(){return _x*_y;}
 
     void setX(Int32 x){_x = x;}
     void setY(Int32 y){_y = y;}

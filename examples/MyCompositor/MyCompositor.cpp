@@ -10,6 +10,7 @@
 #include <MyOutputManager.h>
 #include <WOutput.h>
 #include <SOIL/SOIL.h>
+#include <WPositioner.h>
 
 MyCompositor::MyCompositor():WCompositor()
 {
@@ -31,7 +32,7 @@ MyCompositor::MyCompositor():WCompositor()
          * 1 is the default ( 1 virtual pixel = 1 screen pixel )
          * 2 is for HDPi screens ( 1 virtual pixel = 2 screen pixels )
          * Clients can ignore this suggestion and use a different scale.
-         * Get the client's surface scale with the surface->getScale() method.
+         * Get the client's surface scale with the surface->bufferScale() method.
          * You can invoke this method at any time but only new clients will
          * be notified.
          *********************************************************************/
@@ -162,33 +163,128 @@ void MyCompositor::paintGL(WOutput *output)
     */
 
     for(list<MySurface*>::iterator s = surfacesList.begin(); s != surfacesList.end(); s++)
+        drawSurfaceTree(*s);
+
+    drawCursor();
+}
+
+void MyCompositor::drawSurfaceTree(MySurface *surface)
+{
+
+    if( surface->type() == SurfaceType::Undefined || surface->type() == SurfaceType::Cursor)
+        return;
+
+    if( surface->isDamaged() )
+        surface->applyDamages();
+
+    // If surface has no parent
+    if(surface->parent() == nullptr)
     {
-
-        MySurface *surface = *s;
-
-        if( surface->type() == SurfaceType::Undefined || surface->type() == SurfaceType::Cursor)
-            continue;
-
-        if( surface->isDamaged() )
-            surface->applyDamages();
-
-        if(resizingSurface == surface && isLeftMouseButtonPressed)
-        {
-            WRect ir = resizeInitSurfaceDecoration;
-
-            if(resizeEdge == ResizeEdge::Top || resizeEdge == ResizeEdge::TopLeft || resizeEdge == ResizeEdge::TopRight)
-                resizingSurface->pos.setY(ir.y() + ir.h() - resizingSurface->height());
-
-            if(resizeEdge == ResizeEdge::Left || resizeEdge == ResizeEdge::TopLeft || resizeEdge == ResizeEdge::BottomLeft)
-                resizingSurface->pos.setX(ir.x() + ir.w() - resizingSurface->width());
-        }
-
         drawQuad(surface->texture(),
                  WRect(0,0,surface->texture()->size().w(),surface->texture()->size().h()),
                  WRect(surface->pos,surface->size()/surface->bufferScale()));
     }
+    else if(surface->type() == SurfaceType::Popup && surface->positioner() != nullptr)
+    {
+        WPositioner *p = surface->positioner();
+        MySurface *parent = (MySurface*)surface->parent();
+        WPoint parentPos = parent->getRectWithoutDecoration().topLeft();
+        WPoint anchorPos;
+        WPoint popupOrigin;
+        WSize popupSize = p->size();
+        switch(surface->positioner()->anchor())
+        {
+            case XDG_POSITIONER_ANCHOR_NONE:
+            {
+                anchorPos = p->anchorRect().bottomRight()/2;
+            }break;
+            case XDG_POSITIONER_ANCHOR_TOP:
+            {
+                anchorPos.setX(p->anchorRect().w()/2);
+            }break;
+            case XDG_POSITIONER_ANCHOR_BOTTOM:
+            {
+                anchorPos.setX(p->anchorRect().w()/2);
+                anchorPos.setY(p->anchorRect().h());
+            }break;
+            case XDG_POSITIONER_ANCHOR_LEFT:
+            {
+                anchorPos.setY(p->anchorRect().h()/2);
+            }break;
+            case XDG_POSITIONER_ANCHOR_RIGHT:
+            {
+                anchorPos.setX(p->anchorRect().w());
+                anchorPos.setY(p->anchorRect().h()/2);
+            }break;
+            case XDG_POSITIONER_ANCHOR_TOP_LEFT:
+            {
+                // (0,0)
+            }break;
+            case XDG_POSITIONER_ANCHOR_BOTTOM_LEFT:
+            {
+                anchorPos.setY(p->anchorRect().h());
+            }break;
+            case XDG_POSITIONER_ANCHOR_TOP_RIGHT:
+            {
+                anchorPos.setX(p->anchorRect().w());
+            }break;
+            case XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT:
+            {
+                anchorPos = p->anchorRect().bottomRight();
+            }break;
+        }
+        printf("GRAVITY %i\n",surface->positioner()->gravity());
+        switch(surface->positioner()->gravity())
+        {
+            case XDG_POSITIONER_GRAVITY_NONE:
+            {
+                popupOrigin = popupSize/2;
+            }break;
+            case XDG_POSITIONER_GRAVITY_TOP:
+            {
+                popupOrigin.setX(popupSize.w()/2);
+                popupOrigin.setY(popupSize.h());
+            }break;
+            case XDG_POSITIONER_GRAVITY_BOTTOM:
+            {
+                popupOrigin.setX(popupSize.w()/2);
+            }break;
+            case XDG_POSITIONER_GRAVITY_LEFT:
+            {
+                popupOrigin.setX(popupSize.w());
+                popupOrigin.setY(popupSize.h()/2);
+            }break;
+            case XDG_POSITIONER_GRAVITY_RIGHT:
+            {
+                popupOrigin.setY(popupSize.h()/2);
+            }break;
+            case XDG_POSITIONER_GRAVITY_TOP_LEFT:
+            {
+                popupOrigin = popupSize;
+            }break;
+            case XDG_POSITIONER_GRAVITY_BOTTOM_LEFT:
+            {
+                popupOrigin.setX(popupSize.w());
+            }break;
+            case XDG_POSITIONER_GRAVITY_TOP_RIGHT:
+            {
+                popupOrigin.setY(popupSize.h());
+            }break;
+            case XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT:
+            {
+                // (0,0)
+            }break;
+        }
 
-    drawCursor();
+        WPoint popupPos = parentPos + p->anchorRect().topLeft() + anchorPos - popupOrigin + p->offset();
+        drawQuad(surface->texture(),
+                 WRect(WPoint(),surface->texture()->size()),
+                 WRect(popupPos,surface->size()/surface->bufferScale()));
+    }
+
+    // Draw it's children
+    for(list<WSurface*>::iterator s = surface->_children.begin(); s != surface->_children.end(); s++)
+        drawSurfaceTree((MySurface*)*s);
 }
 
 WClient *MyCompositor::newClientRequest(wl_client *client)
@@ -398,8 +494,11 @@ void MyCompositor::pointerClickEvent(UInt32 button, UInt32 state)
             }
 
             // Raise view
-            surfacesList.remove((MySurface*)_pointerFocusSurface);
-            surfacesList.push_back((MySurface*)_pointerFocusSurface);
+            if(_pointerFocusSurface->parent() == nullptr)
+            {
+                surfacesList.remove((MySurface*)_pointerFocusSurface);
+                surfacesList.push_back((MySurface*)_pointerFocusSurface);
+            }
 
         }
     }
@@ -476,8 +575,7 @@ void MyCompositor::drawCursor()
 
 void MyCompositor::drawQuad(WTexture *tex, WRect src, WRect dst)
 {
-    glActiveTexture(GL_TEXTURE0+tex->textureUnit());
-    glBindTexture (GL_TEXTURE_2D,tex->textureId());
+    glBindTexture(GL_TEXTURE_2D,tex->textureId());
     glUniform1i(activeTextureUniform,tex->textureUnit());
     glUniform2f(texSizeUniform,tex->size().w(), tex->size().h());
     glUniform4f(srcRectUniform,src.x(), src.y(), src.w(), src.h());
@@ -502,4 +600,6 @@ void MyCompositor::setPointerPos(double x, double y)
     pointer = WPointF(x, y);
 
 }
+
+
 

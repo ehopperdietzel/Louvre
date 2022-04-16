@@ -20,8 +20,11 @@ public:
     Int32 h(){return _h;}
     Int32 width(){return _w;}
     Int32 height(){return _h;}
-    const WPoint topLeft(){return WPoint(_x,_y);}
-    const WSize bottomRight(){return WSize(_w,_h);}
+    Int32 area(){return _w*_h;}
+
+    WPoint topLeft(){return WPoint(_x,_y);}
+    WSize bottomRight(){return WSize(_w,_h);}
+
     void setX(Int32 x){_x = x;}
     void setY(Int32 y){_y = y;}
     void setW(Int32 width){_w = width;}

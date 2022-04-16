@@ -8,6 +8,7 @@
 class Wpp::Extensions::XdgShell::Toplevel
 {
 public:
+    static void destroy_resource(wl_resource *resource);
     static void destroy(wl_client *client, wl_resource *resource);
     static void set_parent(wl_client *client, wl_resource *resource, wl_resource *parent);
     static void set_title(wl_client *client, wl_resource *resource, const char *title);

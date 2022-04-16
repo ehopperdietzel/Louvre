@@ -23,6 +23,7 @@ public:
     void positionerChangeRequest() override;
     void parentChangeRequest() override;
     void bufferScaleChangeRequest() override;
+    void bufferSizeChangeRequest() override;
 
     MyCompositor *comp = nullptr;
 

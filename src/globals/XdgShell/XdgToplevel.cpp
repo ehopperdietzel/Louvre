@@ -6,9 +6,16 @@
 
 using namespace Wpp;
 
+void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
+{
+    (void)resource;
+    printf("TOP LEVEL DESTROYED.\n");
+}
+
 void Extensions::XdgShell::Toplevel::destroy (wl_client *client, wl_resource *resource)
 {
-    (void)client;(void)resource;
+    (void)client;
+    wl_resource_destroy(resource);
 }
 void Extensions::XdgShell::Toplevel::set_parent (wl_client *client, wl_resource *resource, wl_resource *parent)
 {

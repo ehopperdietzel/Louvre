@@ -77,7 +77,7 @@ int WWayland::initWayland(WCompositor *comp)
     wl_global_create(display, &wl_output_interface, 3, comp, &Globals::Output::bind);//3
 
     // Create data device manager global
-    //wl_global_create(display, &wl_data_device_manager_interface, 3, comp, &Globals::DataDeviceManager::bind);//3
+    wl_global_create(display, &wl_data_device_manager_interface, 3, comp, &Globals::DataDeviceManager::bind);//3
 
     // Create xdg shell global
     wl_global_create(display, &xdg_wm_base_interface, 4, comp, &Extensions::XdgShell::WmBase::bind);

@@ -5,8 +5,8 @@ MySurface::MySurface(wl_resource *surfaceResource, WClient *client, GLuint textu
           :WSurface::WSurface(surfaceResource,client,textureUnit)
 {
     comp = (MyCompositor*)compositor();
-    //pos.setX(rand() % W_WIDTH / 4);
-    //pos.setY(rand() % W_HEIGHT / 4);
+    pos.setX(200 + rand() % W_WIDTH / 4);
+    pos.setY(200 + rand() % W_HEIGHT / 4);
 }
 
 MySurface::~MySurface()
@@ -39,9 +39,9 @@ void MySurface::resizeStartRequest(ResizeEdge edge)
 
     comp->resizingSurface = this;
     comp->resizeEdge = edge;
-    comp->resizeInitMousePos = comp->pointer;
+    comp->resizeInitMousePos = WPoint(comp->pointer);
     comp->resizeInitSurfaceRect = getRectWithoutDecoration();
-    comp->resizeInitSurfaceDecoration = WRect(pos.x(),pos.y(),width(),height());
+    comp->resizeInitSurfaceDecoration = WRect(pos,size()/bufferScale());
 }
 
 void MySurface::geometryChangeRequest()
@@ -65,6 +65,7 @@ void MySurface::positionerChangeRequest()
     /* Internally updated, can be accessed with the positioner() menthod.
      * The positoner is only avaliable if the surface type is Popup otherwise nullptr is returned */
 
+
     comp->repaintAllOutputs();
 }
 
@@ -72,6 +73,18 @@ void MySurface::parentChangeRequest()
 {
     /* Internally updated, can be accessed with the parent() menthod.
      * If the surface has no parent, nullptr is returned */
+
+    // If the surface has a parent we remove it from our surface list (to access it later with parent->children())
+    if(parent() == nullptr)
+    {
+        if(!(std::find(comp->surfacesList.begin(), comp->surfacesList.end(), this) != comp->surfacesList.end()))
+            comp->surfacesList.push_back(this);
+    }
+    else
+    {
+        comp->surfacesList.remove(this);
+        printf("REMOVED POPUP FROM LIST.\n");
+    }
 
     comp->repaintAllOutputs();
 }
@@ -82,6 +95,20 @@ void MySurface::bufferScaleChangeRequest()
      * If the surface has no parent, nullptr is returned */
 
     comp->repaintAllOutputs();
+}
+
+void MySurface::bufferSizeChangeRequest()
+{
+    if(comp->resizingSurface == this && comp->isLeftMouseButtonPressed)
+    {
+        WRect ir = comp->resizeInitSurfaceDecoration;
+
+        if(comp->resizeEdge == ResizeEdge::Top || comp->resizeEdge == ResizeEdge::TopLeft || comp->resizeEdge == ResizeEdge::TopRight)
+            pos.setY(ir.y() + ir.h() - height()/bufferScale());
+
+        if(comp->resizeEdge == ResizeEdge::Left || comp->resizeEdge == ResizeEdge::TopLeft || comp->resizeEdge == ResizeEdge::BottomLeft)
+            pos.setX(ir.x() + ir.w() - width()/bufferScale());
+    }
 }
 
 Int32 MySurface::mapXtoLocal(int xGlobal)
@@ -130,18 +157,12 @@ WRect MySurface::getRectWithoutDecoration()
 {
     WRect rect;
     WRect decoration = decorationGeometry();
+
     if(type() != SurfaceType::Undefined)
-    {
-        rect = WRect(
-            pos.x() + decoration.x(),
-            pos.y() + decoration.y(),
-            decoration.w(),
-            decoration.h());
-    }
+        rect = WRect(pos + decoration.topLeft(),decoration.bottomRight());
     else
-    {
         rect = WRect(pos.x(),pos.y(),width(),height());
-    }
+
     return rect;
 }
 
