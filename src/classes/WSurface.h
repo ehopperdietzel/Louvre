@@ -30,6 +30,7 @@ public:
     virtual void parentChangeRequest() = 0;
     virtual void bufferScaleChangeRequest() = 0;
     virtual void bufferSizeChangeRequest() = 0;
+    virtual void grabSeatRequest() = 0;
 
     // Events
     void sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UInt32 milliseconds);
@@ -40,7 +41,8 @@ public:
     void sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group);
     void sendKeyboardEnterEvent();
     void sendKeyboardLeaveEvent();
-    void sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags states);
+    void sendConfigureToplevelEvent(Int32 width, Int32 height, SurfaceStateFlags states);
+    void sendConfigurePopupEvent(Int32 x, Int32 y, Int32 width, Int32 height);
 
     // Surface info
     const char *appId()     { return _appId; }
@@ -74,6 +76,7 @@ public:
     list<WSurface*>&children(){return _children;}
     list<WSurface*>_children;
 
+    wl_resource *xdg_popup       = nullptr;
  private:
     friend class WWayland;
     friend class WCompositor;
@@ -112,7 +115,7 @@ public:
 
     wl_resource *xdg_shell       = nullptr;
     wl_resource *xdg_toplevel    = nullptr;
-    wl_resource *xdg_popup       = nullptr;
+
 
     WPoint _maxSize, _minSize;
     Int32 _bufferScale = 1;

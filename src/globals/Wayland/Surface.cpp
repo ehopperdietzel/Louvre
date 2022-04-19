@@ -76,7 +76,7 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
 
     if (surface->committedBuffer == nullptr)
     {
-        surface->sendConfigureEvent(0,0,SurfaceState::Activated);
+        surface->sendConfigureToplevelEvent(0,0,SurfaceState::Activated);
         return;
     }
 

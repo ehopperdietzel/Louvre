@@ -19,6 +19,8 @@ public:
     WPoint  offset()     { return _offset; };
     bool    isReactive() { return _isReactive; }
 
+    WPoint calculatePopupPosition(const WRect &outputRect, const WPoint &parentPosition);
+
     ConstraintAdjustment constraintAdjustment() { return _constraintAdjustment; };
 
 private:

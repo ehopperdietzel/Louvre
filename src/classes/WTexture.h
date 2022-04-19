@@ -27,6 +27,7 @@ public:
     GLuint textureId(){return _textureId;}
     GLuint textureUnit(){return _textureUnit;}
     Type type(){return _type;}
+    UInt32 format(){return _format;}
 
 private:
     friend class Wpp::Globals::Surface;

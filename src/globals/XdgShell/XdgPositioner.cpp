@@ -6,9 +6,8 @@
 
 void Wpp::Extensions::XdgShell::Positioner::destroy_resource(wl_resource *resource)
 {
+    (void)resource;
     printf("Xdg Positioner resource destroyed.\n");
-    //WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    //delete positioner;
 }
 
 void Wpp::Extensions::XdgShell::Positioner::destroy(wl_client *client, wl_resource *resource)
@@ -20,19 +19,29 @@ void Wpp::Extensions::XdgShell::Positioner::destroy(wl_client *client, wl_resour
 void Wpp::Extensions::XdgShell::Positioner::set_size(wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
     (void)client;
+
+    if (width <= 0 || height <= 0)
+    {
+        wl_resource_post_error(resource, XDG_POSITIONER_ERROR_INVALID_INPUT,"xdg_positioner.set_size requested with non-positive dimensions");
+        return;
+    }
+
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
     positioner->_size = WSize(width,height);
-    if(positioner->_linkedSurface != nullptr)
-        positioner->_linkedSurface->positionerChangeRequest();
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_anchor_rect(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {
     (void)client;
+
+    if (width <= 0 || height <= 0)
+    {
+        wl_resource_post_error(resource, XDG_POSITIONER_ERROR_INVALID_INPUT,"xdg_positioner.set_anchor_rect requested with non-positive dimensions");
+        return;
+    }
+
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
     positioner->_anchorRect = WRect(x,y,width,height);
-    if(positioner->_linkedSurface != nullptr)
-        positioner->_linkedSurface->positionerChangeRequest();
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_anchor(wl_client *client, wl_resource *resource, UInt32 anchor)
@@ -40,8 +49,6 @@ void Wpp::Extensions::XdgShell::Positioner::set_anchor(wl_client *client, wl_res
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
     positioner->_anchor = (Anchor)anchor;
-    if(positioner->_linkedSurface != nullptr)
-        positioner->_linkedSurface->positionerChangeRequest();
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_gravity(wl_client *client, wl_resource *resource, UInt32 gravity)
@@ -49,8 +56,6 @@ void Wpp::Extensions::XdgShell::Positioner::set_gravity(wl_client *client, wl_re
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
     positioner->_gravity = (Gravity)gravity;
-    if(positioner->_linkedSurface != nullptr)
-        positioner->_linkedSurface->positionerChangeRequest();
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_constraint_adjustment(wl_client *client, wl_resource *resource, UInt32 constraintAdjustment)
@@ -58,8 +63,6 @@ void Wpp::Extensions::XdgShell::Positioner::set_constraint_adjustment(wl_client 
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
     positioner->_constraintAdjustment = (ConstraintAdjustment)constraintAdjustment;
-    if(positioner->_linkedSurface != nullptr)
-        positioner->_linkedSurface->positionerChangeRequest();
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_offset(wl_client *client, wl_resource *resource, Int32 x, Int32 y)
@@ -67,8 +70,6 @@ void Wpp::Extensions::XdgShell::Positioner::set_offset(wl_client *client, wl_res
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
     positioner->_offset = WPoint(x,y);
-    if(positioner->_linkedSurface != nullptr)
-        positioner->_linkedSurface->positionerChangeRequest();
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_reactive(wl_client *client, wl_resource *resource)
@@ -76,8 +77,6 @@ void Wpp::Extensions::XdgShell::Positioner::set_reactive(wl_client *client, wl_r
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
     positioner->_isReactive = true;
-    if(positioner->_linkedSurface != nullptr)
-        positioner->_linkedSurface->positionerChangeRequest();
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_parent_size(wl_client *client, wl_resource *resource, Int32 parentWidth, Int32 parentHeight)
@@ -85,14 +84,12 @@ void Wpp::Extensions::XdgShell::Positioner::set_parent_size(wl_client *client, w
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
     positioner->_parentSize = WSize(parentWidth,parentHeight);
-    if(positioner->_linkedSurface != nullptr)
-        positioner->_linkedSurface->positionerChangeRequest();
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_parent_configure(wl_client *client, wl_resource *resource, UInt32 serial)
 {
     (void)client;
-    WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    if(positioner->_linkedSurface != nullptr)
-        positioner->_linkedSurface->positionerChangeRequest();
+    //WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
+
+    // TODO
 }

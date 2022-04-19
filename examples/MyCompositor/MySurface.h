@@ -24,6 +24,7 @@ public:
     void parentChangeRequest() override;
     void bufferScaleChangeRequest() override;
     void bufferSizeChangeRequest() override;
+    void grabSeatRequest() override;
 
     MyCompositor *comp = nullptr;
 

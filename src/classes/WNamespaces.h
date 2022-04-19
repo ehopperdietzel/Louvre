@@ -12,8 +12,8 @@
 #include <wayland-egl-core.h>
 #include <wayland-egl.h>
 
-#define W_WIDTH 2880
-#define W_HEIGHT 1800
+#define W_WIDTH 1440*2
+#define W_HEIGHT 900*2
 
 namespace Wpp
 {

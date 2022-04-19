@@ -15,12 +15,12 @@ WTexture::WTexture(GLuint __textureUnit)
 void WTexture::setData(Int32 width, Int32 height, void *data, Type textureType)
 {
     glActiveTexture(GL_TEXTURE0 + textureUnit());
-
+    //printf("Resize: W %i, H %i\n",width,height);
     // Prevent gen a new texture if the buffer size is the same
     if(width != _size.w() || height != _size.h() || textureType == Type::EGL)
     {
 
-        //printf("Resize: W %i, H %i\n",width,height);
+
         deleteTexture();
         _size = WSize(width,height);
         glGenTextures(1, &_textureId);

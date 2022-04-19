@@ -141,9 +141,9 @@ void WSurface::sendKeyboardLeaveEvent()
     }
 }
 
-void WSurface::sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags states)
+void WSurface::sendConfigureToplevelEvent(Int32 width, Int32 height, SurfaceStateFlags states)
 {
-    if(xdg_toplevel != nullptr && xdg_shell != nullptr) //xdgShellVersion >= 2
+    if(xdg_toplevel != nullptr) //xdgShellVersion >= 2
     {
         wl_array dummy;
         wl_array_init(&dummy);
@@ -209,9 +209,19 @@ void WSurface::sendConfigureEvent(Int32 width, Int32 height, SurfaceStateFlags s
 
         xdg_toplevel_send_configure(xdg_toplevel,width,height,&dummy);
         wl_array_release(&dummy);
+    }
+
+    if(xdg_shell != nullptr)
+    {
         xdg_surface_send_configure(xdg_shell,configureSerial);
         configureSerial++;
     }
+}
+
+void WSurface::sendConfigurePopupEvent(Int32 x, Int32 y, Int32 width, Int32 height)
+{
+    if(xdg_popup != nullptr)
+        xdg_popup_send_configure(xdg_popup,x,y,width,height);
 }
 
 void WSurface::setAppId(const char *appId)
@@ -258,10 +268,19 @@ void WSurface::applyDamages()
         height = wl_shm_buffer_get_height(shm_buffer);
         void *data = wl_shm_buffer_get_data(shm_buffer);
         UInt32 format =  wl_shm_buffer_get_format(shm_buffer);
-        if( format == WL_SHM_FORMAT_XRGB8888 )
+
+        if( format == WL_SHM_FORMAT_XRGB8888)
+        {
             _texture->_format = GL_RGB;
-        else
+            printf("XRGB\n");
+        }
+        else if(format == WL_SHM_FORMAT_ARGB8888)
+        {
             _texture->_format = GL_RGBA;
+            printf("ARGB\n");
+        }
+        else
+            exit(1);
 
         _texture->setData(width, height, data);
         wl_shm_buffer_end_access(shm_buffer);

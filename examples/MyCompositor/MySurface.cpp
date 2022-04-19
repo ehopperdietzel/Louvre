@@ -1,12 +1,14 @@
 #include "MySurface.h"
 #include <MyCompositor.h>
 #include <WOutput.h>
+#include <WPositioner.h>
+
 MySurface::MySurface(wl_resource *surfaceResource, WClient *client, GLuint textureUnit)
           :WSurface::WSurface(surfaceResource,client,textureUnit)
 {
     comp = (MyCompositor*)compositor();
-    pos.setX(200 + rand() % W_WIDTH / 4);
-    pos.setY(200 + rand() % W_HEIGHT / 4);
+    pos.setX(100 + rand() % W_WIDTH / 4);
+    pos.setY(20 + rand() % W_HEIGHT / 4);
 }
 
 MySurface::~MySurface()
@@ -64,8 +66,12 @@ void MySurface::positionerChangeRequest()
 {
     /* Internally updated, can be accessed with the positioner() menthod.
      * The positoner is only avaliable if the surface type is Popup otherwise nullptr is returned */
-
-
+    MySurface *parentSurface = (MySurface*)parent();
+    WPoint parentPos = parentSurface->pos + parentSurface->decorationGeometry().topLeft();
+    pos = positioner()->calculatePopupPosition(WRect(),parentPos);
+    WPoint relPos = parentPos - pos;
+    pos+=decorationGeometry().topLeft();
+    sendConfigurePopupEvent(relPos.x(),relPos.y(),positioner()->size().w(),positioner()->size().h());
     comp->repaintAllOutputs();
 }
 
@@ -73,18 +79,6 @@ void MySurface::parentChangeRequest()
 {
     /* Internally updated, can be accessed with the parent() menthod.
      * If the surface has no parent, nullptr is returned */
-
-    // If the surface has a parent we remove it from our surface list (to access it later with parent->children())
-    if(parent() == nullptr)
-    {
-        if(!(std::find(comp->surfacesList.begin(), comp->surfacesList.end(), this) != comp->surfacesList.end()))
-            comp->surfacesList.push_back(this);
-    }
-    else
-    {
-        comp->surfacesList.remove(this);
-        printf("REMOVED POPUP FROM LIST.\n");
-    }
 
     comp->repaintAllOutputs();
 }
@@ -109,6 +103,24 @@ void MySurface::bufferSizeChangeRequest()
         if(comp->resizeEdge == ResizeEdge::Left || comp->resizeEdge == ResizeEdge::TopLeft || comp->resizeEdge == ResizeEdge::BottomLeft)
             pos.setX(ir.x() + ir.w() - width()/bufferScale());
     }
+}
+
+void MySurface::grabSeatRequest()
+{
+    if(comp->_keyboardFocusSurface && comp->_keyboardFocusSurface != this)
+        comp->_keyboardFocusSurface->sendKeyboardLeaveEvent();
+
+    comp->_keyboardFocusSurface = this;
+    this->sendKeyboardEnterEvent();
+
+    /*
+    if(comp->_pointerFocusSurface && comp->_pointerFocusSurface != this)
+        comp->_pointerFocusSurface->sendPointerLeaveEvent();
+
+    comp->_pointerFocusSurface = this;
+    this->sendPointerEnterEvent(20,20);
+    */
+
 }
 
 Int32 MySurface::mapXtoLocal(int xGlobal)

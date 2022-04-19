@@ -32,10 +32,10 @@ void Wpp::Globals::Output::bind(wl_client *client, void *data, UInt32 version, U
         0,
         2880,
         1800,
-        WL_OUTPUT_SUBPIXEL_UNKNOWN,
+        WL_OUTPUT_SUBPIXEL_HORIZONTAL_RGB,
         "Fake name\0",
         "Fake Model\0",
-        wl_output_transform::WL_OUTPUT_TRANSFORM_NORMAL);
+        WL_OUTPUT_TRANSFORM_NORMAL);
 
     wl_output_send_mode(
         resource,

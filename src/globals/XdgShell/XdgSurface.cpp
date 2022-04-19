@@ -49,27 +49,57 @@ void Extensions::XdgShell::Surface::destroy (wl_client *client, wl_resource *res
 void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *resource, UInt32 id)
 {
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+
+    if (surface->xdg_toplevel || surface->xdg_popup)
+    {
+        wl_resource_post_error(resource, XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"xdg_surface already has a role object");
+        return;
+    }
+
     surface->xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
 
     surface->_type = SurfaceType::Toplevel;
     wl_resource_set_implementation(surface->xdg_toplevel, &xdg_toplevel_implementation, surface, &Extensions::XdgShell::Toplevel::destroy_resource);
-    surface->sendConfigureEvent(0,0,SurfaceState::Activated);
+    surface->sendConfigureToplevelEvent(0,0,SurfaceState::Activated);
     surface->typeChangeRequest();
 }
 void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *parent, wl_resource *positioner)
 {
     (void)parent;(void)positioner;
 
-    WPositioner *wPositioner = (WPositioner*)wl_resource_get_user_data(positioner);
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    if(wPositioner->size().area() <= 0 || wPositioner->anchorRect().area() <= 0)
+    if (surface->xdg_toplevel || surface->xdg_popup)
     {
-        printf("INVALID POSITIONER.\n");
-        wl_resource_post_error(positioner,XDG_POSITIONER_ERROR_INVALID_INPUT,"Invalid Popup");
+        wl_resource_post_error(resource, XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"xdg_surface already has a role object");
         return;
     }
 
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    WSurface *wParent = (WSurface*)wl_resource_get_user_data(parent);
+
+    if(!wParent)
+    {
+        wl_resource_post_error(resource, XDG_WM_BASE_ERROR_INVALID_POPUP_PARENT,"xdg_surface.get_popup with invalid popup parent");
+        return;
+    }
+
+    WPositioner *wPositioner = (WPositioner*)wl_resource_get_user_data(positioner);
+
+    if (!wPositioner)
+    {
+        wl_resource_post_error(resource, XDG_WM_BASE_ERROR_INVALID_POSITIONER,"xdg_surface.get_popup without positioner");
+        return;
+    }
+
+    if(wPositioner->size().area() <= 0 || wPositioner->anchorRect().area() <= 0)
+    {
+        wl_resource_post_error(
+                    positioner,
+                    XDG_WM_BASE_ERROR_INVALID_POSITIONER,
+                    "xdg_surface.get_popup with invalid positioner (size: %dx%d, anchorRect: %dx%d)",
+                    wPositioner->size().w(),wPositioner->size().h(),wPositioner->anchorRect().w(),wPositioner->anchorRect().h());
+        return;
+    }
 
     // Delete previous popup if exists
     if(surface->_positioner != nullptr)
@@ -78,20 +108,12 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
     surface->_positioner = wPositioner;
     surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
     surface->_type = SurfaceType::Popup;
-    if(parent != NULL)
-    {
-        printf("POPUP HAS PARENT.\n");
-        WSurface *parentSurface = (WSurface*)wl_resource_get_user_data(parent);
-        surface->_parent = parentSurface;
-        parentSurface->_children.push_back(surface);
-        printf("CHILDREN %lu.\n",parentSurface->_children.size());
-        surface->parentChangeRequest();
-    }
-
+    surface->_parent = wParent;
+    wParent->_children.push_back(surface);
+    surface->parentChangeRequest();
     wl_resource_set_implementation(surface->xdg_popup, &xdg_popup_implementation, surface, &Extensions::XdgShell::Popup::destroy_resource);
-    xdg_popup_send_configure(surface->xdg_popup,0,0,0,0);
     surface->typeChangeRequest();
-    printf("NEW POPUP.\n");
+    surface->positionerChangeRequest();
 }
 void Extensions::XdgShell::Surface::set_window_geometry(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {

@@ -163,7 +163,9 @@ void MyCompositor::paintGL(WOutput *output)
     */
 
     for(list<MySurface*>::iterator s = surfacesList.begin(); s != surfacesList.end(); s++)
+    {
         drawSurfaceTree(*s);
+    }
 
     drawCursor();
 }
@@ -177,6 +179,8 @@ void MyCompositor::drawSurfaceTree(MySurface *surface)
     if( surface->isDamaged() )
         surface->applyDamages();
 
+    //printf("Format %i \n",surface->texture()->format());
+
     // If surface has no parent
     if(surface->parent() == nullptr)
     {
@@ -186,105 +190,16 @@ void MyCompositor::drawSurfaceTree(MySurface *surface)
     }
     else if(surface->type() == SurfaceType::Popup && surface->positioner() != nullptr)
     {
-        WPositioner *p = surface->positioner();
-        MySurface *parent = (MySurface*)surface->parent();
-        WPoint parentPos = parent->getRectWithoutDecoration().topLeft();
-        WPoint anchorPos;
-        WPoint popupOrigin;
-        WSize popupSize = p->size();
-        switch(surface->positioner()->anchor())
-        {
-            case XDG_POSITIONER_ANCHOR_NONE:
-            {
-                anchorPos = p->anchorRect().bottomRight()/2;
-            }break;
-            case XDG_POSITIONER_ANCHOR_TOP:
-            {
-                anchorPos.setX(p->anchorRect().w()/2);
-            }break;
-            case XDG_POSITIONER_ANCHOR_BOTTOM:
-            {
-                anchorPos.setX(p->anchorRect().w()/2);
-                anchorPos.setY(p->anchorRect().h());
-            }break;
-            case XDG_POSITIONER_ANCHOR_LEFT:
-            {
-                anchorPos.setY(p->anchorRect().h()/2);
-            }break;
-            case XDG_POSITIONER_ANCHOR_RIGHT:
-            {
-                anchorPos.setX(p->anchorRect().w());
-                anchorPos.setY(p->anchorRect().h()/2);
-            }break;
-            case XDG_POSITIONER_ANCHOR_TOP_LEFT:
-            {
-                // (0,0)
-            }break;
-            case XDG_POSITIONER_ANCHOR_BOTTOM_LEFT:
-            {
-                anchorPos.setY(p->anchorRect().h());
-            }break;
-            case XDG_POSITIONER_ANCHOR_TOP_RIGHT:
-            {
-                anchorPos.setX(p->anchorRect().w());
-            }break;
-            case XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT:
-            {
-                anchorPos = p->anchorRect().bottomRight();
-            }break;
-        }
-        printf("GRAVITY %i\n",surface->positioner()->gravity());
-        switch(surface->positioner()->gravity())
-        {
-            case XDG_POSITIONER_GRAVITY_NONE:
-            {
-                popupOrigin = popupSize/2;
-            }break;
-            case XDG_POSITIONER_GRAVITY_TOP:
-            {
-                popupOrigin.setX(popupSize.w()/2);
-                popupOrigin.setY(popupSize.h());
-            }break;
-            case XDG_POSITIONER_GRAVITY_BOTTOM:
-            {
-                popupOrigin.setX(popupSize.w()/2);
-            }break;
-            case XDG_POSITIONER_GRAVITY_LEFT:
-            {
-                popupOrigin.setX(popupSize.w());
-                popupOrigin.setY(popupSize.h()/2);
-            }break;
-            case XDG_POSITIONER_GRAVITY_RIGHT:
-            {
-                popupOrigin.setY(popupSize.h()/2);
-            }break;
-            case XDG_POSITIONER_GRAVITY_TOP_LEFT:
-            {
-                popupOrigin = popupSize;
-            }break;
-            case XDG_POSITIONER_GRAVITY_BOTTOM_LEFT:
-            {
-                popupOrigin.setX(popupSize.w());
-            }break;
-            case XDG_POSITIONER_GRAVITY_TOP_RIGHT:
-            {
-                popupOrigin.setY(popupSize.h());
-            }break;
-            case XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT:
-            {
-                // (0,0)
-            }break;
-        }
-
-        WPoint popupPos = parentPos + p->anchorRect().topLeft() + anchorPos - popupOrigin + p->offset();
         drawQuad(surface->texture(),
                  WRect(WPoint(),surface->texture()->size()),
-                 WRect(popupPos,surface->size()/surface->bufferScale()));
+                 WRect(surface->pos,surface->size()/surface->bufferScale()));
     }
 
+    /*
     // Draw it's children
     for(list<WSurface*>::iterator s = surface->_children.begin(); s != surface->_children.end(); s++)
         drawSurfaceTree((MySurface*)*s);
+    */
 }
 
 WClient *MyCompositor::newClientRequest(wl_client *client)
@@ -346,56 +261,56 @@ void MyCompositor::pointerMoveEvent(float dx, float dy)
         {
             case ResizeEdge::Bottom:
             {
-                resizingSurface->sendConfigureEvent(
+                resizingSurface->sendConfigureToplevelEvent(
                             resizeInitSurfaceRect.w(),
                             resizeInitSurfaceRect.h() + (y - resizeInitMousePos.y()),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::Right:
             {
-                resizingSurface->sendConfigureEvent(
+                resizingSurface->sendConfigureToplevelEvent(
                             resizeInitSurfaceRect.w() + (x - resizeInitMousePos.x()),
                             resizeInitSurfaceRect.h(),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::BottomRight:
             {
-                resizingSurface->sendConfigureEvent(
+                resizingSurface->sendConfigureToplevelEvent(
                             resizeInitSurfaceRect.w() + (x - resizeInitMousePos.x()),
                             resizeInitSurfaceRect.h() + (y - resizeInitMousePos.y()),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::Top:
             {
-                resizingSurface->sendConfigureEvent(
+                resizingSurface->sendConfigureToplevelEvent(
                             resizeInitSurfaceRect.w(),
                             resizeInitSurfaceRect.h() + (resizeInitMousePos.y() - y),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::Left:
             {
-                resizingSurface->sendConfigureEvent(
+                resizingSurface->sendConfigureToplevelEvent(
                             resizeInitSurfaceRect.w() + (resizeInitMousePos.x() - x),
                             resizeInitSurfaceRect.h(),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::TopLeft:
             {
-                resizingSurface->sendConfigureEvent(
+                resizingSurface->sendConfigureToplevelEvent(
                             resizeInitSurfaceRect.w() + (resizeInitMousePos.x() - x),
                             resizeInitSurfaceRect.h() + (resizeInitMousePos.y() - y),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::BottomLeft:
             {
-                resizingSurface->sendConfigureEvent(
+                resizingSurface->sendConfigureToplevelEvent(
                             resizeInitSurfaceRect.w() + (resizeInitMousePos.x() - x),
                             resizeInitSurfaceRect.h() + (y - resizeInitMousePos.y()),
                             SurfaceState::Activated | SurfaceState::Resizing);
             }break;
             case ResizeEdge::TopRight:
             {
-                resizingSurface->sendConfigureEvent(
+                resizingSurface->sendConfigureToplevelEvent(
                             resizeInitSurfaceRect.w() + (x - resizeInitMousePos.x()),
                             resizeInitSurfaceRect.h() + (resizeInitMousePos.y() - y),
                             SurfaceState::Activated | SurfaceState::Resizing);
@@ -467,7 +382,7 @@ void MyCompositor::pointerClickEvent(UInt32 button, UInt32 state)
 
         if(resizingSurface != nullptr)
         {
-            resizingSurface->sendConfigureEvent(
+            resizingSurface->sendConfigureToplevelEvent(
                         resizingSurface->getRectWithoutDecoration().w(),
                         resizingSurface->getRectWithoutDecoration().h(),
                         SurfaceState::Activated);
