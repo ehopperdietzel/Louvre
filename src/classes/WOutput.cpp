@@ -83,7 +83,7 @@ void WOutput::startRenderLoop(void *data)
     ts.it_interval.tv_sec = 0;
     ts.it_interval.tv_nsec = 0;
     ts.it_value.tv_sec = 0;
-    ts.it_value.tv_nsec = 1000000000/60;
+    ts.it_value.tv_nsec = 1000000000/59;
     timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
 
     while(true)
@@ -112,9 +112,6 @@ void WOutput::startRenderLoop(void *data)
 
         // Show buffer on screen
         WBackend::flipPage(output);
-
-
-        //usleep(20000);
     }
 }
 

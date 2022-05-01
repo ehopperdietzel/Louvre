@@ -311,27 +311,9 @@ void WSurface::applyDamages()
         wl_shm_buffer_end_access(shm_buffer);
     }
 
-    //WWayland::apply_damage_emit(this);
-
 
     wl_buffer_send_release(current.buffer);
-    current.buffer = nullptr;
     _isDamaged = false;
-
-
-    //requestNextFrame();
-    /*
-    if (frame_callback != nullptr)
-    {
-
-        wl_callback_send_done(frame_callback,compositor()->getMilliseconds());
-        wl_resource_destroy(frame_callback);
-        frame_callback = nullptr;
-    }
-    */
-
-    //if(ack_configure)
-        //dispachLastConfiguration();
 
     if(current.windowGeometry != pending.windowGeometry)
     {
@@ -341,7 +323,6 @@ void WSurface::applyDamages()
 
     if(prevSize != size())
         bufferSizeChangeRequest();
-
 
 
     //wl_client_flush(_client->_client);

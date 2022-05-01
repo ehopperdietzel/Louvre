@@ -1,8 +1,8 @@
 
 # Wayland++
-A friendly C++ library to create Wayland compositors that run directly on top of DRM or X11 (useful while developing).
+A friendly C++ library to create Wayland compositors with DRM or X11 backend support.
 
-Wayland++ uses **libinput** and **evdev** for input listening and devices discovering, **xkbcommon** for keyboard mapping and any version of **Open GL** or **Vulkan** for drawing (any **EGL** - compatible API).
+Wayland++ uses **libinput** and **evdev** for input listening and device discovering, **xkbcommon** for keyboard mapping and any version of **OpenGL** or **Vulkan** for painting (any **EGL** - compatible API).
 
 ## Libraries
 `sudo apt-get update & sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libinput-dev libegl-dev mesa-common-dev libgles2-mesa-dev libxkbcommon-dev libsoil-dev`
@@ -10,26 +10,39 @@ Wayland++ uses **libinput** and **evdev** for input listening and devices discov
 ## Example
 
 1. Add your user to the **input** and **video** groups and then reboot.
-2. Compile the ***MyCompositor*** example. (Easily buildable with QtCreator).
+2. Compile the Examples project.
 3. Run it like a regular program when using the X11 backend and on a new tty when using the DRM backend.
 4. Press 1 to launch weston-terminal.
 5. Press ESC to quit.
 
 ## Todo
 
-* Globals Implementation
+* Multithreading ✅
+* Wayland Interface
 	* Compositor
-		* create_region ✅
 		* create_surface ✅
+		* create_region ✅
+        * destroy ✅
+    * Subcompositor
+        * get_subsurface
+        * destroy
+    * Subcompositor
+        * set_desync
+        * set_sync
+        * place_below
+        * place_above
+        * set_position
+        * destroy
 	* Region
 		* add ✅
-		* destroy ✅
 		* subtract ✅
+        * destroy ✅
 	* Surface
 		* attach ✅
+        * offset
 		* commit ✅
 		* damage ✅
-		* damage_buffer
+		* damage_buffer ✅
 		* destroy ✅
 		* frame ✅
 		* set_buffer_scale ✅
@@ -51,8 +64,9 @@ Wayland++ uses **libinput** and **evdev** for input listening and devices discov
 	* Data Device Manager
 		* create_data_source
 		* get_data_device
+        * ...
 
-* Extensions Implementation
+* XDG Shell Interface
 	* Xdg wm-base
 		* create_positioner
 		* destroy ✅
@@ -67,23 +81,42 @@ Wayland++ uses **libinput** and **evdev** for input listening and devices discov
 	* Xdg toplevel
 		* destroy
 		* move ✅
-		* resize
+		* resize ✅
 		* set_app_id ✅
 		* set_fullscreen
 		* set_max_size ✅
 		* set_maximized
 		* set_min_size ✅
 		* set_minimized
-		* set_parent
+		* set_parent ✅
 		* set_title ✅
 		* show_window_menu
 		* unset_fullscreen
 		* unset_maximized
 	* Xdg popup
 		* destroy
-		* grab
-		* reposition
+		* grab ✅
+		* reposition ✅
+    * Xdg positioner
+		* destroy ✅
+		* set_size ✅
+		* set_anchor_rect ✅
+        * set_anchor ✅
+        * set_gravity ✅
+        * set_constraint_adjustment ✅
+        * set_offset ✅
+        * set_reactive
+        * set_parent_size
+        * set_parent_configure
 * Shared Memory Textures  ✅
-* EGL Texture Sharing (share textures already stored in GPU) ✅
+* EGL Texture Sharing ✅
+* Libinput Events ✅
+* OpenGL ES 2 Support ✅
+* OpenGL ES 3 Support
+* OpenGL 3.x Support
+* OpenGL 4.x Support
+* Vulkan Support
+* DRM Hardware Cursor
 * XWayland Support
+
 

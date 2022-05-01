@@ -93,13 +93,15 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
         return;
     }
 
-    surface->texture()->damages.swap(surface->texture()->pendingDamages);
+    surface->texture()->damages.clear();
+    for(list<WRect>::iterator r = surface->texture()->pendingDamages.begin(); r != surface->texture()->pendingDamages.end(); ++r)
+    {
+        surface->texture()->damages.push_back(*r);
+    }
     surface->texture()->pendingDamages.clear();
 
     surface->current.callbacks.merge(surface->pending.callbacks);
     surface->pending.callbacks.clear();
-
-
 
 
     surface->_isDamaged = true;
@@ -152,5 +154,5 @@ void Globals::Surface::set_buffer_scale(wl_client *client, wl_resource *resource
 
 void Globals::Surface::offset(wl_client *client, wl_resource *resource, Int32 x, Int32 y)
 {
-    printf("ATTACH:(%i,%i)\n",x,y);
+    (void)client;(void)resource;(void)x;(void)y;
 }

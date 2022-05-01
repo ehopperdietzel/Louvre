@@ -203,6 +203,7 @@ void MyCompositor::drawSurfaceTree(MySurface *surface)
 
 
     surface->requestNextFrame();
+
     /*
     // Draw it's children
     for(list<WSurface*>::iterator s = surface->_children.begin(); s != surface->_children.end(); s++)
@@ -519,8 +520,8 @@ void MyCompositor::drawQuad(WTexture *tex, WRect src, WRect dst, Int32 scale)
     glUniform4f(dstRectUniform,dst.x(), dst.y(), dst.w(), dst.h());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-    /*
-    drawColorQuad(dst,0.f,0.f,1.f,0.2f);
+
+    //drawColorQuad(dst,0.f,0.f,1.f,0.2f);
 
     for(list<WRect>::iterator t = tex->damages.begin(); t != tex->damages.end(); t++)
     {
@@ -529,7 +530,7 @@ void MyCompositor::drawQuad(WTexture *tex, WRect src, WRect dst, Int32 scale)
         damage/=scale;
         drawColorQuad(WRect(dst.topLeft()+damage.topLeft(),damage.bottomRight()),1.f,0.f,0.f,0.2f);
     }
-    */
+
 
     tex->damages.clear();
 
