@@ -1,7 +1,7 @@
 #ifndef WWAYLAND_H
 #define WWAYLAND_H
 
-#include <wayland-server.h>
+//#include <wayland-server.h>
 #include <WNamespaces.h>
 #include <EGL/egl.h>
 
@@ -24,7 +24,11 @@ public:
     static int apply_damage_emit(void *data);
     static void clDisc(wl_listener *listener, void *data);
 
-    static wl_event_source *addTimer(wl_event_loop_timer_func_t func, void *data);    
+    static wl_event_source *addTimer(wl_event_loop_timer_func_t func, void *data);
+
+    static EGLContext eglContext();
+    static void initGLContext();
+    static void setContext(EGLDisplay sharedDisplay, EGLContext sharedContext);
 
 
 };

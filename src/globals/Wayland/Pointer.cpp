@@ -19,7 +19,7 @@ void Wpp::Globals::Pointer::set_cursor(wl_client *client, wl_resource *resource,
         return;
 
     WSurface *cursorSurface = (WSurface*)wl_resource_get_user_data(surface);
-    cursorSurface->_type = Wpp::SurfaceType::Cursor;
+    cursorSurface->current.type = Wpp::SurfaceType::Cursor;
     cursorSurface->typeChangeRequest();
 
     wClient->getCompositor()->setCursorRequest((WSurface*)wl_resource_get_user_data(surface),hotspot_x,hotspot_y);

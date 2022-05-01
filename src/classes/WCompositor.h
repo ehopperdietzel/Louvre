@@ -4,7 +4,6 @@
 #include <libinput.h>
 #include <stdio.h>
 #include <GLES2/gl2.h>
-#include <wayland-server.h>
 
 #include <list>
 #include <algorithm>

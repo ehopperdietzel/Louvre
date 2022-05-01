@@ -51,7 +51,9 @@ public:
     texSizeUniform,             // Texture size (width,height)
     dstRectUniform,             // Dest quad position and size (x,y,width,height)
     srcRectUniform,             // Src tex rect (x,y,width,height)
-    activeTextureUniform;       // glActiveTexture
+    activeTextureUniform,       // glActiveTexture
+    modeUniform,
+    colorUniform;
 
     // Active surfaces
     MySurface *focusSurface,*movingSurface,*resizingSurface,*cursorSurface = nullptr;
@@ -69,8 +71,7 @@ public:
     // Surfaces list ( orderer from back to front )
     list<MySurface*>surfacesList;
 
-    WTexture *defaultCursorTexture = new WTexture();
-    WTexture *backgroundTexture = new WTexture();
+    WTexture *defaultCursorTexture,*backgroundTexture;
     WPoint backgroundPos;
 
     WPoint movingSurfaceInitPos, movingSurfaceInitCursorPos;
@@ -79,7 +80,9 @@ public:
 
     void drawSurfaceTree(MySurface *surface);
     void drawCursor();
-    void drawQuad(WTexture *tex,WRect src, WRect dst);
+    void drawQuad(WTexture *tex, WRect src, WRect dst, Int32 scale = 1);
+    void drawColorQuad(WRect dst, float r, float g, float b, float a);
+    void riseSurface(MySurface *surface);
 
 };
 

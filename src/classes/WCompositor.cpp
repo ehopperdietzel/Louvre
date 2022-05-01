@@ -14,6 +14,7 @@ using namespace Wpp;
 
 WCompositor::WCompositor()
 {
+    printf("A\n");
     signal(SIGINT,SIG_IGN);
     //signal(SIGABRT,SIG_IGN);
     libinputFd = eventfd(0,EFD_SEMAPHORE);

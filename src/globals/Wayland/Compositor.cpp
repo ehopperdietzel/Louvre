@@ -9,16 +9,17 @@ using namespace Wpp;
 
 struct wl_surface_interface surface_implementation =
 {
-    &Globals::Surface::destroy,
-    &Globals::Surface::attach,
-    &Globals::Surface::damage,
-    &Globals::Surface::frame,
-    &Globals::Surface::set_opaque_region,
-    &Globals::Surface::set_input_region,
-    &Globals::Surface::commit,
-    &Globals::Surface::set_buffer_transform,
-    &Globals::Surface::set_buffer_scale,
-    &Globals::Surface::damage_buffer
+    .destroy                = &Globals::Surface::destroy,
+    .attach                 = &Globals::Surface::attach,
+    .damage                 = &Globals::Surface::damage,
+    .frame                  = &Globals::Surface::frame,
+    .set_opaque_region      = &Globals::Surface::set_opaque_region,
+    .set_input_region       = &Globals::Surface::set_input_region,
+    .commit                 = &Globals::Surface::commit,
+    .set_buffer_transform   = &Globals::Surface::set_buffer_transform,
+    .set_buffer_scale       = &Globals::Surface::set_buffer_scale,
+    .damage_buffer          = &Globals::Surface::damage_buffer,
+    .offset                 = &Globals::Surface::offset
 };
 
 struct wl_region_interface region_implementation =

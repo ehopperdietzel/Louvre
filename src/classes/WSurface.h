@@ -1,7 +1,7 @@
 #ifndef WSURFACE_H
 #define WSURFACE_H
 
-#include <wayland-server.h>
+//#include <wayland-server.h>
 #include <WTexture.h>
 #include <WNamespaces.h>
 #include <list>
@@ -32,6 +32,9 @@ public:
     virtual void bufferSizeChangeRequest() = 0;
     virtual void grabSeatRequest() = 0;
 
+
+    virtual void resizingChanged() = 0;
+
     // Events
     void sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UInt32 milliseconds);
     void sendPointerMotionEvent(double x, double y, UInt32 milliseconds);
@@ -47,7 +50,7 @@ public:
     // Surface info
     const char *appId()     { return _appId; }
     const char *title()     { return _title; }
-    Wpp::SurfaceType type() { return _type; }
+    Wpp::SurfaceType type() { return current.type; }
 
     // Size in surface coordinates
     Int32 width()   { return texture()->size().w(); }
@@ -55,7 +58,7 @@ public:
     WSize size()    { return texture()->size(); }
     WSize minSize() { return _minSize; }
     WSize maxSize() { return _maxSize; }
-    WRect decorationGeometry() { return _decorationGeometry; }
+    WRect decorationGeometry() { return current.windowGeometry; }
 
     // Popup positioner
     WPositioner *positioner() { return _positioner; }
@@ -65,6 +68,7 @@ public:
     WTexture *texture() { return _texture; }
     bool isDamaged()    { return _isDamaged; }
     void applyDamages();
+    void requestNextFrame();
 
     // References
     wl_resource *resource()     { return _resource; }
@@ -73,10 +77,23 @@ public:
 
     // Hierarchy
     WSurface *parent() { return _parent; };
+    WSurface *topParent();
     list<WSurface*>&children(){return _children;}
     list<WSurface*>_children;
 
     wl_resource *xdg_popup       = nullptr;
+
+    struct State
+    {
+        SurfaceType type = SurfaceType::Undefined;
+        wl_resource *buffer = nullptr;
+        WRect windowGeometry = WRect();
+        list<wl_resource*>callbacks;
+    };
+
+    State current,pending;
+    bool ack_configure = true;
+    Int32 t = 0;
  private:
     friend class WWayland;
     friend class WCompositor;
@@ -97,8 +114,6 @@ public:
     void setAppId(const char *appId);
     void setTitle(const char *title);
 
-    SurfaceType _type = SurfaceType::Undefined;
-
     Int32 xdgShellVersion = -1;
 
     UInt32 moveSerial, pointerSerial, keyboardSerial, configureSerial = 0;
@@ -108,10 +123,6 @@ public:
     WSurface    *_parent         = nullptr;
 
     wl_resource *_resource       = nullptr;
-    wl_resource *frame_callback  = nullptr;
-
-    wl_resource *committedBuffer = nullptr;
-    wl_resource *pendingBuffer   = nullptr;
 
     wl_resource *xdg_shell       = nullptr;
     wl_resource *xdg_toplevel    = nullptr;
@@ -123,12 +134,16 @@ public:
     char *_appId = new char[1];
     char *_title = new char[1];
 
-    WRect _decorationGeometry;
-
 
 
     bool _isDamaged = false;
 
+
+    // Configure event
+    void dispachLastConfiguration();
+    bool pendingConfigure = false;
+    WSize pendingConfigureSize;
+    SurfaceStateFlags pendingConfigureStates;
 
 
 };

@@ -28,6 +28,7 @@
 #include <WBackend.h>
 #include <WCompositor.h>
 #include <WOutput.h>
+#include <WWayland.h>
 
 #if W_BACKEND == 1
 
@@ -167,6 +168,8 @@ static int init_gl(DRM *data)
 
     // connect the context to the surface
     eglMakeCurrent(data->gl.display, data->gl.surface, data->gl.surface, data->gl.context);
+
+    WWayland::setContext(data->gl.display,data->gl.context);
 
     //printf("GL Extensions: \"%s\"\n", glGetString(GL_EXTENSIONS));
 

@@ -1,7 +1,7 @@
 #include <WBackend.h>
 
-#include <wayland-server.h>
 #include <X11/Xlib.h>
+#include <X11/extensions/Xfixes.h>
 #include <linux/input.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
@@ -16,6 +16,7 @@
 #include <poll.h>
 #include <WCompositor.h>
 #include <WOutput.h>
+#include <WWayland.h>
 
 #if W_BACKEND == 2
 
@@ -54,6 +55,7 @@ static void create_window(X11 *data)
 
     EGLConfig config;
     EGLint num_configs_returned;
+
     eglChooseConfig(data->egl_display, attribs, &config, 1, &num_configs_returned);
 
     // get the visual from the EGL config
@@ -81,6 +83,11 @@ static void create_window(X11 *data)
         &window_attributes // attributes
     );
 
+    unsigned long valuemask = CWOverrideRedirect;
+    XSetWindowAttributes attributes;
+    attributes.override_redirect = True;
+    XChangeWindowAttributes(data->x_display, data->window.window, valuemask, &attributes);
+
     // EGL context and surface
     if(!eglBindAPI(EGL_OPENGL_ES_API))
     {
@@ -89,16 +96,18 @@ static void create_window(X11 *data)
     }
 
     data->window.context = eglCreateContext(data->egl_display, config, EGL_NO_CONTEXT, context_attribs);
+
     if(data->window.context == NULL)
     {
-        printf("Failed to create context\n");
+        printf("Failed to create context.\n");
         exit(-1);
     }
 
     data->window.surface = eglCreateWindowSurface(data->egl_display, config, data->window.window, NULL);
+
     if(data->window.surface == EGL_NO_SURFACE)
     {
-        printf("Failed to create egl surface\n");
+        printf("Failed to create egl surface.\n");
         exit(-1);
     }
 
@@ -110,7 +119,13 @@ static void create_window(X11 *data)
 
     XMoveWindow(data->x_display,data->window.window,0,0);
 
+    XFixesHideCursor(data->x_display, data->window.window);
+
+    XSetInputFocus(data->x_display,data->window.window,RevertToParent,CurrentTime);
+
     printf("X11 Window created.\n");
+
+    WWayland::setContext(data->egl_display,data->window.context);
 }
 
 
@@ -147,6 +162,7 @@ void WBackend::flipPage(WOutput *output)
 {
     X11 *data = (X11*)output->data;
     eglSwapBuffers(data->egl_display, data->window.surface);
+    XWarpPointer(data->x_display, None, data->window.window, 0, 0, 0, 0, W_WIDTH/2, W_HEIGHT/2);
 }
 
 #endif

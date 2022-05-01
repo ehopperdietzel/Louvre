@@ -1,7 +1,6 @@
 #ifndef REGION_H
 #define REGION_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Globals::Region

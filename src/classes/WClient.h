@@ -2,7 +2,6 @@
 #define WCLIENT_H
 
 #include <list>
-#include <wayland-server.h>
 #include <WRegion.h>
 #include <WSurface.h>
 

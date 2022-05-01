@@ -1,7 +1,6 @@
 #ifndef XDGPOSITIONER_H
 #define XDGPOSITIONER_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Extensions::XdgShell::Positioner

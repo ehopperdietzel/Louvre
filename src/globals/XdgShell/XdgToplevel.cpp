@@ -9,6 +9,10 @@ using namespace Wpp;
 void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
 {
     (void)resource;
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    if(surface->_parent != nullptr)
+        surface->_parent->children().remove(surface);
+
     printf("TOP LEVEL DESTROYED.\n");
 }
 
@@ -23,10 +27,15 @@ void Extensions::XdgShell::Toplevel::set_parent (wl_client *client, wl_resource 
 
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     if(parent == NULL)
+    {
+        if(surface->_parent != nullptr)
+            surface->_parent->children().remove(surface);
         surface->_parent = nullptr;
+    }
     else
     {
         surface->_parent = (WSurface*)wl_resource_get_user_data(parent);
+        surface->_parent->children().push_back(surface);
     }
 
     surface->parentChangeRequest();

@@ -3,7 +3,8 @@
 
 #include <libinput.h>
 #include <xdg-shell.h>
-
+/*
+#include <Wayland-5.h>
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 #include <wayland-server.h>
@@ -11,6 +12,7 @@
 #include <wayland-version.h>
 #include <wayland-egl-core.h>
 #include <wayland-egl.h>
+*/
 
 #define W_WIDTH 1440*2
 #define W_HEIGHT 900*2
@@ -152,6 +154,11 @@ namespace Wpp
             class Toplevel;
             class WmBase;
             class Positioner;
+        };
+        namespace Viewporter
+        {
+            class Viewporter;
+            class Viewport;
         };
     };
 

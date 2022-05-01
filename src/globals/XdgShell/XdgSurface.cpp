@@ -50,18 +50,31 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *
 {
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
+    printf("XDG Toplevel version:%i\n",wl_resource_get_version(resource));
+
+    // Check errors
+    /*
+    if(surface->pending.buffer != nullptr || surface->current.buffer != nullptr)
+    {
+        wl_resource_post_error(resource,XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"Given wl_surface already has a buffer attached.");
+        return;
+    }*/
+
     if (surface->xdg_toplevel || surface->xdg_popup)
     {
-        wl_resource_post_error(resource, XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"xdg_surface already has a role object");
+        const char msg[] = "xdg_surface already has a role object";
+        printf("%s\n",msg);
+        wl_resource_post_error(resource, XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,msg);
         return;
     }
 
     surface->xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
 
-    surface->_type = SurfaceType::Toplevel;
+    surface->pending.type = SurfaceType::Toplevel;
     wl_resource_set_implementation(surface->xdg_toplevel, &xdg_toplevel_implementation, surface, &Extensions::XdgShell::Toplevel::destroy_resource);
-    surface->sendConfigureToplevelEvent(0,0,SurfaceState::Activated);
-    surface->typeChangeRequest();
+    //surface->sendConfigureToplevelEvent(0,0,SurfaceState::Activated);
+    //surface->dispachLastConfiguration();
+    //surface->typeChangeRequest();
 }
 void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *parent, wl_resource *positioner)
 {
@@ -107,7 +120,7 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
 
     surface->_positioner = wPositioner;
     surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
-    surface->_type = SurfaceType::Popup;
+    surface->current.type = SurfaceType::Popup;
     surface->_parent = wParent;
     wParent->_children.push_back(surface);
     surface->parentChangeRequest();
@@ -119,11 +132,15 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *client, wl_re
 {
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->_decorationGeometry = {x, y, width, height};
-    surface->geometryChangeRequest();
+    surface->pending.windowGeometry = WRect(x, y, width, height);
 }
 void Extensions::XdgShell::Surface::ack_configure(wl_client *client, wl_resource *resource, UInt32 serial)
 {
-    (void)client;(void)resource;(void)serial;
+    (void)client;(void)serial;
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+
+    //printf("ACK serial %i\n",serial);
+    surface->ack_configure = true;
+    //surface->resizingChanged();
 }
 

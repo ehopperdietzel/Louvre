@@ -1,7 +1,6 @@
 #ifndef DATADEVICE_H
 #define DATADEVICE_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Globals::DataDevice

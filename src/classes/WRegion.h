@@ -1,7 +1,7 @@
 #ifndef WREGION_H
 #define WREGION_H
 
-#include <wayland-server.h>
+//#include <wayland-server.h>
 #include <list>
 #include <WNamespaces.h>
 

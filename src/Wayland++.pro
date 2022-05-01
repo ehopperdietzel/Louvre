@@ -5,8 +5,8 @@ CONFIG -= qt
 TARGET = Wpp
 DESTDIR = $$PWD/build
 
-LIBS += -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lxkbcommon
-INCLUDEPATH += /usr/include/drm ./classes ./globals/Wayland ./globals/XdgShell
+LIBS += -L/usr/local/lib -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lXfixes -lxkbcommon
+INCLUDEPATH += /usr/include/drm ./classes ./globals/Wayland ./globals/XdgShell /usr/local/include
 
 HEADERS += \
     classes/WBackend.h \
@@ -27,6 +27,8 @@ HEADERS += \
     classes/WTexture.h \
     classes/WView.h \
     classes/WWayland.h \
+    globals/Viewporter/Viewporter.h \
+    globals/Viewporter/viewporter.h \
     globals/Wayland/Compositor.h \
     globals/Wayland/DataDevice.h \
     globals/Wayland/DataDeviceManager.h \
@@ -62,6 +64,8 @@ SOURCES += \
     classes/WTexture.cpp \
     classes/WView.cpp \
     classes/WWayland.cpp \
+    globals/Viewporter/Viewporter.cpp \
+    globals/Viewporter/viewporter.c \
     globals/Wayland/Compositor.cpp \
     globals/Wayland/DataDevice.cpp \
     globals/Wayland/DataDeviceManager.cpp \

@@ -1,9 +1,7 @@
 #ifndef XDGTOPLEVEL_H
 #define XDGTOPLEVEL_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
-
 
 class Wpp::Extensions::XdgShell::Toplevel
 {

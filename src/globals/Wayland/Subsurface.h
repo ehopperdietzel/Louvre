@@ -1,8 +1,6 @@
 #ifndef SUBSURFACE_H
 #define SUBSURFACE_H
 
-
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Globals::Subsurface

@@ -38,7 +38,8 @@ void Globals::Surface::attach(wl_client *client, wl_resource *resource, wl_resou
 {
     (void)client;(void)x;(void)y;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->pendingBuffer = buffer;
+    surface->pending.buffer = buffer;
+    surface->texture()->resizeDirection = WPoint(x,y);
 }
 
 void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 callback)
@@ -49,7 +50,9 @@ void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 ca
 
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->frame_callback = wl_resource_create(client, &wl_callback_interface, version, callback); // 1
+
+    surface->pending.callbacks.push_back(wl_resource_create(client, &wl_callback_interface, version, callback));
+    //surface->frame_callback = wl_resource_create(client, &wl_callback_interface, version, callback); // 1
 }
 
 void Globals::Surface::destroy(wl_client *client, wl_resource *resource)
@@ -62,25 +65,46 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
 {
     (void)client;
 
-    /* Client tells the server that the current buffer is ready to be drawed.
+    /* Client tells the server that the current buffer is ready to be drawn.
      * (this means that the current buffer already contains all the damages and transformations) */
 
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    surface->committedBuffer = surface->pendingBuffer;
-    surface->texture()->damages.swap(surface->texture()->pendingDamages);
+    surface->current.buffer = surface->pending.buffer;
 
-    while(!surface->texture()->pendingDamages.empty())
-        surface->texture()->pendingDamages.pop();
-
-    if (surface->committedBuffer == nullptr)
+    if(surface->current.buffer == nullptr)
     {
-        surface->sendConfigureToplevelEvent(0,0,SurfaceState::Activated);
+        if(surface->xdg_shell)
+        {
+            xdg_surface_send_configure(surface->xdg_shell,surface->configureSerial);
+            surface->configureSerial++;
+        }
+
+        if(surface->pending.type == SurfaceType::Toplevel)
+        {
+            surface->current.type = surface->pending.type;
+            surface->pending.type = SurfaceType::Undefined;
+
+            surface->sendConfigureToplevelEvent(0,0,SurfaceState::Activated);
+            surface->dispachLastConfiguration();
+            surface->typeChangeRequest();
+        }
         return;
     }
 
+    surface->texture()->damages.swap(surface->texture()->pendingDamages);
+    surface->texture()->pendingDamages.clear();
+
+    surface->current.callbacks.merge(surface->pending.callbacks);
+    surface->pending.callbacks.clear();
+
+
+
+
     surface->_isDamaged = true;
+
+    surface->applyDamages();
 
     // FALTA ENVIAR EVENTO
     surface->compositor()->repaintAllOutputs();
@@ -93,12 +117,7 @@ void Globals::Surface::damage(wl_client *client, wl_resource *resource, Int32 x,
 
     /* The client tells the server that has updated a region of the current buffer */
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-
-    Int32 s = surface->bufferScale();
-
-    Wpp::Rect damage = {x*s, y*s, width*s, height*s};
-
-    surface->texture()->pendingDamages.push(damage);
+    surface->texture()->pendingDamages.push_back(WRect(x, y, width, height)*surface->bufferScale());
 }
 
 void Globals::Surface::set_opaque_region(wl_client *client, wl_resource *resource, wl_resource *region)
@@ -121,7 +140,7 @@ void Globals::Surface::damage_buffer(wl_client *client, wl_resource *resource, I
 {
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
-    surface->texture()->pendingDamages.push({x, y, width, height});
+    surface->texture()->pendingDamages.push_back(WRect(x, y, width, height));
 }
 
 void Globals::Surface::set_buffer_scale(wl_client *client, wl_resource *resource, Int32 scale)
@@ -129,4 +148,9 @@ void Globals::Surface::set_buffer_scale(wl_client *client, wl_resource *resource
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->setBufferScale(scale);
+}
+
+void Globals::Surface::offset(wl_client *client, wl_resource *resource, Int32 x, Int32 y)
+{
+    printf("ATTACH:(%i,%i)\n",x,y);
 }

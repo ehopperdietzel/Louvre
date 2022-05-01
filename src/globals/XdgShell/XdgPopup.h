@@ -1,9 +1,7 @@
 #ifndef XDGPOPUP_H
 #define XDGPOPUP_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
-
 
 class Wpp::Extensions::XdgShell::Popup
 {

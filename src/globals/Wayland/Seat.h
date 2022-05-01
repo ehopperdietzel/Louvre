@@ -1,7 +1,6 @@
 #ifndef SEAT_H
 #define SEAT_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 

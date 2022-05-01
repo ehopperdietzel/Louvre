@@ -15,6 +15,8 @@
 #include <EGL/eglext.h>
 #include <WOutput.h>
 
+#include <unistd.h>
+
 using namespace Wpp;
 
 wl_array nullKeys;
@@ -143,79 +145,10 @@ void WSurface::sendKeyboardLeaveEvent()
 
 void WSurface::sendConfigureToplevelEvent(Int32 width, Int32 height, SurfaceStateFlags states)
 {
-    if(xdg_toplevel != nullptr) //xdgShellVersion >= 2
-    {
-        wl_array dummy;
-        wl_array_init(&dummy);
-        UInt32 index = 0;
-
-        if((states & (SurfaceStateFlags)SurfaceState::Activated))
-        {
-            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-            s[index] = XDG_TOPLEVEL_STATE_ACTIVATED;
-            index++;
-        }
-        if(states & (SurfaceStateFlags)SurfaceState::Fullscreen)
-        {
-            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-            s[index] = XDG_TOPLEVEL_STATE_FULLSCREEN;
-            index++;
-        }
-        if(states & (SurfaceStateFlags)SurfaceState::Maximized)
-        {
-            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-            s[index] = XDG_TOPLEVEL_STATE_MAXIMIZED;
-            index++;
-        }
-        if(states & (SurfaceStateFlags)SurfaceState::Resizing)
-        {
-            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-            s[index] = XDG_TOPLEVEL_STATE_RESIZING;
-            index++;
-        }
-
-        if(states & (SurfaceStateFlags)SurfaceState::TiledBottom)
-        {
-            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-            s[index] = XDG_TOPLEVEL_STATE_TILED_BOTTOM;
-            index++;
-        }
-        if(states & (SurfaceStateFlags)SurfaceState::TiledLeft)
-        {
-            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-            s[index] = XDG_TOPLEVEL_STATE_TILED_LEFT;
-            index++;
-        }
-        if(states & (SurfaceStateFlags)SurfaceState::TiledRight)
-        {
-            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-            s[index] = XDG_TOPLEVEL_STATE_TILED_RIGHT;
-            index++;
-        }
-        if(states & (SurfaceStateFlags)SurfaceState::TiledTop)
-        {
-            wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-            xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-            s[index] = XDG_TOPLEVEL_STATE_TILED_TOP;
-            index++;
-        }
-
-        xdg_toplevel_send_configure(xdg_toplevel,width,height,&dummy);
-        wl_array_release(&dummy);
-    }
-
-    if(xdg_shell != nullptr)
-    {
-        xdg_surface_send_configure(xdg_shell,configureSerial);
-        configureSerial++;
-    }
+    pendingConfigure = true;
+    pendingConfigureSize.setW(width);
+    pendingConfigureSize.setH(height);
+    pendingConfigureStates = states;
 }
 
 void WSurface::sendConfigurePopupEvent(Int32 x, Int32 y, Int32 width, Int32 height)
@@ -238,49 +171,141 @@ void WSurface::setTitle(const char *title)
     strcpy(_title,title);
 }
 
+void WSurface::dispachLastConfiguration()
+{
+    ack_configure = false;
+
+    if(type() == SurfaceType::Toplevel)
+    {
+        if(xdg_toplevel != nullptr)
+        {
+            wl_array dummy;
+            wl_array_init(&dummy);
+            UInt32 index = 0;
+
+            if((pendingConfigureStates & (SurfaceStateFlags)SurfaceState::Activated))
+            {
+                wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+                xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+                s[index] = XDG_TOPLEVEL_STATE_ACTIVATED;
+                index++;
+            }
+            if(pendingConfigureStates & (SurfaceStateFlags)SurfaceState::Fullscreen)
+            {
+                wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+                xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+                s[index] = XDG_TOPLEVEL_STATE_FULLSCREEN;
+                index++;
+            }
+            if(pendingConfigureStates & (SurfaceStateFlags)SurfaceState::Maximized)
+            {
+                wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+                xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+                s[index] = XDG_TOPLEVEL_STATE_MAXIMIZED;
+                index++;
+            }
+            if(pendingConfigureStates & (SurfaceStateFlags)SurfaceState::Resizing)
+            {
+                wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+                xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+                s[index] = XDG_TOPLEVEL_STATE_RESIZING;
+                index++;
+            }
+
+            if(wl_resource_get_version(xdg_toplevel) >= 2)
+            {
+                if(pendingConfigureStates & (SurfaceStateFlags)SurfaceState::TiledBottom)
+                {
+                    wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+                    xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+                    s[index] = XDG_TOPLEVEL_STATE_TILED_BOTTOM;
+                    index++;
+                }
+                if(pendingConfigureStates & (SurfaceStateFlags)SurfaceState::TiledLeft)
+                {
+                    wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+                    xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+                    s[index] = XDG_TOPLEVEL_STATE_TILED_LEFT;
+                    index++;
+                }
+                if(pendingConfigureStates & (SurfaceStateFlags)SurfaceState::TiledRight)
+                {
+                    wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+                    xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+                    s[index] = XDG_TOPLEVEL_STATE_TILED_RIGHT;
+                    index++;
+                }
+                if(pendingConfigureStates & (SurfaceStateFlags)SurfaceState::TiledTop)
+                {
+                    wl_array_add(&dummy, sizeof(xdg_toplevel_state));
+                    xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
+                    s[index] = XDG_TOPLEVEL_STATE_TILED_TOP;
+                    index++;
+                }
+            }
+
+            xdg_toplevel_send_configure(xdg_toplevel,pendingConfigureSize.w(),pendingConfigureSize.h(),&dummy);
+            wl_array_release(&dummy);
+        }
+    }
+
+    if(xdg_shell != nullptr)
+    {
+        xdg_surface_send_configure(xdg_shell,configureSerial);
+        //printf("CONFIGURE serial %i\n",configureSerial);
+        configureSerial++;
+    }
+
+    pendingConfigure = false;
+
+}
 void WSurface::applyDamages()
 {
-    if(!_isDamaged || resource() == nullptr )
+
+    if(!_isDamaged || resource() == nullptr)
         return;
 
     WOutput *output = compositor()->getOutputs().front();
     Int32 width, height;
     WSize prevSize = size();
 
-    if(eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_TEXTURE_FORMAT, &texture_format))
+    if(eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
         //printf("EGL buffer\n");
 
-        eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_WIDTH, &width);
-        eglQueryWaylandBufferWL(output->getDisplay(), committedBuffer, EGL_HEIGHT, &height);
+        eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_WIDTH, &width);
+        eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_HEIGHT, &height);
         _texture->_format = texture_format;
         EGLAttrib attribs = EGL_NONE;
-        EGLImage image = eglCreateImage(output->getDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, committedBuffer, &attribs);
+        EGLImage image = eglCreateImage(output->getDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, current.buffer, &attribs);
         _texture->setData(width, height, &image, WTexture::Type::EGL);
         eglDestroyImage (output->getDisplay(), image);
     }
     else
     {
         //printf("SHM buffer\n");
-        wl_shm_buffer *shm_buffer = wl_shm_buffer_get(committedBuffer);
+        wl_shm_buffer *shm_buffer = wl_shm_buffer_get(current.buffer);
         wl_shm_buffer_begin_access(shm_buffer);
         width = wl_shm_buffer_get_width(shm_buffer);
         height = wl_shm_buffer_get_height(shm_buffer);
         void *data = wl_shm_buffer_get_data(shm_buffer);
         UInt32 format =  wl_shm_buffer_get_format(shm_buffer);
 
+        //printf("STRIDE %i %i\n",wl_shm_buffer_get_stride(shm_buffer),width);
+
         if( format == WL_SHM_FORMAT_XRGB8888)
         {
-            _texture->_format = GL_RGB;
-            printf("XRGB\n");
+            _texture->_format = GL_BGR;
         }
         else if(format == WL_SHM_FORMAT_ARGB8888)
         {
-            _texture->_format = GL_RGBA;
-            printf("ARGB\n");
+            _texture->_format = GL_BGRA;
         }
         else
+        {
+            printf("Texture format not supported.\n");
             exit(1);
+        }
 
         _texture->setData(width, height, data);
         wl_shm_buffer_end_access(shm_buffer);
@@ -289,9 +314,13 @@ void WSurface::applyDamages()
     //WWayland::apply_damage_emit(this);
 
 
-    wl_buffer_send_release(committedBuffer);
+    wl_buffer_send_release(current.buffer);
+    current.buffer = nullptr;
     _isDamaged = false;
 
+
+    //requestNextFrame();
+    /*
     if (frame_callback != nullptr)
     {
 
@@ -299,9 +328,33 @@ void WSurface::applyDamages()
         wl_resource_destroy(frame_callback);
         frame_callback = nullptr;
     }
+    */
+
+    //if(ack_configure)
+        //dispachLastConfiguration();
+
+    if(current.windowGeometry != pending.windowGeometry)
+    {
+        current.windowGeometry = pending.windowGeometry;
+        geometryChangeRequest();
+    }
 
     if(prevSize != size())
         bufferSizeChangeRequest();
+
+
+
+    //wl_client_flush(_client->_client);
+}
+
+void WSurface::requestNextFrame()
+{
+    while(!current.callbacks.empty())
+    {
+        wl_callback_send_done(current.callbacks.front(),compositor()->getMilliseconds());
+        wl_resource_destroy(current.callbacks.front());
+        current.callbacks.pop_front();
+    }
 }
 
 void WSurface::setBufferScale(Int32 scale)
@@ -315,6 +368,21 @@ WCompositor *WSurface::compositor()
         return _client->getCompositor();
     else
         return nullptr;
+}
+
+WSurface *findTopmostParent(WSurface *surface)
+{
+    if(surface->parent() == nullptr)
+        return surface;
+
+    return findTopmostParent(surface->parent());
+}
+Wpp::WSurface *WSurface::topParent()
+{
+    if(parent() == nullptr)
+        return nullptr;
+
+    return findTopmostParent(parent());
 }
 
 

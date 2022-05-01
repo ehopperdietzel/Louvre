@@ -99,8 +99,6 @@ void WOutput::startRenderLoop(void *data)
         // Let the user do his painting
         output->_compositor->renderMutex.lock();
         output->_compositor->paintGL(output);
-        //WWayland::flushClients();
-        //WWayland::dispatchEvents();
         output->_compositor->renderMutex.unlock();
 
         // Tell the input loop to process events

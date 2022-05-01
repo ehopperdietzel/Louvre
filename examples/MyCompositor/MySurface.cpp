@@ -50,6 +50,8 @@ void MySurface::geometryChangeRequest()
 {
     /* Geometry of the surface without client decorations
      * x and y represent the decoration margin */
+
+
 }
 
 void MySurface::typeChangeRequest()
@@ -120,6 +122,11 @@ void MySurface::grabSeatRequest()
     comp->_pointerFocusSurface = this;
     this->sendPointerEnterEvent(20,20);
     */
+
+}
+
+void MySurface::resizingChanged()
+{
 
 }
 

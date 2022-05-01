@@ -14,13 +14,14 @@
 
 MyCompositor::MyCompositor():WCompositor()
 {
-
+    printf("B\n");
     // Use the output manager to get connected displays
     MyOutputManager *outputManager = new MyOutputManager(this);
 
     if(outputManager->getOutputsList()->size() == 0)
     {
         // If there aren't currently any avaliable display, you should wait for the WOutputManager::outputPluggedEvent
+        exit(1);
     }
     else
     {
@@ -115,6 +116,8 @@ void MyCompositor::initializeGL(WOutput *output)
     srcRectUniform = glGetUniformLocation(programObject, "srcRect");
     dstRectUniform = glGetUniformLocation(programObject, "dstRect");
     activeTextureUniform = glGetUniformLocation(programObject, "tex");
+    modeUniform = glGetUniformLocation(programObject, "mode");
+    colorUniform = glGetUniformLocation(programObject, "colorRGBA");
 
     // Set screen size
     glUniform2f(
@@ -122,16 +125,14 @@ void MyCompositor::initializeGL(WOutput *output)
         W_WIDTH/output->getOutputScale(),
         W_HEIGHT/output->getOutputScale());
 
-    // Reserve unit 0 for cursor
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1i(activeTextureUniform,0);
-
     // Create default cursor texture (64x64)
     int w,h;
+    defaultCursorTexture = new WTexture();
     unsigned char * img = SOIL_load_image("res/images/Cursor.png", &w, &h, 0, SOIL_LOAD_RGBA);
     defaultCursorTexture->setData(w,h,img);
     SOIL_free_image_data(img);
 
+    backgroundTexture = new WTexture();
     img = SOIL_load_image("res/images/Wallpaper.png", &w, &h, 0, SOIL_LOAD_RGBA);
     backgroundTexture->setData(w,h,img);
     SOIL_free_image_data(img);
@@ -152,15 +153,17 @@ void MyCompositor::paintGL(WOutput *output)
     //printf("Outputs count:%lu\n",getOutputs().size());
 
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT);
 
-    /*
+/*
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,backgroundTexture->textureId());
     glUniform1i(activeTextureUniform,0);
     glUniform4f(rectUniform,0,0,W_WIDTH/output->getOutputScale(),W_HEIGHT/output->getOutputScale());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     */
+    drawQuad(backgroundTexture, WRect(WPoint(0,0),backgroundTexture->size()), WRect(0,0,W_WIDTH/output->getOutputScale(),W_HEIGHT/output->getOutputScale()));
+
 
     for(list<MySurface*>::iterator s = surfacesList.begin(); s != surfacesList.end(); s++)
     {
@@ -176,25 +179,30 @@ void MyCompositor::drawSurfaceTree(MySurface *surface)
     if( surface->type() == SurfaceType::Undefined || surface->type() == SurfaceType::Cursor)
         return;
 
-    if( surface->isDamaged() )
-        surface->applyDamages();
+    //if( surface->isDamaged() )
+    //surface->applyDamages();
 
-    //printf("Format %i \n",surface->texture()->format());
+
+    //printf("Callbacks %lu \n",surface->current.callbacks.size());
 
     // If surface has no parent
-    if(surface->parent() == nullptr)
+    if(surface->type() == SurfaceType::Toplevel)
     {
         drawQuad(surface->texture(),
                  WRect(0,0,surface->texture()->size().w(),surface->texture()->size().h()),
-                 WRect(surface->pos,surface->size()/surface->bufferScale()));
+                 WRect(surface->pos,surface->size()/surface->bufferScale()),
+                 surface->bufferScale());
     }
     else if(surface->type() == SurfaceType::Popup && surface->positioner() != nullptr)
     {
         drawQuad(surface->texture(),
                  WRect(WPoint(),surface->texture()->size()),
-                 WRect(surface->pos,surface->size()/surface->bufferScale()));
+                 WRect(surface->pos,surface->size()/surface->bufferScale()),
+                 surface->bufferScale());
     }
 
+
+    surface->requestNextFrame();
     /*
     // Draw it's children
     for(list<WSurface*>::iterator s = surface->_children.begin(); s != surface->_children.end(); s++)
@@ -243,6 +251,7 @@ void MyCompositor::libinputEvent(libinput_event *)
 
 void MyCompositor::pointerMoveEvent(float dx, float dy)
 {
+
     MySurface *surface;
 
     pointer += WPointF(dx,dy);
@@ -254,6 +263,8 @@ void MyCompositor::pointerMoveEvent(float dx, float dy)
 
     float x = pointer.x();
     float y = pointer.y();
+
+
 
     if(resizingSurface != nullptr)
     {
@@ -410,10 +421,9 @@ void MyCompositor::pointerClickEvent(UInt32 button, UInt32 state)
 
             // Raise view
             if(_pointerFocusSurface->parent() == nullptr)
-            {
-                surfacesList.remove((MySurface*)_pointerFocusSurface);
-                surfacesList.push_back((MySurface*)_pointerFocusSurface);
-            }
+                riseSurface((MySurface*)_pointerFocusSurface);
+            else
+                riseSurface((MySurface*)_pointerFocusSurface->topParent());
 
         }
     }
@@ -465,6 +475,15 @@ void MyCompositor::keyEvent(UInt32 keyCode, UInt32 keyState)
                 exit(0);
             }
         }
+        if(keyCode == 4)
+        {
+            pid_t pid = fork();
+            if (pid==0)
+            {
+                system("/home/eduardo/Escritorio/build-menus-Desktop_Qt_6_3_0_GCC_64bit-Debug/menus --platform wayland");
+                exit(0);
+            }
+        }
     }
 
 }
@@ -478,7 +497,8 @@ void MyCompositor::drawCursor()
 
         drawQuad(cursorSurface->texture(),
                  WRect(0,0,cursorSurface->texture()->size().w(),cursorSurface->texture()->size().h()),
-                 WRect(pointer-cursorHotspot,cursorSurface->size()/cursorSurface->bufferScale()));
+                 WRect(pointer-cursorHotspot,cursorSurface->size()/cursorSurface->bufferScale()),
+                 cursorSurface->bufferScale());
     }
     else
     {
@@ -488,14 +508,50 @@ void MyCompositor::drawCursor()
     }
 }
 
-void MyCompositor::drawQuad(WTexture *tex, WRect src, WRect dst)
+void MyCompositor::drawQuad(WTexture *tex, WRect src, WRect dst, Int32 scale)
 {
-    glBindTexture(GL_TEXTURE_2D,tex->textureId());
+    glActiveTexture(GL_TEXTURE0 + tex->textureUnit());
+    glUniform1i(modeUniform,0);
     glUniform1i(activeTextureUniform,tex->textureUnit());
+    glBindTexture(GL_TEXTURE_2D,tex->textureId());
     glUniform2f(texSizeUniform,tex->size().w(), tex->size().h());
     glUniform4f(srcRectUniform,src.x(), src.y(), src.w(), src.h());
     glUniform4f(dstRectUniform,dst.x(), dst.y(), dst.w(), dst.h());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    /*
+    drawColorQuad(dst,0.f,0.f,1.f,0.2f);
+
+    for(list<WRect>::iterator t = tex->damages.begin(); t != tex->damages.end(); t++)
+    {
+
+        WRect damage = (*t);
+        damage/=scale;
+        drawColorQuad(WRect(dst.topLeft()+damage.topLeft(),damage.bottomRight()),1.f,0.f,0.f,0.2f);
+    }
+    */
+
+    tex->damages.clear();
+
+}
+
+void MyCompositor::drawColorQuad(WRect dst, float r, float g, float b, float a)
+{
+    glUniform4f(colorUniform,r,g,b,a);
+    glUniform1i(modeUniform,1);
+    glUniform4f(dstRectUniform,dst.x(), dst.y(), dst.w(), dst.h());
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+
+// Rise surface and its children
+void MyCompositor::riseSurface(MySurface *surface)
+{
+    surfacesList.remove(surface);
+    surfacesList.push_back(surface);
+
+    for(list<WSurface*>::iterator s = surface->children().begin(); s != surface->children().end(); s++)
+        riseSurface((MySurface*)(*s));
+
 }
 
 void MyCompositor::setPointerPos(double x, double y)

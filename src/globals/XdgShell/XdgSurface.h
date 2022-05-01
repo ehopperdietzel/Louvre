@@ -1,7 +1,6 @@
 #ifndef XDGSURFACE_H
 #define XDGSURFACE_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Extensions::XdgShell::Surface

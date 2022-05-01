@@ -1,7 +1,6 @@
 #ifndef OUTPUT_H
 #define OUTPUT_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Globals::Output

@@ -35,7 +35,106 @@ wl_listener clientConnectedListener,clientDisconnectedListener;
 wl_event_source *clientDisconnectedEventSource;
 wl_signal sign;
 wl_listener signListen;
+EGLContext eglCtx;
+EGLDisplay eglDpy;
+EGLContext sharedContext;
+EGLDisplay sharedDisplay;
+Int32 contextInitialized = 0;
 
+
+void WWayland::initGLContext()
+{
+
+    static const EGLint attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
+        EGL_ALPHA_SIZE, 0,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+
+    static const EGLint context_attribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    /*
+    // 1. Initialize EGL
+    if ((eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY)) == EGL_NO_DISPLAY)
+    {
+        printf("eglGetDisplay() returned error %d\n", eglGetError());
+        exit(0);
+    }
+    eglInitialize(eglDpy, 0, 0);
+    */
+
+    eglDpy = sharedDisplay;
+
+    EGLConfig config;
+    EGLint num_configs_returned;
+
+    eglChooseConfig(eglDpy, attribs, &config, 1, &num_configs_returned);
+
+    // EGL context and surface
+    if(!eglBindAPI(EGL_OPENGL_ES_API))
+    {
+        printf("Failed to bind api EGL_OPENGL_ES_API\n");
+        exit(-1);
+    }
+
+    /*
+    EGLint visual_id;
+    eglGetConfigAttrib(eglDpy, config, EGL_NATIVE_VISUAL_ID, &visual_id);
+    */
+
+    // 3. Create a context and make it current
+    eglCtx = eglCreateContext(eglDpy, config, sharedContext,context_attribs);
+
+    if(eglCtx == NULL)
+    {
+        printf("CONTEXT ERROR %d\n",eglGetError());
+        exit(0);
+    }
+
+    static const EGLint att[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
+
+    /*
+    static const EGLint att[] = {
+        //EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
+        EGL_ALPHA_SIZE, 0,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+    */
+
+    /*
+    EGLSurface surf = eglCreatePbufferSurface(eglDpy,config, att); // pbuffer surface is enough, we're not going to use
+
+
+    if(!surf)
+    {
+        printf("ERRRR\n");
+        exit(0);
+    }
+    */
+
+    eglMakeCurrent(eglDpy, EGL_NO_SURFACE, EGL_NO_SURFACE, eglCtx);
+
+
+    return;
+}
+
+void WWayland::setContext(EGLDisplay sharedDisp, EGLContext sharedCont)
+{
+    sharedDisplay = sharedDisp;
+    sharedContext = sharedCont;
+    contextInitialized = 1;
+}
 int WWayland::initWayland(WCompositor *comp)
 {
     eglBindWaylandDisplayWL = (PFNEGLBINDWAYLANDDISPLAYWL) eglGetProcAddress ("eglBindWaylandDisplayWL");
@@ -65,7 +164,7 @@ int WWayland::initWayland(WCompositor *comp)
     // GLOBALS
 
     // Create compositor global
-    wl_global_create(display, &wl_compositor_interface, 4, comp, &Globals::Compositor::bind);//4
+    wl_global_create(display, &wl_compositor_interface, 4, comp, &Globals::Compositor::bind); // Last 5
 
     // Create subcompositor global
     //wl_global_create(display, &wl_subcompositor_interface, 1, comp, &Globals::Subcompositor::bind); // 1
@@ -80,9 +179,7 @@ int WWayland::initWayland(WCompositor *comp)
     wl_global_create(display, &wl_data_device_manager_interface, 3, comp, &Globals::DataDeviceManager::bind);//3
 
     // Create xdg shell global
-    wl_global_create(display, &xdg_wm_base_interface, 4, comp, &Extensions::XdgShell::WmBase::bind);
-
-    //eglBindWaylandDisplayWL(WBackend::getEGLDisplay(), display);
+    wl_global_create(display, &xdg_wm_base_interface, 4, comp, &Extensions::XdgShell::WmBase::bind); //4
 
     wl_display_init_shm(display);
     //wl_data_device_manager_init(display);
@@ -128,6 +225,7 @@ int WWayland::readFd(int, unsigned int, void *d)
 {
     WCompositor *comp = (WCompositor*)d;
     eventfd_read(comp->libinputFd,&comp->libinputVal);
+    return 0;
 }
 
 void WWayland::bindEGLDisplay(EGLDisplay eglDisplay)
@@ -148,6 +246,7 @@ void WWayland::runLoop()
     fds[2].events = POLLIN;
     fds[2].fd = WInput::getLibinputFd();
 
+
     while(true)
     {
         poll(fds,3,-1);
@@ -165,16 +264,23 @@ void WWayland::runLoop()
         //if(fds[2].revents & POLLIN)
             //WInput::processInput(0,0,NULL);
 
+        if(contextInitialized == 1)
+        {
+            WWayland::initGLContext();
+            contextInitialized = 2;
+        }
 
-        /*
+
         for(list<WClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
         {
             for(list<WSurface*>::iterator s = (*c)->surfaces.begin(); s != (*c)->surfaces.end(); ++s)
             {
-                WWayland::apply_damage_emit(*s);
+                if((*s)->pendingConfigure)
+                {
+                    (*s)->dispachLastConfiguration();
+                }
             }
         }
-        */
 
         flushClients();
         dispatchEvents();
@@ -261,4 +367,9 @@ int WWayland::apply_damage_emit(void *data)
 wl_event_source *WWayland::addTimer(wl_event_loop_timer_func_t func, void *data)
 {
     return wl_event_loop_add_timer(event_loop,func,data);
+}
+
+EGLContext WWayland::eglContext()
+{
+    return eglCtx;
 }

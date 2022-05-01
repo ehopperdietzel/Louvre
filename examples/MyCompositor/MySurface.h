@@ -26,6 +26,8 @@ public:
     void bufferSizeChangeRequest() override;
     void grabSeatRequest() override;
 
+    void resizingChanged() override;
+
     MyCompositor *comp = nullptr;
 
     Int32 mapXtoLocal(int xGlobal);

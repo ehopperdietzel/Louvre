@@ -1,7 +1,6 @@
 #ifndef DATADEVICEMANAGER_H
 #define DATADEVICEMANAGER_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Globals::DataDeviceManager

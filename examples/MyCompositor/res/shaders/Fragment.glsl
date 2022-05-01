@@ -6,14 +6,24 @@ precision lowp int;
 uniform sampler2D tex;
 uniform vec2 texSize;
 uniform vec4 srcRect;
+uniform int mode;
+uniform vec4 colorRGBA;
 
 varying vec2 v_texcoord;
 
 void main()
 {
-  float x = v_texcoord.x*(srcRect.z - srcRect.x)/texSize.x + srcRect.x/texSize.x;
-  float y = (1.0 - v_texcoord.y)*(srcRect.w - srcRect.y)/texSize.y + srcRect.y/texSize.y;
-  gl_FragColor = texture2D(tex,vec2(x,y));
+  if(mode == 0)
+  {
+    float x = v_texcoord.x*(srcRect.z - srcRect.x)/texSize.x + srcRect.x/texSize.x;
+    float y = (1.0 - v_texcoord.y)*(srcRect.w - srcRect.y)/texSize.y + srcRect.y/texSize.y;
+    gl_FragColor = texture2D(tex,vec2(x,y));
+  }
+  else
+  {
+    gl_FragColor = colorRGBA;
+  }
+  
 }
 
 

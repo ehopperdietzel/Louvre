@@ -4,9 +4,10 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GL/gl.h>
-#include <queue>
+#include <list>
 #include <WNamespaces.h>
 #include <WSize.h>
+#include <WPoint.h>
 
 class Wpp::WTexture
 {
@@ -29,12 +30,15 @@ public:
     Type type(){return _type;}
     UInt32 format(){return _format;}
 
+    WPoint resizeDirection;
+    std::list<WRect>damages;
+    std::list<WRect>pendingDamages;
+
 private:
     friend class Wpp::Globals::Surface;
     friend class Wpp::WSurface;
 
-    std::queue<Rect>damages;
-    std::queue<Rect>pendingDamages;
+
     WSize _size;
     GLuint _textureId,_textureUnit = 0;
     bool _initialized = false;

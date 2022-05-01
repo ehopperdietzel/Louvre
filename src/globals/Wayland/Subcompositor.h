@@ -1,8 +1,6 @@
 #ifndef SUBCOMPOSITOR_H
 #define SUBCOMPOSITOR_H
 
-
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Globals::Subcompositor

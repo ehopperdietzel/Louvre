@@ -1,7 +1,6 @@
 #ifndef XDGWMBASE_H
 #define XDGWMBASE_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Extensions::XdgShell::WmBase

@@ -65,14 +65,29 @@ void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resourc
 {
     (void)resource;
 
-    Int32 version = wl_resource_get_version(resource);
-    printf("Xdg Surface version: %i\n",version);
-
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data(_surface);
+
+    // Check errors
+    /*
+    if(surface->pending.buffer != nullptr || surface->current.buffer != nullptr)
+    {
+        wl_resource_post_error(resource,XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"Given wl_surface already has a buffer attached.");
+        return;
+    }
+    */
+
+    if(surface->type() != SurfaceType::Undefined)
+    {
+        wl_resource_post_error(resource,XDG_WM_BASE_ERROR_ROLE,"Given wl_surface has another role.");
+        return;
+    }
+
+    Int32 version = wl_resource_get_version(resource);
+    printf("Xdg Surface version: %i\n",version);
     surface->xdg_shell = wl_resource_create(client, &xdg_surface_interface, version, id);// 4
     wl_resource_set_implementation(surface->xdg_shell, &xdg_surface_implementation, surface, &Wpp::Extensions::XdgShell::Surface::resource_destroy);
-    xdg_surface_send_configure(surface->xdg_shell, 0);
+    //xdg_surface_send_configure(surface->xdg_shell, 0);
 }
 void Extensions::XdgShell::WmBase::pong(wl_client *client, wl_resource *resource, UInt32 serial)
 {

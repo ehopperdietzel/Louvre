@@ -1,7 +1,6 @@
 #ifndef COMPOSITOR_H
 #define COMPOSITOR_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Globals::Compositor

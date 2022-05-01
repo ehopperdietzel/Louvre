@@ -1,7 +1,6 @@
 #ifndef POINTER_H
 #define POINTER_H
 
-#include <wayland-server.h>
 #include <WNamespaces.h>
 
 class Wpp::Globals::Pointer
