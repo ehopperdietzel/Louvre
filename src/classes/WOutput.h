@@ -15,12 +15,19 @@
 
 #include <sys/eventfd.h>
 #include <sys/poll.h>
-
+#include <WSize.h>
 
 class Wpp::WOutput
 {
 
 public:
+
+    enum InitializeResult
+    {
+        Pending = 0,
+        Initialized = 1,
+        Failed = 2
+    };
 
     WOutput();
     ~WOutput();
@@ -32,11 +39,23 @@ public:
     const drmModeModeInfo getCurrentMode();
     const drmModeConnector getCurrentConnector();
 
+    InitializeResult initializeResult(){ return p_initializeResult; }
+
+    UInt32 refreshRate = 60;
+
+    WSize size;
+
+    void *getData(){ return data; };
+
 private:
 
     friend class WBackend;
     friend class WOutputManager;
     friend class WCompositor;
+
+    InitializeResult p_initializeResult = InitializeResult::Pending;
+
+
 
     wl_event_source *timer;
     timespec lastDrawTime;
@@ -64,7 +83,7 @@ private:
 
     // Render thread
     int _renderFd;
-    eventfd_t _renderValue = 1;
+    eventfd_t _renderValue = 0;
     std::thread *_renderThread;
     pollfd _renderPoll;
 

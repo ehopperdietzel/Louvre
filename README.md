@@ -26,7 +26,7 @@ Wayland++ uses **libinput** and **evdev** for input listening and device discove
     * Subcompositor
         * get_subsurface
         * destroy
-    * Subcompositor
+    * Subsurface
         * set_desync
         * set_sync
         * place_below

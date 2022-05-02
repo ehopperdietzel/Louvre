@@ -83,7 +83,8 @@ void WOutput::startRenderLoop(void *data)
     ts.it_interval.tv_sec = 0;
     ts.it_interval.tv_nsec = 0;
     ts.it_value.tv_sec = 0;
-    ts.it_value.tv_nsec = 1000000000/59;
+
+    ts.it_value.tv_nsec = 1000000000/output->refreshRate;
     timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
 
     while(true)
@@ -102,7 +103,7 @@ void WOutput::startRenderLoop(void *data)
         output->_compositor->renderMutex.unlock();
 
         // Tell the input loop to process events
-        eventfd_write(output->_compositor->libinputFd,1);
+        WWayland::forceUpdate();
 
         // Wait for the next frame
         poll(&output->timerPoll,1,-1);
@@ -111,7 +112,11 @@ void WOutput::startRenderLoop(void *data)
         timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
 
         // Show buffer on screen
+        //if(WWayland::mainOutput() != output)
         WBackend::flipPage(output);
+
+
+
     }
 }
 

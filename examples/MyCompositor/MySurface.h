@@ -25,6 +25,7 @@ public:
     void bufferScaleChangeRequest() override;
     void bufferSizeChangeRequest() override;
     void grabSeatRequest() override;
+    void configureToplevelRequest() override;
 
     void resizingChanged() override;
 

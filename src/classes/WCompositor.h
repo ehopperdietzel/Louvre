@@ -39,13 +39,12 @@ public:
     void repaintAllOutputs();
     void addOutput(WOutput *output);
     void removeOutput(WOutput *output);
-    const list<WOutput*> getOutputs();
+    const list<WOutput*>&outputs(){ return p_outputs; };
 
     UInt32 getMilliseconds();
     timespec getNanoseconds();
 
     list<WClient*>clients;
-
 
     mutex renderMutex;
 
@@ -58,7 +57,7 @@ private:
     friend class Wpp::Globals::Pointer;
 
     // Output scale
-    list<WOutput*>_outputs;
+    list<WOutput*>p_outputs;
 
     int libinputFd, waylandFd;
     eventfd_t libinputVal, waylandVal = 1;

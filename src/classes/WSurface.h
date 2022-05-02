@@ -33,6 +33,7 @@ public:
     virtual void grabSeatRequest() = 0;
 
 
+    virtual void configureToplevelRequest() = 0;
     virtual void resizingChanged() = 0;
 
     // Events
@@ -88,7 +89,6 @@ public:
         SurfaceType type = SurfaceType::Undefined;
         wl_resource *buffer = nullptr;
         WRect windowGeometry = WRect();
-        list<wl_resource*>callbacks;
     };
 
     State current,pending;
@@ -126,6 +126,7 @@ public:
 
     wl_resource *xdg_shell       = nullptr;
     wl_resource *xdg_toplevel    = nullptr;
+    wl_resource *frameCallback   = nullptr;
 
 
     WPoint _maxSize, _minSize;

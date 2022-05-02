@@ -17,8 +17,10 @@
 #include <XdgWmBase.h>
 
 #include <sys/poll.h>
+#include <unistd.h>
 
 #include <WSurface.h>
+#include <WOutput.h>
 
 using namespace std;
 using namespace Wpp;
@@ -40,10 +42,20 @@ EGLDisplay eglDpy;
 EGLContext sharedContext;
 EGLDisplay sharedDisplay;
 Int32 contextInitialized = 0;
+WOutput *p_mainOutput;
+
+bool updated = false;
 
 
 void WWayland::initGLContext()
 {
+
+    if(contextInitialized == 1)
+        contextInitialized = 2;
+    else
+    {
+        return;
+    }
 
     static const EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -129,11 +141,28 @@ void WWayland::initGLContext()
     return;
 }
 
-void WWayland::setContext(EGLDisplay sharedDisp, EGLContext sharedCont)
+bool WWayland::isGlContextInitialized()
 {
+    return contextInitialized == 2;
+}
+
+void WWayland::setContext(WOutput *output, EGLDisplay sharedDisp, EGLContext sharedCont)
+{
+    p_mainOutput = output;
     sharedDisplay = sharedDisp;
     sharedContext = sharedCont;
     contextInitialized = 1;
+}
+
+WOutput *WWayland::mainOutput()
+{
+    return p_mainOutput;
+}
+
+void WWayland::forceUpdate()
+{
+    if(!updated)
+        eventfd_write(compositor->libinputFd,1);
 }
 int WWayland::initWayland(WCompositor *comp)
 {
@@ -224,6 +253,7 @@ void WWayland::flushClients()
 int WWayland::readFd(int, unsigned int, void *d)
 {
     WCompositor *comp = (WCompositor*)d;
+    updated = false;
     eventfd_read(comp->libinputFd,&comp->libinputVal);
     return 0;
 }
@@ -240,36 +270,21 @@ void WWayland::runLoop()
     fds[0].events = WL_EVENT_READABLE | WL_EVENT_WRITABLE;
     fds[0].fd = wayland_fd;
 
+    /*
     fds[1].events = POLLIN;
     fds[1].fd = compositor->libinputFd;
 
     fds[2].events = POLLIN;
     fds[2].fd = WInput::getLibinputFd();
-
+    */
 
     while(true)
     {
-        poll(fds,3,-1);
-
-        /*
-        if(fds[1].revents & WL_EVENT_READABLE)
-        {
-            eventfd_read(compositor->libinputFd,&compositor->libinputVal);
-        }
-        */
+        poll(fds,1,-1);
 
         compositor->renderMutex.lock();
 
-
-        //if(fds[2].revents & POLLIN)
-            //WInput::processInput(0,0,NULL);
-
-        if(contextInitialized == 1)
-        {
-            WWayland::initGLContext();
-            contextInitialized = 2;
-        }
-
+        dispatchEvents();
 
         for(list<WClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
         {
@@ -283,18 +298,7 @@ void WWayland::runLoop()
         }
 
         flushClients();
-        dispatchEvents();
 
-
-
-        /*
-        if(fds[0].revents & WL_EVENT_READABLE)
-            dispatchEvents();
-
-
-        if(fds[1].revents & POLLIN)
-            eventfd_read(compositor->libinputFd,&compositor->libinputVal);
-        */
         compositor->renderMutex.unlock();
 
 
@@ -371,5 +375,10 @@ wl_event_source *WWayland::addTimer(wl_event_loop_timer_func_t func, void *data)
 
 EGLContext WWayland::eglContext()
 {
-    return eglCtx;
+    return sharedContext;
+}
+
+EGLDisplay WWayland::eglDisplay()
+{
+    return sharedDisplay;
 }

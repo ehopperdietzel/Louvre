@@ -27,8 +27,14 @@ public:
     static wl_event_source *addTimer(wl_event_loop_timer_func_t func, void *data);
 
     static EGLContext eglContext();
+    static EGLDisplay eglDisplay();
     static void initGLContext();
-    static void setContext(EGLDisplay sharedDisplay, EGLContext sharedContext);
+    static bool isGlContextInitialized();
+    static void setContext(WOutput *output, EGLDisplay sharedDisplay, EGLContext sharedContext);
+
+    static WOutput *mainOutput();
+
+    static void forceUpdate();
 
 
 };

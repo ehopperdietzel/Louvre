@@ -119,8 +119,8 @@ void WTexture::setData(Int32 width, Int32 height, void *data, Type textureType)
         deleteTexture();
         _textureId = newTexture;
         _type = textureType;
-        _initialized = true;
     }
+    _initialized = true;
 }
 
 void WTexture::deleteTexture()

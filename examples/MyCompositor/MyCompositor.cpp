@@ -14,9 +14,10 @@
 
 MyCompositor::MyCompositor():WCompositor()
 {
-    printf("B\n");
     // Use the output manager to get connected displays
     MyOutputManager *outputManager = new MyOutputManager(this);
+
+    printf("Total outputs %lu\n",outputManager->getOutputsList()->size());
 
     if(outputManager->getOutputsList()->size() == 0)
     {
@@ -26,7 +27,7 @@ MyCompositor::MyCompositor():WCompositor()
     else
     {
         // Use the first avaliable display
-        WOutput *output = outputManager->getOutputsList()->front();
+        WOutput *output = outputManager->getOutputsList()->back();
 
         /* *******************************************************************
          * Suggests clients to scale their buffers.
@@ -41,6 +42,15 @@ MyCompositor::MyCompositor():WCompositor()
         output->setOutputScale(2);
         pointerOutput = output;
         addOutput(output);
+
+
+        WOutput *output2 = outputManager->getOutputsList()->front();
+
+
+        output2->setOutputScale(1);
+        //pointerOutput = output2;
+        addOutput(output2);
+
     }
 
 }
@@ -51,6 +61,7 @@ void MyCompositor::initializeGL(WOutput *output)
     /*************************************************
      * Here you initialize your OpenGL ES 2 context
      *************************************************/
+
 
     GLuint vertexShader,fragmentShader,programObject;
 
@@ -102,13 +113,16 @@ void MyCompositor::initializeGL(WOutput *output)
     glUseProgram(programObject);
 
     // Set the viewport
-    glViewport(0, 0, W_WIDTH, W_HEIGHT);
+    glViewport(0, 0, output->size.w(),output->size.h());
 
     // Load the vertex data
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, square);
 
     // Enables the vertex array
     glEnableVertexAttribArray(0);
+
+    //if(output != pointerOutput)
+        //return;
 
     // Get Uniform Variables
     screenSizeUniform = glGetUniformLocation(programObject, "screenSize");
@@ -122,8 +136,8 @@ void MyCompositor::initializeGL(WOutput *output)
     // Set screen size
     glUniform2f(
         screenSizeUniform,
-        W_WIDTH/output->getOutputScale(),
-        W_HEIGHT/output->getOutputScale());
+        output->size.w()/output->getOutputScale(),
+        output->size.h()/output->getOutputScale());
 
     // Create default cursor texture (64x64)
     int w,h;
@@ -140,6 +154,7 @@ void MyCompositor::initializeGL(WOutput *output)
     printf("Initialize GL\n");
 }
 
+WPoint outOff;
 void MyCompositor::paintGL(WOutput *output)
 {
     /*************************************************
@@ -153,7 +168,13 @@ void MyCompositor::paintGL(WOutput *output)
     //printf("Outputs count:%lu\n",getOutputs().size());
 
 
-    //glClear(GL_COLOR_BUFFER_BIT);
+
+    if(output != pointerOutput)
+        outOff = WPoint(-pointerOutput->size.w()/pointerOutput->getOutputScale(),0);
+    else
+        outOff = WPoint(0,0);
+
+
 
 /*
     glActiveTexture(GL_TEXTURE0);
@@ -162,8 +183,10 @@ void MyCompositor::paintGL(WOutput *output)
     glUniform4f(rectUniform,0,0,W_WIDTH/output->getOutputScale(),W_HEIGHT/output->getOutputScale());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     */
-    drawQuad(backgroundTexture, WRect(WPoint(0,0),backgroundTexture->size()), WRect(0,0,W_WIDTH/output->getOutputScale(),W_HEIGHT/output->getOutputScale()));
-
+    if(output == pointerOutput)
+        drawQuad(backgroundTexture, WRect(WPoint(0,0),backgroundTexture->size()), WRect(0,0,output->size.w()/output->getOutputScale(),output->size.h()/output->getOutputScale()));
+    else
+        glClear(GL_COLOR_BUFFER_BIT);
 
     for(list<MySurface*>::iterator s = surfacesList.begin(); s != surfacesList.end(); s++)
     {
@@ -517,12 +540,13 @@ void MyCompositor::drawQuad(WTexture *tex, WRect src, WRect dst, Int32 scale)
     glBindTexture(GL_TEXTURE_2D,tex->textureId());
     glUniform2f(texSizeUniform,tex->size().w(), tex->size().h());
     glUniform4f(srcRectUniform,src.x(), src.y(), src.w(), src.h());
-    glUniform4f(dstRectUniform,dst.x(), dst.y(), dst.w(), dst.h());
+    glUniform4f(dstRectUniform,outOff.x() + dst.x(), outOff.y() + dst.y(), dst.w(), dst.h());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 
     //drawColorQuad(dst,0.f,0.f,1.f,0.2f);
 
+    /*
     for(list<WRect>::iterator t = tex->damages.begin(); t != tex->damages.end(); t++)
     {
 
@@ -533,6 +557,7 @@ void MyCompositor::drawQuad(WTexture *tex, WRect src, WRect dst, Int32 scale)
 
 
     tex->damages.clear();
+    */
 
 }
 
@@ -557,6 +582,7 @@ void MyCompositor::riseSurface(MySurface *surface)
 
 void MyCompositor::setPointerPos(double x, double y)
 {
+    /*
     float w = W_WIDTH/pointerOutput->getOutputScale();
     float h = W_HEIGHT/pointerOutput->getOutputScale();
 
@@ -568,6 +594,7 @@ void MyCompositor::setPointerPos(double x, double y)
         x = w;
     if(y > h)
         y = h;
+        */
 
     pointer = WPointF(x, y);
 

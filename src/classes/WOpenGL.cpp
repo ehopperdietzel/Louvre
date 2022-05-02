@@ -85,3 +85,8 @@ GLuint WOpenGL::LoadShader(GLenum type, const char *shaderSrc)
 
     return shader;
 }
+
+void WOpenGL::useWGLProgram()
+{
+
+}

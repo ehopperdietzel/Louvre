@@ -11,6 +11,7 @@ public:
     static void checkGLError(const char *msg);
     static GLuint getMaxTextureUnits();
     static GLuint LoadShader(GLenum type, const char *shaderSrc);
+    static void useWGLProgram();
 };
 
 #endif // WOPENGL_H

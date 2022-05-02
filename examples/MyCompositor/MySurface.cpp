@@ -125,6 +125,12 @@ void MySurface::grabSeatRequest()
 
 }
 
+void MySurface::configureToplevelRequest()
+{
+    sendConfigureToplevelEvent(0,0,Wpp::SurfaceState::Activated);
+    comp->repaintAllOutputs();
+}
+
 void MySurface::resizingChanged()
 {
 

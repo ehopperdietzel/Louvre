@@ -149,6 +149,9 @@ void WSurface::sendConfigureToplevelEvent(Int32 width, Int32 height, SurfaceStat
     pendingConfigureSize.setW(width);
     pendingConfigureSize.setH(height);
     pendingConfigureStates = states;
+    //dispachLastConfiguration();
+    //eventfd_write(compositor()->libinputFd,1);
+    //compositor()->repaintAllOutputs();
 }
 
 void WSurface::sendConfigurePopupEvent(Int32 x, Int32 y, Int32 width, Int32 height)
@@ -265,7 +268,7 @@ void WSurface::applyDamages()
     if(!_isDamaged || resource() == nullptr)
         return;
 
-    WOutput *output = compositor()->getOutputs().front();
+    WOutput *output = compositor()->outputs().front();
     Int32 width, height;
     WSize prevSize = size();
 
@@ -330,11 +333,11 @@ void WSurface::applyDamages()
 
 void WSurface::requestNextFrame()
 {
-    while(!current.callbacks.empty())
+    if(frameCallback)
     {
-        wl_callback_send_done(current.callbacks.front(),compositor()->getMilliseconds());
-        wl_resource_destroy(current.callbacks.front());
-        current.callbacks.pop_front();
+        wl_callback_send_done(frameCallback,compositor()->getMilliseconds());
+        wl_resource_destroy(frameCallback);
+        frameCallback = nullptr;
     }
 }
 

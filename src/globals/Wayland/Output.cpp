@@ -44,7 +44,7 @@ void Wpp::Globals::Output::bind(wl_client *client, void *data, UInt32 version, U
         1800,
         0);
 
-    wl_output_send_scale(resource, compositor->getOutputs().front()->getOutputScale());
+    wl_output_send_scale(resource, compositor->outputs().front()->getOutputScale());
     wl_output_send_done(resource);
 
     /*

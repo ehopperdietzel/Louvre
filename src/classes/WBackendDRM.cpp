@@ -85,7 +85,16 @@ struct FB_DATA
 
 static int init_gbm(DRM *data)
 {
-    data->gbm.dev = gbm_create_device(data->deviceFd);
+
+    printf("DEVICE FD:%i\n",data->deviceFd);
+    if(WWayland::isGlContextInitialized())
+    {
+        WOutput *mainOutput = WWayland::mainOutput();
+        DRM *mainOutputData = (DRM*)mainOutput->getData();
+        data->gbm.dev = mainOutputData->gbm.dev;
+    }
+    else
+        data->gbm.dev = gbm_create_device(data->deviceFd);
 
     data->gbm.surface = gbm_surface_create(
         data->gbm.dev,
@@ -102,8 +111,9 @@ static int init_gbm(DRM *data)
     return 0;
 }
 
-static int init_gl(DRM *data)
+static int init_gl(DRM *data, WOutput *output)
 {
+
     EGLint major, minor, n;
 
     static const EGLint context_attribs[] = {
@@ -125,7 +135,10 @@ static int init_gl(DRM *data)
     get_platform_display =(void *(*)(unsigned int,void*,const int*)) eglGetProcAddress("eglGetPlatformDisplayEXT");
     assert(get_platform_display != NULL);
 
-    data->gl.display = get_platform_display(EGL_PLATFORM_GBM_KHR, data->gbm.dev, NULL);
+    if(WWayland::isGlContextInitialized())
+        data->gl.display = WWayland::eglDisplay();
+    else
+        data->gl.display = get_platform_display(EGL_PLATFORM_GBM_KHR, data->gbm.dev, NULL);
 
     if (!eglInitialize(data->gl.display, &major, &minor))
     {
@@ -134,7 +147,6 @@ static int init_gl(DRM *data)
     }
 
     printf("Using display %p with EGL version %d.%d.\n", data->gl.display, major, minor);
-
     printf("EGL Version \"%s\"\n", eglQueryString(data->gl.display, EGL_VERSION));
     printf("EGL Vendor \"%s\"\n", eglQueryString(data->gl.display, EGL_VENDOR));
     printf("EGL Extensions \"%s\"\n", eglQueryString(data->gl.display, EGL_EXTENSIONS));
@@ -151,7 +163,12 @@ static int init_gl(DRM *data)
         return -1;
     }
 
-    data->gl.context = eglCreateContext(data->gl.display, data->gl.config, EGL_NO_CONTEXT, context_attribs);
+    EGLContext ctx = EGL_NO_CONTEXT;
+
+    if(WWayland::isGlContextInitialized())
+        ctx = WWayland::eglContext();
+
+    data->gl.context = eglCreateContext(data->gl.display, data->gl.config, ctx, context_attribs);
 
     if (data->gl.context == NULL)
     {
@@ -169,7 +186,8 @@ static int init_gl(DRM *data)
     // connect the context to the surface
     eglMakeCurrent(data->gl.display, data->gl.surface, data->gl.surface, data->gl.context);
 
-    WWayland::setContext(data->gl.display,data->gl.context);
+    if(!WWayland::isGlContextInitialized())
+        WWayland::setContext(output, data->gl.display,data->gl.context);
 
     //printf("GL Extensions: \"%s\"\n", glGetString(GL_EXTENSIONS));
 
@@ -270,7 +288,7 @@ void WBackend::createGLContext(WOutput *output)
         return;
     }
 
-    data->ret = init_gl(data);
+    data->ret = init_gl(data,output);
     if (data->ret)
     {
         printf("Failed to initialize EGL\n");
@@ -290,6 +308,7 @@ void WBackend::createGLContext(WOutput *output)
         return;
     }
 
+    output->p_initializeResult = Wpp::WOutput::InitializeResult::Initialized;
     printf("DRM backend initialized.\n");
 
     return;
@@ -309,7 +328,8 @@ void WBackend::flipPage(WOutput *output)
     // Here you could also update drm plane layers if you want
     // hw composition
 
-
+    data->ret = drmModeSetCrtc(data->deviceFd, data->crtc_id, data->fb->fb_id, 0, 0, &data->connector->connector_id, 1, data->mode);
+    /*
     data->ret = drmModePageFlip(data->deviceFd, data->crtc_id, data->fb->fb_id,DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
     if (data->ret)
     {
@@ -319,6 +339,7 @@ void WBackend::flipPage(WOutput *output)
 
     while (waiting_for_flip)
     {
+
         data->ret = select(data->deviceFd + 1, &data->fds, NULL, NULL, NULL);
         if (data->ret < 0)
         {
@@ -335,8 +356,11 @@ void WBackend::flipPage(WOutput *output)
             printf("User interrupted!\n");
             break;
         }
+
         drmHandleEvent(data->deviceFd, &data->evctx);
     }
+    */
+
 
     // release last buffer to render on again:
     gbm_surface_release_buffer(data->gbm.surface, data->bo);
@@ -511,8 +535,10 @@ std::list<WOutput *> WBackend::getAvaliableOutputs()
                 data->encoder = encoder;
                 data->mode = defaultMode;
 
+                newOutput->size = WSize(defaultMode->hdisplay,defaultMode->vdisplay);
+                newOutput->refreshRate = defaultMode->vrefresh;
                 outputs.push_front(newOutput);
-                printf("New output with id: %i.\n",crtc_id);
+                printf("New output with id: %i and vrefresh: %i, w: %i h: %i \n",crtc_id,defaultMode->vrefresh,defaultMode->hdisplay,defaultMode->vdisplay);
             }
             else
             {

@@ -30,6 +30,8 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
         surface->client()->surfaceDestroyRequest(surface);
     }
 
+
+    surface->texture()->deleteTexture();
     delete surface;
 }
 
@@ -47,12 +49,12 @@ void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 ca
     /* Client waits for this frame to be marked as done before creating next frame*/
 
     Int32 version = wl_resource_get_version(resource);
-
-    // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    surface->pending.callbacks.push_back(wl_resource_create(client, &wl_callback_interface, version, callback));
-    //surface->frame_callback = wl_resource_create(client, &wl_callback_interface, version, callback); // 1
+    if(surface->frameCallback)
+        wl_resource_destroy(surface->frameCallback);
+
+    surface->frameCallback = wl_resource_create(client, &wl_callback_interface, version, callback);
 }
 
 void Globals::Surface::destroy(wl_client *client, wl_resource *resource)
@@ -86,8 +88,7 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
             surface->current.type = surface->pending.type;
             surface->pending.type = SurfaceType::Undefined;
 
-            surface->sendConfigureToplevelEvent(0,0,SurfaceState::Activated);
-            surface->dispachLastConfiguration();
+            surface->configureToplevelRequest();
             surface->typeChangeRequest();
         }
         return;
@@ -99,10 +100,6 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
         surface->texture()->damages.push_back(*r);
     }
     surface->texture()->pendingDamages.clear();
-
-    surface->current.callbacks.merge(surface->pending.callbacks);
-    surface->pending.callbacks.clear();
-
 
     surface->_isDamaged = true;
 
