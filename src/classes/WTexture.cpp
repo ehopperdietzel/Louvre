@@ -4,6 +4,7 @@
 #include <WRect.h>
 #include <GLES2/gl2.h>
 
+
 using namespace Wpp;
 using namespace std;
 
@@ -27,8 +28,8 @@ void WTexture::setData(Int32 width, Int32 height, void *data, Type textureType)
         _size = WSize(width,height);
         glGenTextures(1, &newTexture);
         glBindTexture (GL_TEXTURE_2D, newTexture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         if(textureType == Type::EGL)
         {
@@ -113,8 +114,8 @@ void WTexture::setData(Int32 width, Int32 height, void *data, Type textureType)
         _size = WSize(width,height);
         glGenTextures(1, &newTexture);
         glBindTexture (GL_TEXTURE_2D, newTexture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, _format, _size.w(), _size.h(), 0, _format, GL_UNSIGNED_BYTE, data);
         deleteTexture();
         _textureId = newTexture;

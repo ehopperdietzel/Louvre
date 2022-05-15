@@ -2,6 +2,8 @@
 #include <MyCompositor.h>
 #include <WOutput.h>
 #include <WPositioner.h>
+#include <WCursor.h>
+#include <MySeat.h>
 
 MySurface::MySurface(wl_resource *surfaceResource, WClient *client, GLuint textureUnit)
           :WSurface::WSurface(surfaceResource,client,textureUnit)
@@ -19,11 +21,12 @@ MySurface::~MySurface()
 // Event when window is grabbed (tipically by the topbar)
 void MySurface::moveStartRequest()
 {
-    if(!comp->isLeftMouseButtonPressed)
+    MySeat *seat = (MySeat*)compositor()->seat();
+    if(!seat->isLeftMouseButtonPressed)
         return;
-    comp->movingSurfaceInitPos = getRectWithoutDecoration().topLeft();
-    comp->movingSurfaceInitCursorPos = comp->pointer;
-    comp->movingSurface = this;
+    seat->movingSurfaceInitPos = getRectWithoutDecoration().topLeft();
+    seat->movingSurfaceInitCursorPos = comp->cursor->position();
+    seat->movingSurface = this;
 }
 
 void MySurface::maxSizeChangeRequest()
@@ -36,14 +39,16 @@ void MySurface::minSizeChangeRequest()
 
 void MySurface::resizeStartRequest(ResizeEdge edge)
 {
-    if(!comp->isLeftMouseButtonPressed)
+    MySeat *seat = (MySeat*)compositor()->seat();
+
+    if(!seat->isLeftMouseButtonPressed)
         return;
 
-    comp->resizingSurface = this;
-    comp->resizeEdge = edge;
-    comp->resizeInitMousePos = WPoint(comp->pointer);
-    comp->resizeInitSurfaceRect = getRectWithoutDecoration();
-    comp->resizeInitSurfaceDecoration = WRect(pos,size()/bufferScale());
+    seat->resizingSurface = this;
+    seat->resizeEdge = edge;
+    seat->resizeInitMousePos = comp->cursor->position();
+    seat->resizeInitSurfaceRect = getRectWithoutDecoration();
+    seat->resizeInitSurfaceDecoration = WRect(pos,size()/bufferScale());
 }
 
 void MySurface::geometryChangeRequest()
@@ -95,31 +100,35 @@ void MySurface::bufferScaleChangeRequest()
 
 void MySurface::bufferSizeChangeRequest()
 {
-    if(comp->resizingSurface == this && comp->isLeftMouseButtonPressed)
-    {
-        WRect ir = comp->resizeInitSurfaceDecoration;
+    MySeat *seat = (MySeat*)compositor()->seat();
 
-        if(comp->resizeEdge == ResizeEdge::Top || comp->resizeEdge == ResizeEdge::TopLeft || comp->resizeEdge == ResizeEdge::TopRight)
+    if(seat->resizingSurface == this && seat->isLeftMouseButtonPressed)
+    {
+        WRect ir = seat->resizeInitSurfaceDecoration;
+
+        if(seat->resizeEdge == ResizeEdge::Top || seat->resizeEdge == ResizeEdge::TopLeft || seat->resizeEdge == ResizeEdge::TopRight)
             pos.setY(ir.y() + ir.h() - height()/bufferScale());
 
-        if(comp->resizeEdge == ResizeEdge::Left || comp->resizeEdge == ResizeEdge::TopLeft || comp->resizeEdge == ResizeEdge::BottomLeft)
+        if(seat->resizeEdge == ResizeEdge::Left || seat->resizeEdge == ResizeEdge::TopLeft || seat->resizeEdge == ResizeEdge::BottomLeft)
             pos.setX(ir.x() + ir.w() - width()/bufferScale());
     }
 }
 
 void MySurface::grabSeatRequest()
 {
-    if(comp->_keyboardFocusSurface && comp->_keyboardFocusSurface != this)
-        comp->_keyboardFocusSurface->sendKeyboardLeaveEvent();
+    MySeat *seat = (MySeat*)compositor()->seat();
 
-    comp->_keyboardFocusSurface = this;
+    if(seat->keyboardFocusSurface && seat->keyboardFocusSurface != this)
+        seat->keyboardFocusSurface->sendKeyboardLeaveEvent();
+
+    seat->keyboardFocusSurface = this;
     this->sendKeyboardEnterEvent();
 
     /*
-    if(comp->_pointerFocusSurface && comp->_pointerFocusSurface != this)
-        comp->_pointerFocusSurface->sendPointerLeaveEvent();
+    if(comp->pointerFocusSurface && comp->pointerFocusSurface != this)
+        comp->pointerFocusSurface->sendPointerLeaveEvent();
 
-    comp->_pointerFocusSurface = this;
+    comp->pointerFocusSurface = this;
     this->sendPointerEnterEvent(20,20);
     */
 
@@ -154,11 +163,11 @@ bool MySurface::containsPoint(Int32 x, Int32 y, bool withoutDecoration)
 
         if(r.x() > x)
             return false;
-        if(r.x() + r.w() < x)
+        if(r.x() + r.w()/bufferScale() < x)
             return false;
         if(r.y() > y)
             return false;
-        if(r.y() + r.h() < y)
+        if(r.y() + r.h()/bufferScale() < y)
             return false;
 
         return true;
@@ -167,11 +176,11 @@ bool MySurface::containsPoint(Int32 x, Int32 y, bool withoutDecoration)
     {
         if(pos.x() > x)
             return false;
-        if(pos.x() + width() < x)
+        if(pos.x() + width()/bufferScale() < x)
             return false;
         if(pos.y() > y)
             return false;
-        if(pos.y() + height() < y)
+        if(pos.y() + height()/bufferScale() < y)
             return false;
 
         return true;

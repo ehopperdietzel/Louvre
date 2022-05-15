@@ -22,6 +22,7 @@
 #include <WCompositor.h>
 #include <WWayland.h>
 #include <WInput.h>
+#include <WOpenGL.h>
 
 using namespace Wpp;
 
@@ -43,6 +44,8 @@ void WOutput::setCompositor(WCompositor *compositor)
 void WOutput::setOutputScale(Int32 scale)
 {
     _outputScale = scale;
+    if(p_painter)
+        p_painter->viewportToOutput();
 }
 
 Int32 WOutput::getOutputScale()
@@ -115,8 +118,6 @@ void WOutput::startRenderLoop(void *data)
         //if(WWayland::mainOutput() != output)
         WBackend::flipPage(output);
 
-
-
     }
 }
 
@@ -132,6 +133,13 @@ void WOutput::repaint()
 EGLDisplay WOutput::getDisplay()
 {
     return WBackend::getEGLDisplay(this);
+}
+
+void WOutput::setPainter(WOpenGL *painter)
+{
+    p_painter = painter;
+    p_painter->p_output = this;
+    p_painter->viewportToOutput();
 }
 
 

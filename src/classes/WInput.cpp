@@ -1,3 +1,4 @@
+/*
 #include <WInput.h>
 #include <WCompositor.h>
 
@@ -206,5 +207,5 @@ int WInput::initInput(WCompositor *compositor)
     printf("Libinput initialized.\n");
 
     return 0;
-
 }
+*/

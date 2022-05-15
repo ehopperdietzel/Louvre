@@ -115,13 +115,13 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
     }
 
     // Delete previous popup if exists
-    if(surface->_positioner != nullptr)
-        delete surface->_positioner;
+    if(surface->p_positioner != nullptr)
+        delete surface->p_positioner;
 
-    surface->_positioner = wPositioner;
+    surface->p_positioner = wPositioner;
     surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
     surface->current.type = SurfaceType::Popup;
-    surface->_parent = wParent;
+    surface->p_parent = wParent;
     wParent->_children.push_back(surface);
     surface->parentChangeRequest();
     wl_resource_set_implementation(surface->xdg_popup, &xdg_popup_implementation, surface, &Extensions::XdgShell::Popup::destroy_resource);

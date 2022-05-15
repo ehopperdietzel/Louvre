@@ -11,6 +11,7 @@
 #include <WCompositor.h>
 #include <unistd.h>
 #include <sys/eventfd.h>
+#include <WSeat.h>
 
 using namespace Wpp;
 
@@ -104,6 +105,11 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     surface->_isDamaged = true;
 
     surface->applyDamages();
+
+    if(surface->type() == Cursor)
+    {
+        surface->compositor()->seat()->setCursorRequest(surface,surface->hotspot().x(),surface->hotspot().y());
+    }
 
     // FALTA ENVIAR EVENTO
     surface->compositor()->repaintAllOutputs();

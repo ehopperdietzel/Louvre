@@ -124,7 +124,7 @@ void Globals::Compositor::bind(wl_client *client, void *data, UInt32 version, UI
     // Search for the client object
     for(list<WClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
     {
-        if((*c)->getClient() == client)
+        if((*c)->client() == client)
         {
             wClient = (*c);
             break;

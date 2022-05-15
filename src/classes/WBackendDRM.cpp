@@ -29,6 +29,8 @@
 #include <WCompositor.h>
 #include <WOutput.h>
 #include <WWayland.h>
+#include <WOpenGL.h>
+#include <WSizeF.h>
 
 #if W_BACKEND == 1
 
@@ -75,6 +77,8 @@ struct DRM
 
     GBM gbm;
     GL_CONF gl;
+
+    gbm_bo *cursor_bo = nullptr;
 };
 
 struct FB_DATA
@@ -107,6 +111,9 @@ static int init_gbm(DRM *data)
         printf("Failed to create gbm surface.\n");
         return -1;
     }
+
+    // Create cursor bo
+    data->cursor_bo = gbm_bo_create(data->gbm.dev, 64, 64, GBM_FORMAT_ARGB8888, GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE);
 
     return 0;
 }
@@ -209,7 +216,7 @@ static void drm_fb_destroy_callback(gbm_bo *bo, void *data)
     free(fb_data);
 }
 
-static struct FB_DATA * drm_fb_get_from_bo(struct gbm_bo *bo, DRM *data)
+static struct FB_DATA * drm_fb_get_from_bo(gbm_bo *bo, DRM *data)
 {
     FB_DATA *fb_data = (FB_DATA*)gbm_bo_get_user_data(bo);
 
@@ -319,7 +326,6 @@ void WBackend::flipPage(WOutput *output)
     DRM *data = (DRM*)output->data;
 
     gbm_bo *next_bo;
-    int waiting_for_flip = 1;
 
     eglSwapBuffers(data->gl.display, data->gl.surface);
     next_bo = gbm_surface_lock_front_buffer(data->gbm.surface);
@@ -329,37 +335,6 @@ void WBackend::flipPage(WOutput *output)
     // hw composition
 
     data->ret = drmModeSetCrtc(data->deviceFd, data->crtc_id, data->fb->fb_id, 0, 0, &data->connector->connector_id, 1, data->mode);
-    /*
-    data->ret = drmModePageFlip(data->deviceFd, data->crtc_id, data->fb->fb_id,DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
-    if (data->ret)
-    {
-        printf("Failed to queue page flip: %s\n", strerror(errno));
-        return;
-    }
-
-    while (waiting_for_flip)
-    {
-
-        data->ret = select(data->deviceFd + 1, &data->fds, NULL, NULL, NULL);
-        if (data->ret < 0)
-        {
-            printf("Select err: %s\n", strerror(errno));
-            return;
-        }
-        else if (data->ret == 0)
-        {
-            printf("Select timeout!\n");
-            return;
-        }
-        else if (FD_ISSET(0, &data->fds))
-        {
-            printf("User interrupted!\n");
-            break;
-        }
-
-        drmHandleEvent(data->deviceFd, &data->evctx);
-    }
-    */
 
 
     // release last buffer to render on again:
@@ -554,28 +529,67 @@ std::list<WOutput *> WBackend::getAvaliableOutputs()
     return outputs;
 }
 
-/*
-void Wpp::WBackend::setHWCursor()
+bool WBackend::hasHardwareCursorSupport()
+{
+    return true;
+}
+
+
+void WBackend::setCursor(WOutput *output, WTexture *texture, WSizeF size)
 {
 
-    gbm_bo *m_bo = nullptr;
-    m_bo = gbm_bo_create(gbm.dev, 64, 64,GBM_FORMAT_ARGB8888, GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE);
+    DRM *data = (DRM*)output->data;
 
-    unsigned char cursorPixels[4*64*64];
-    for(int i = 0; i < 4*64*64; i++)
-        cursorPixels[i] = 255;
-    gbm_bo_write(m_bo,cursorPixels, 4*64*64);
-    uint32_t handle = gbm_bo_get_handle(m_bo).u32;
-    drmModeSetCursor(drm.fd, drm.crtc_id, handle,64, 64);
+    WOpenGL *GL;
+
+    if(std::this_thread::get_id() == output->_compositor->mainThreadId())
+        GL = output->_compositor->p_painter;
+    else
+        GL = output->painter();
+
+    unsigned char pixels[4*64*64];
+
+    // Create framebuffer to scale cursor
+    unsigned int fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    // Create render buffer
+    unsigned int rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, 66, 66);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
+
+    GL->setViewport(WRect(0,0,66,66),1);
+    GL->drawColor(WRect(0,0,66,66),0,0,0,0);
+    GL->drawTexture(texture,WRect(0,0,texture->size().w(),-texture->size().h()),WRect(1,64+1-size.h(),size.w(),size.h()));
+    glReadPixels(1,1,64,64,GL_RGBA,GL_UNSIGNED_BYTE,&pixels);
+
+    gbm_bo_write(data->cursor_bo,pixels, 4*64*64);
+    uint32_t handle = gbm_bo_get_handle(data->cursor_bo).u32;
+    drmModeSetCursor(data->deviceFd, data->crtc_id, handle, 64, 64);
+
+
+    // Goes back to main framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0,0,output->size.w()/output->getOutputScale(),output->size.h()/output->getOutputScale());
+    glDeleteBuffers(1,&rbo);
+    glDeleteFramebuffers(1, &fbo);
+
+
+
+    output->painter()->viewportToOutput();
+
 
 }
 
-void WBackend::setHWCursorPos(Int32 x, Int32 y)
+void WBackend::setCursorPosition(WOutput *output, WPoint position)
 {
-    (void)x;(void)y;
-    //drmModeMoveCursor(drm.fd, drm.crtc_id,x,y);
+    DRM *data = (DRM*)output->data;
+    drmModeMoveCursor(data->deviceFd, data->crtc_id,position.x(),position.y());
 }
-*/
+
 
 #endif
 

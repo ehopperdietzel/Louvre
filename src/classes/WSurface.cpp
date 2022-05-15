@@ -41,8 +41,8 @@ WSurface::WSurface(wl_resource *surface, WClient *client, GLuint textureUnit)
     get_egl_func();
     _texture = new WTexture(textureUnit);
     srand(time(NULL));
-    _resource = surface;
-    _client = client;
+    p_resource = surface;
+    p_client = client;
 }
 
 WSurface::~WSurface()
@@ -53,92 +53,91 @@ WSurface::~WSurface()
 
 void WSurface::sendPointerButtonEvent(UInt32 buttonCode, UInt32 buttonState, UInt32 milliseconds)
 {
-    if(_client->getPointer() != nullptr)
+    if(p_client->p_pointerResource != nullptr)
     {
-        wl_pointer_send_button(_client->getPointer(),pointerSerial,milliseconds,buttonCode,buttonState);
+        wl_pointer_send_button(p_client->p_pointerResource,pointerSerial,milliseconds,buttonCode,buttonState);
         pointerSerial++;
-        if(_client->_wl_pointer_version >= 5)
-            wl_pointer_send_frame(_client->getPointer());
-
+        if(wl_resource_get_version(p_client->p_pointerResource) >= 5)
+            wl_pointer_send_frame(p_client->p_pointerResource);
     }
 }
 
 void WSurface::sendPointerMotionEvent(double x, double y, UInt32 milliseconds)
 {
-    if(_client->getPointer() != nullptr)
+    if(p_client->p_pointerResource != nullptr)
     {
         wl_pointer_send_motion(
-                    _client->getPointer(),
+                    p_client->p_pointerResource,
                     milliseconds,
                     wl_fixed_from_double(x),
                     wl_fixed_from_double(y));
 
-        if(_client->_wl_pointer_version >= 5)
-            wl_pointer_send_frame(_client->getPointer());
+        if(wl_resource_get_version(p_client->p_pointerResource) >= 5)
+            wl_pointer_send_frame(p_client->p_pointerResource);
 
     }
 }
 
 void WSurface::sendPointerEnterEvent(double x, double y)
 {
-    if(_client->getPointer() != nullptr)
+    if(p_client->p_pointerResource != nullptr)
     {
         wl_pointer_send_enter(
-                    _client->getPointer(),
+                    p_client->p_pointerResource,
                     pointerSerial,
-                    _resource,
+                    p_resource,
                     wl_fixed_from_double(x),
                     wl_fixed_from_double(y));
         pointerSerial++;
-        if(_client->_wl_pointer_version >= 5)
-            wl_pointer_send_frame(_client->getPointer());
+        if(wl_resource_get_version(p_client->p_pointerResource) >= 5)
+            wl_pointer_send_frame(p_client->p_pointerResource);
     }
 }
 
 void WSurface::sendPointerLeaveEvent()
 {
-    if(_client->getPointer() != nullptr)
+    if(p_client->p_pointerResource != nullptr)
     {
-        wl_pointer_send_leave(_client->getPointer(),pointerSerial,_resource);
+        wl_pointer_send_leave(p_client->p_pointerResource,pointerSerial,p_resource);
         pointerSerial++;
-        if(_client->_wl_pointer_version >= 5)
-            wl_pointer_send_frame(_client->getPointer());
+        if(wl_resource_get_version(p_client->p_pointerResource) >= 5)
+            wl_pointer_send_frame(p_client->p_pointerResource);
 
     }
 }
 
 void WSurface::sendKeyEvent(UInt32 keyCode, UInt32 keyState)
 {
-    if(_client->getKeyboard() != nullptr)
+    if(p_client->p_keyboardResource != nullptr)
     {
-        wl_keyboard_send_key(_client->getKeyboard(),keyboardSerial,compositor()->getMilliseconds(),keyCode,keyState);
+        wl_keyboard_send_key(p_client->p_keyboardResource,keyboardSerial,compositor()->getMilliseconds(),keyCode,keyState);
         keyboardSerial++;        
     }
 }
 
 void WSurface::sendKeyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
-    if(_client->getKeyboard() != nullptr)
+    if(p_client->p_keyboardResource != nullptr)
     {
-        wl_keyboard_send_modifiers(_client->getKeyboard(),keyboardSerial,depressed,latched,locked,group);
+        wl_keyboard_send_modifiers(p_client->p_keyboardResource,keyboardSerial,depressed,latched,locked,group);
         keyboardSerial++;
     }
 }
 
 void WSurface::sendKeyboardEnterEvent()
 {
-    if(_client->getKeyboard() != nullptr)
+    if(p_client->p_keyboardResource != nullptr)
     {
-        wl_keyboard_send_enter(_client->getKeyboard(),keyboardSerial,_resource,&nullKeys);
+        wl_keyboard_send_enter(p_client->p_keyboardResource,keyboardSerial,p_resource,&nullKeys);
         keyboardSerial++;
     }
 }
 
 void WSurface::sendKeyboardLeaveEvent()
 {
-    if(_client->getKeyboard() != nullptr)
+    if(p_client->p_keyboardResource != nullptr)
     {
-        wl_keyboard_send_leave(_client->getKeyboard(),keyboardSerial,_resource);
+        wl_keyboard_send_leave(p_client->p_keyboardResource,keyboardSerial,p_resource);
         keyboardSerial++;
     }
 }
@@ -158,6 +157,51 @@ void WSurface::sendConfigurePopupEvent(Int32 x, Int32 y, Int32 width, Int32 heig
 {
     if(xdg_popup != nullptr)
         xdg_popup_send_configure(xdg_popup,x,y,width,height);
+}
+
+WSize WSurface::calculateResizeRect(WPoint cursorPosDelta, WSize initialSize, ResizeEdge edge)
+{
+    switch(edge)
+    {
+        case ResizeEdge::Bottom:
+        {
+            initialSize.setH(initialSize.h() - cursorPosDelta.y());
+        }break;
+        case ResizeEdge::Right:
+        {
+            initialSize.setW(initialSize.w() - cursorPosDelta.x());
+        }break;
+        case ResizeEdge::BottomRight:
+        {
+            initialSize.setH(initialSize.h() - cursorPosDelta.y());
+            initialSize.setW(initialSize.w() - cursorPosDelta.x());
+        }break;
+        case ResizeEdge::Top:
+        {
+            initialSize.setH(initialSize.h() + cursorPosDelta.y());
+        }break;
+        case ResizeEdge::Left:
+        {
+            initialSize.setW(initialSize.w() + cursorPosDelta.x());
+        }break;
+        case ResizeEdge::TopLeft:
+        {
+            initialSize.setH(initialSize.h() + cursorPosDelta.y());
+            initialSize.setW(initialSize.w() + cursorPosDelta.x());
+        }break;
+        case ResizeEdge::BottomLeft:
+        {
+            initialSize.setH(initialSize.h() - cursorPosDelta.y());
+            initialSize.setW(initialSize.w() + cursorPosDelta.x());
+        }break;
+        case ResizeEdge::TopRight:
+        {
+            initialSize.setH(initialSize.h() + cursorPosDelta.y());
+            initialSize.setW(initialSize.w() - cursorPosDelta.x());
+        }break;
+    }
+
+    return initialSize;
 }
 
 void WSurface::setAppId(const char *appId)
@@ -348,8 +392,8 @@ void WSurface::setBufferScale(Int32 scale)
 
 WCompositor *WSurface::compositor()
 {
-    if(_client != nullptr)
-        return _client->getCompositor();
+    if(p_client != nullptr)
+        return p_client->compositor();
     else
         return nullptr;
 }

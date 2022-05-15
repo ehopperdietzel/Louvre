@@ -9,16 +9,19 @@
 #include <unistd.h>
 #include <signal.h>
 #include <WOutput.h>
+#include <WSeat.h>
 
 using namespace Wpp;
 
 WCompositor::WCompositor()
 {
-    printf("A\n");
-    signal(SIGINT,SIG_IGN);
+    //signal(SIGINT,SIG_IGN);
     //signal(SIGABRT,SIG_IGN);
+
+    // Store the main thread id for later use (in WCursor)
+    p_threadId = std::this_thread::get_id();
+
     libinputFd = eventfd(0,EFD_SEMAPHORE);
-    WInput::initInput(this);
     WWayland::initWayland(this);
 }
 
@@ -26,6 +29,11 @@ void WCompositor::start()
 {    
     if(_started)
         return;
+
+    // Ask the developer to return a WSeat
+    p_seat = configureSeat();
+    p_seat->p_compositor = this;
+    WWayland::setSeat(p_seat);
 
     // Init wayland
     _started = true;

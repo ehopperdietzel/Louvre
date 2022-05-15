@@ -9,6 +9,13 @@
 class Wpp::WWayland
 {
 public:
+
+    static void setSeat(WSeat *seat);
+    static int processSeat(int, unsigned int, void*userData);
+
+
+
+
     static int initWayland(WCompositor *comp);//, int libinputFd, wl_event_loop_fd_func_t *libinputFunc);
     static void terminateDisplay();
     static void dispatchEvents();

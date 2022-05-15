@@ -5,47 +5,27 @@ using namespace Wpp;
 
 WClient::WClient(wl_client *client, WCompositor *compositor)
 {
-    _client = client;
-    _compositor = compositor;
+    p_client = client;
+    p_compositor = compositor;
 }
 
 WClient::~WClient()
 {
-    printf("CLIENT DELETEDDDDDD\n");
+    printf("Client removed.\n");
 }
 
-WCompositor *WClient::getCompositor()
+WCompositor *WClient::compositor()
 {
-    return _compositor;
+    return p_compositor;
 }
 
-wl_client *WClient::getClient()
+wl_client *WClient::client()
 {
-    return _client;
+    return p_client;
 }
 
-wl_resource *WClient::getKeyboard()
+UInt32 WClient::id()
 {
-    return _keyboard;
-}
-
-wl_resource *WClient::getPointer()
-{
-    return _pointer;
-}
-
-void WClient::setPointer(wl_resource *pointer)
-{
-    _pointer = pointer;
-}
-
-void WClient::setKeyboard(wl_resource *keyboard)
-{
-    _keyboard = keyboard;
-}
-
-UInt32 WClient::getId()
-{
-    return _id;
+    return p_id;
 }
 

@@ -13,10 +13,8 @@ public:
     WClient(wl_client *client, WCompositor *compositor);
     virtual ~WClient();
 
-    WCompositor *getCompositor();
-    wl_client *getClient();
-    wl_resource *getKeyboard();
-    wl_resource *getPointer();
+    WCompositor *compositor();
+    wl_client *client();
 
     // Requests
     virtual WSurface *newSurfaceRequest(wl_resource *surface) = 0;
@@ -25,25 +23,31 @@ public:
     //virtual void regionDestroyRequest(WRegion *region) = 0;
     //virtual void newPositionerRequest(WPositioner *positioner) = 0;
 
-    void setPointer(wl_resource *pointer);
-    void setKeyboard(wl_resource *keyboard);
-
     list<WRegion*>regions;
     list<WSurface*>surfaces;
     list<WPositioner*>positioners;
 
-    UInt32 getId();
+    UInt32 id();
 private:
     friend class WSurface;
     friend class Globals::Seat;
     friend class Globals::Compositor;
+    friend class Globals::Keyboard;
+    friend class Globals::Pointer;
 
-    WCompositor *_compositor = nullptr;
-    wl_client *_client = nullptr;
-    wl_resource *_keyboard = nullptr;
-    wl_resource *_pointer = nullptr;
-    UInt32 _id;
-    Int32 _wl_pointer_version = -1;
+    WCompositor         *p_compositor               = nullptr;
+    wl_client           *p_client                   = nullptr;
+
+    wl_resource         *p_seatResource             = nullptr;
+    wl_resource         *p_pointerResource          = nullptr;
+    wl_resource         *p_keyboardResource         = nullptr;
+    wl_resource         *p_touchResource            = nullptr;
+
+    WSurface            *p_pointerFocusedSurface    = nullptr;
+    WSurface            *p_keyboardFocusedSurface   = nullptr;
+    WSurface            *p_touchFocusedSurface      = nullptr;
+    UInt32 p_id;
+
 };
 
 #endif // WCLIENT_H

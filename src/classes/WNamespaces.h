@@ -14,6 +14,10 @@
 #include <wayland-egl.h>
 */
 
+// Globals versions
+#define WPP_SEAT_VERSION 7
+
+
 #define W_WIDTH 1440*2
 #define W_HEIGHT 900*2
 
@@ -23,12 +27,14 @@ namespace Wpp
     class WBackend;
     class WClient;
     class WCompositor;
+    class WCursor;
     class WInput;
     class WOutput;
     class WOutputManager;
     class WOpenGL;
     class WPositioner;
     class WRegion;
+    class WSeat;
     class WSurface;
     class WTexture;
     class WTypes;
@@ -49,6 +55,7 @@ namespace Wpp
     typedef xdg_positioner_gravity Gravity;
     typedef xdg_positioner_constraint_adjustment ConstraintAdjustment;
     typedef WPoint WSize;
+    typedef WPointF WSizeF;
 
     struct Point
     {

@@ -1,6 +1,7 @@
 #ifndef WINPUT_H
 #define WINPUT_H
 
+/*
 #include <WNamespaces.h>
 
 class Wpp::WInput
@@ -14,6 +15,6 @@ public:
     static int getKeymapSize();
 };
 
-
+*/
 
 #endif // WINPUT_H

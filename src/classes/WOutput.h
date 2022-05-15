@@ -45,6 +45,12 @@ public:
 
     WSize size;
 
+    void setUserData(void *userData){p_userData = userData;}
+    void *userData(){return p_userData;}
+
+    void setPainter(WOpenGL *painter);
+    WOpenGL *painter(){return p_painter;}
+
     void *getData(){ return data; };
 
 private:
@@ -53,9 +59,12 @@ private:
     friend class WOutputManager;
     friend class WCompositor;
 
+    // Painter
+    WOpenGL *p_painter = nullptr;
+
     InitializeResult p_initializeResult = InitializeResult::Pending;
 
-
+    void *p_userData;
 
     wl_event_source *timer;
     timespec lastDrawTime;

@@ -15,11 +15,12 @@ public:
     static EGLDisplay getEGLDisplay(WOutput *output);
     static void createGLContext(WOutput *output);
     static void flipPage(WOutput *output);
+    static bool hasHardwareCursorSupport();
 
-    /*
-    static void setHWCursor();
-    static void setHWCursorPos(Int32 x, Int32 y);
-    */
+
+    static void setCursor(WOutput *output, WTexture *texture,WSizeF size);
+    static void setCursorPosition(WOutput *output, WPoint position);
+
 };
 
 

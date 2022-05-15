@@ -17,6 +17,7 @@
 #include <WCompositor.h>
 #include <WOutput.h>
 #include <WWayland.h>
+#include <WSizeF.h>
 
 #if W_BACKEND == 2
 
@@ -36,8 +37,10 @@ struct X11
     Int32 windowNumber;
 };
 
-static void create_window(X11 *data)
+static void create_window(WOutput *output)
 {
+
+    X11 *data = (X11*)output->getData();
 
     static const EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -57,6 +60,8 @@ static void create_window(X11 *data)
     EGLConfig config;
     EGLint num_configs_returned;
 
+    eglInitialize(data->egl_display, NULL, NULL);
+
     eglChooseConfig(data->egl_display, attribs, &config, 1, &num_configs_returned);
 
     // get the visual from the EGL config
@@ -75,7 +80,7 @@ static void create_window(X11 *data)
         data->x_display,
         RootWindow(data->x_display, DefaultScreen(data->x_display)),
         0, 0,
-        W_WIDTH/2, W_HEIGHT,
+        W_WIDTH, W_HEIGHT,
         0, // border width
         visual->depth, // depth
         InputOutput, // class
@@ -83,6 +88,8 @@ static void create_window(X11 *data)
         CWEventMask|CWColormap, // attribute mask
         &window_attributes // attributes
     );
+
+    output->size = WSize(W_WIDTH, W_HEIGHT);
 
 
     unsigned long valuemask = CWOverrideRedirect;
@@ -136,7 +143,7 @@ static void create_window(X11 *data)
     printf("X11 Window created.\n");
 
     if(!WWayland::isGlContextInitialized())
-        WWayland::setContext(data->egl_display,data->window.context);
+        WWayland::setContext(output,data->egl_display,data->window.context);
 
 }
 
@@ -155,6 +162,8 @@ std::list<WOutput*> WBackend::getAvaliableOutputs()
     data->windowNumber = 0;
     outputs.push_back(output);
 
+
+    /*
     WOutput *output1 = new WOutput();
     output1->refreshRate = 10;
     output1->data = malloc(sizeof(X11));
@@ -163,6 +172,7 @@ std::list<WOutput*> WBackend::getAvaliableOutputs()
     data1->egl_display = data->egl_display;
     data1->windowNumber = 1;
     outputs.push_back(output1);
+    */
 
     return outputs;
 }
@@ -175,10 +185,7 @@ EGLDisplay WBackend::getEGLDisplay(WOutput *output)
 
 void WBackend::createGLContext(WOutput *output)
 {
-
-    X11 *data = (X11*)output->data;
-    eglInitialize(data->egl_display, NULL, NULL);
-    create_window(data);
+    create_window(output);
     output->p_initializeResult = Wpp::WOutput::InitializeResult::Initialized;
     printf("X11 backend initialized.\n");
 }
@@ -188,6 +195,20 @@ void WBackend::flipPage(WOutput *output)
     X11 *data = (X11*)output->data;
     eglSwapBuffers(data->egl_display, data->window.surface);
     XWarpPointer(data->x_display, None, data->window.window, 0, 0, 0, 0, W_WIDTH/2, W_HEIGHT/2);
+}
+
+bool WBackend::hasHardwareCursorSupport()
+{
+    return false;
+}
+
+void WBackend::setCursor(WOutput *, WTexture *, WSizeF)
+{
+
+}
+void WBackend::setCursorPosition(WOutput *, WPoint)
+{
+
 }
 
 #endif

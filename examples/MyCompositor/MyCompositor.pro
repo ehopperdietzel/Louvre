@@ -5,7 +5,7 @@ CONFIG -= qt
 CONFIG += ordered
 TARGET = MyCompositor
 
-LIBS += -lGLESv2 -lSOIL
+LIBS += -lGLESv2
 LIBS += -L../../src/build -lWpp
 INCLUDEPATH += /usr/include/drm
 INCLUDEPATH += ../../src/
@@ -29,6 +29,7 @@ SOURCES += \
         MyClient.cpp \
         MyCompositor.cpp \
         MyOutputManager.cpp \
+        MySeat.cpp \
         MySurface.cpp \
         main.cpp
 
@@ -36,6 +37,7 @@ HEADERS += \
     MyClient.h \
     MyCompositor.h \
     MyOutputManager.h \
+    MySeat.h \
     MySurface.h
 
 DISTFILES += \

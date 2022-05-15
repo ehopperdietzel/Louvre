@@ -21,6 +21,7 @@
 
 #include <WSurface.h>
 #include <WOutput.h>
+#include <WSeat.h>
 
 using namespace std;
 using namespace Wpp;
@@ -110,7 +111,7 @@ void WWayland::initGLContext()
         exit(0);
     }
 
-    static const EGLint att[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
+    static const EGLint att[] = { EGL_WIDTH, 128, EGL_HEIGHT, 128, EGL_NONE };
 
     /*
     static const EGLint att[] = {
@@ -137,7 +138,7 @@ void WWayland::initGLContext()
 
     eglMakeCurrent(eglDpy, EGL_NO_SURFACE, EGL_NO_SURFACE, eglCtx);
 
-
+    compositor->p_painter = new WOpenGL();
     return;
 }
 
@@ -164,6 +165,21 @@ void WWayland::forceUpdate()
     if(!updated)
         eventfd_write(compositor->libinputFd,1);
 }
+
+void WWayland::setSeat(WSeat *seat)
+{
+    // Create seat global
+    wl_global_create(display, &wl_seat_interface, WPP_SEAT_VERSION, seat->p_compositor, &Globals::Seat::bind);
+    wl_event_loop_add_fd(event_loop,seat->libinputFd(),WL_EVENT_READABLE,&WWayland::processSeat,seat);
+}
+
+int WWayland::processSeat(int, unsigned int, void *userData)
+{
+    WSeat *seat = (WSeat*)userData;
+    seat->processInput();
+    return 0;
+}
+
 int WWayland::initWayland(WCompositor *comp)
 {
     eglBindWaylandDisplayWL = (PFNEGLBINDWAYLANDDISPLAYWL) eglGetProcAddress ("eglBindWaylandDisplayWL");
@@ -198,9 +214,6 @@ int WWayland::initWayland(WCompositor *comp)
     // Create subcompositor global
     //wl_global_create(display, &wl_subcompositor_interface, 1, comp, &Globals::Subcompositor::bind); // 1
 
-    // Create seat global
-    wl_global_create(display, &wl_seat_interface, 7, comp, &Globals::Seat::bind);//7
-
     // Create output global
     wl_global_create(display, &wl_output_interface, 3, comp, &Globals::Output::bind);//3
 
@@ -215,8 +228,6 @@ int WWayland::initWayland(WCompositor *comp)
 
     event_loop = wl_display_get_event_loop(display);
     wayland_fd = wl_event_loop_get_fd(event_loop);
-
-    wl_event_loop_add_fd(event_loop,WInput::getLibinputFd(),WL_EVENT_READABLE,&WInput::processInput,NULL);
 
     wl_event_loop_add_fd(event_loop,comp->libinputFd,WL_EVENT_READABLE,&WWayland::readFd,comp);
 
@@ -335,7 +346,7 @@ void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     // Remove client from the compositor list
     for(list<WClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
     {
-        if((*c)->getClient() == client)
+        if((*c)->client() == client)
         {
             disconnectedClient = *c;
             break;
@@ -349,7 +360,7 @@ void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     for(list<WSurface*>::iterator s = disconnectedClient->surfaces.begin(); s != disconnectedClient->surfaces.end(); ++s)
     {
         disconnectedClient->surfaceDestroyRequest(*s);
-        (*s)->_client = nullptr;
+        (*s)->p_client = nullptr;
     }
 
     disconnectedClient->surfaces.clear();

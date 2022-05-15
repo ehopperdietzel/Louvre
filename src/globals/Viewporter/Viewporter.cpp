@@ -40,7 +40,7 @@ void Extensions::Viewporter::Viewporter::bind(wl_client *client, void *data, UIn
 
     // Check if client already exists
     for(list<WClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
-        if((*c)->getClient() == client)
+        if((*c)->client() == client)
         {
             wClient = (*c);
             break;

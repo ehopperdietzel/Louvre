@@ -34,7 +34,7 @@ void Extensions::XdgShell::Popup::reposition(wl_client *client, wl_resource *sur
     (void)client;(void)positioner;(void)token;
     WPositioner *wPositioner = (WPositioner*)wl_resource_get_user_data(positioner);
     WSurface *wSurface = (WSurface*)wl_resource_get_user_data(surface);
-    delete wSurface->_positioner;
-    wSurface->_positioner = wPositioner;
+    delete wSurface->p_positioner;
+    wSurface->p_positioner = wPositioner;
     wSurface->positionerChangeRequest();
 }

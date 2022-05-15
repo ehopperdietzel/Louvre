@@ -61,8 +61,10 @@ public:
     WSize maxSize() { return _maxSize; }
     WRect decorationGeometry() { return current.windowGeometry; }
 
+    WSize calculateResizeRect(WPoint cursorPosDelta, WSize initialSize, ResizeEdge edge);
+
     // Popup positioner
-    WPositioner *positioner() { return _positioner; }
+    WPositioner *positioner() { return p_positioner; }
 
     // Buffer
     Int32 bufferScale() { return _bufferScale; }
@@ -72,15 +74,16 @@ public:
     void requestNextFrame();
 
     // References
-    wl_resource *resource()     { return _resource; }
-    WClient *client()           { return _client; }
+    wl_resource *resource()     { return p_resource; }
+    WClient *client()           { return p_client; }
     WCompositor *compositor();
 
     // Hierarchy
-    WSurface *parent() { return _parent; };
+    WSurface *parent() { return p_parent; };
     WSurface *topParent();
     list<WSurface*>&children(){return _children;}
     list<WSurface*>_children;
+    WPoint hotspot(){return p_hotspot;}
 
     wl_resource *xdg_popup       = nullptr;
 
@@ -118,16 +121,17 @@ public:
 
     UInt32 moveSerial, pointerSerial, keyboardSerial, configureSerial = 0;
 
-    WClient     *_client         = nullptr;
-    WPositioner *_positioner     = nullptr;
-    WSurface    *_parent         = nullptr;
+    WClient     *p_client         = nullptr;
+    WPositioner *p_positioner     = nullptr;
+    WSurface    *p_parent         = nullptr;
 
-    wl_resource *_resource       = nullptr;
+    wl_resource *p_resource       = nullptr;
 
     wl_resource *xdg_shell       = nullptr;
     wl_resource *xdg_toplevel    = nullptr;
     wl_resource *frameCallback   = nullptr;
 
+    WPoint p_hotspot;
 
     WPoint _maxSize, _minSize;
     Int32 _bufferScale = 1;

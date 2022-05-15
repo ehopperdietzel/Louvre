@@ -15,6 +15,8 @@
 #include <sys/eventfd.h>
 
 #include <mutex>
+#include <thread>
+#include <WOpenGL.h>
 
 using namespace std;
 
@@ -23,17 +25,16 @@ class Wpp::WCompositor
 public:
     WCompositor();
     void start();
+
     virtual void initializeGL(WOutput *output) = 0;
     virtual void paintGL(WOutput *output) = 0;
 
+    virtual WSeat *configureSeat() = 0;
     virtual WClient *newClientRequest(wl_client *client) = 0;
     virtual void clientDisconnectRequest(WClient *client) = 0;
-    virtual void setCursorRequest(WSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY) = 0;
-    virtual void libinputEvent(libinput_event *ev) = 0;
-    virtual void pointerMoveEvent(float dx, float dy) = 0;
-    virtual void pointerClickEvent(UInt32 button, UInt32 state) = 0;
-    virtual void keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) = 0;
-    virtual void keyEvent(UInt32 keyCode,UInt32 keyState) = 0;
+
+
+    WSeat *seat(){return p_seat;}
 
     // Output
     void repaintAllOutputs();
@@ -46,21 +47,33 @@ public:
 
     list<WClient*>clients;
 
+    std::thread::id mainThreadId(){return p_threadId;}
+
     mutex renderMutex;
 
 private:
     friend class WWayland;
+    friend class WBackend;
     friend class WInput;
     friend class WSurface;
     friend class WOutput;
     friend class Globals::Surface;
     friend class Wpp::Globals::Pointer;
 
-    // Output scale
+
+    WSeat *p_seat = nullptr;
+
+
+
+    std::thread::id p_threadId;
+
+    // Outputs
     list<WOutput*>p_outputs;
 
     int libinputFd, waylandFd;
     eventfd_t libinputVal, waylandVal = 1;
+
+    WOpenGL *p_painter;
 
     bool _started = false;
 };
