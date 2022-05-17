@@ -21,7 +21,6 @@
 #include <WBackend.h>
 #include <WCompositor.h>
 #include <WWayland.h>
-#include <WInput.h>
 #include <WOpenGL.h>
 
 using namespace Wpp;
@@ -48,7 +47,7 @@ void WOutput::setOutputScale(Int32 scale)
         p_painter->viewportToOutput();
 }
 
-Int32 WOutput::getOutputScale()
+Int32 WOutput::getOutputScale() const
 {
     return _outputScale;
 }

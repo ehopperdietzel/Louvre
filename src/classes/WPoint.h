@@ -8,195 +8,196 @@ class Wpp::WPoint
 public:
 
     // Constructors
-    inline WPoint() : _x(0), _y(0) {}
-    inline WPoint(Int32 x, Int32 y) : _x(x), _y(y){}
-    inline WPoint(double x, double y) : _x(x), _y(y){}
+    inline WPoint() : p_x(0), p_y(0) {}
+    inline WPoint(Int32 x, Int32 y) : p_x(x), p_y(y){}
+    inline WPoint(double x, double y) : p_x(x), p_y(y){}
     WPoint(const WPointF &pointF);
 
-    Int32 x(){return _x;}
-    Int32 y(){return _y;}
-    Int32 w(){return _x;}
-    Int32 h(){return _y;}
-    Int32 width(){return _x;}
-    Int32 height(){return _y;}
-    Int32 area(){return _x*_y;}
+    Int32 x()       const   {return p_x;}
+    Int32 y()       const   {return p_y;}
+    Int32 w()       const   {return p_x;}
+    Int32 h()       const   {return p_y;}
+    Int32 width()   const   {return p_x;}
+    Int32 height()  const   {return p_y;}
+    Int32 area()    const   {return p_x*p_y;}
 
-    void setX(Int32 x){_x = x;}
-    void setY(Int32 y){_y = y;}
-    void setW(Int32 x){_x = x;}
-    void setH(Int32 y){_y = y;}
-    void setWidth(Int32 x){_x = x;}
-    void setHeight(Int32 y){_y = y;}
+    void setX(Int32 x){p_x = x;}
+    void setY(Int32 y){p_y = y;}
+    void setW(Int32 x){p_x = x;}
+    void setH(Int32 y){p_y = y;}
+    void setWidth(Int32 x){p_x = x;}
+    void setHeight(Int32 y){p_y = y;}
 
     inline WPoint &operator+=(Int32 factor)
     {
-        _x += factor;
-        _y += factor;
+        p_x += factor;
+        p_y += factor;
         return *this;
     }
 
     inline WPoint &operator-=(Int32 factor)
     {
-        _x -= factor;
-        _y -= factor;
+        p_x -= factor;
+        p_y -= factor;
         return *this;
     }
 
     inline WPoint &operator*=(Int32 factor)
     {
-        _x *= factor;
-        _y *= factor;
+        p_x *= factor;
+        p_y *= factor;
         return *this;
     }
 
     inline WPoint &operator/=(Int32 factor)
     {
-        _x /= factor;
-        _y /= factor;
+        p_x /= factor;
+        p_y /= factor;
         return *this;
     }
 
     inline WPoint &operator+=(double factor)
     {
-        _x += factor;
-        _y += factor;
+        p_x += factor;
+        p_y += factor;
         return *this;
     }
 
     inline WPoint &operator-=(double factor)
     {
-        _x -= factor;
-        _y -= factor;
+        p_x -= factor;
+        p_y -= factor;
         return *this;
     }
 
     inline WPoint &operator*=(double factor)
     {
-        _x *= factor;
-        _y *= factor;
+        p_x *= factor;
+        p_y *= factor;
         return *this;
     }
 
     inline WPoint &operator/=(double factor)
     {
-        _x /= factor;
-        _y /= factor;
+        p_x /= factor;
+        p_y /= factor;
         return *this;
     }
 
     inline WPoint &operator+=(const WPoint &p)
     {
-        _x += p._x;
-        _y += p._y;
+        p_x += p.p_x;
+        p_y += p.p_y;
         return *this;
     }
 
     inline WPoint &operator-=(const WPoint &p)
     {
-        _x -= p._x;
-        _y -= p._y;
+        p_x -= p.p_x;
+        p_y -= p.p_y;
         return *this;
     }
 
     inline WPoint &operator*=(const WPoint &p)
     {
-        _x *= p._x;
-        _y *= p._y;
+        p_x *= p.p_x;
+        p_y *= p.p_y;
         return *this;
     }
 
     inline WPoint &operator/=(const WPoint &p)
     {
-        _x /= p._x;
-        _y /= p._y;
+        p_x /= p.p_x;
+        p_y /= p.p_y;
         return *this;
     }
 
-    inline WPoint &operator+=(const WPointF &p);
-    inline WPoint &operator-=(const WPointF &p);
-    inline WPoint &operator*=(const WPointF &p);
-    inline WPoint &operator/=(const WPointF &p);
+    WPoint &operator+=(const WPointF &p);
+    WPoint &operator-=(const WPointF &p);
+    WPoint &operator*=(const WPointF &p);
+    WPoint &operator/=(const WPointF &p);
 
 
-    inline WPoint operator+(Int32 factor)
+    inline WPoint operator+(Int32 factor) const
     {
-        return WPoint(_x+factor,_y+factor);
+        return WPoint(p_x+factor,p_y+factor);
     }
 
-    inline WPoint operator-(Int32 factor)
+    inline WPoint operator-(Int32 factor) const
     {
-        return WPoint(_x-factor,_y-factor);
+        return WPoint(p_x-factor,p_y-factor);
     }
 
-    inline WPoint operator*(Int32 factor)
+    inline WPoint operator*(Int32 factor) const
     {
-        return WPoint(_x*factor,_y*factor);
+        return WPoint(p_x*factor,p_y*factor);
     }
 
-    inline WPoint operator/(Int32 factor)
+    inline WPoint operator/(Int32 factor) const
     {
-        return WPoint(_x/factor,_y/factor);
+        return WPoint(p_x/factor,p_y/factor);
     }
 
-    inline WPoint operator+(double factor)
+    inline WPoint operator+(double factor) const
     {
-        return WPoint(_x+factor,_y+factor);
+        return WPoint(p_x+factor,p_y+factor);
     }
 
-    inline WPoint operator-(double factor)
+    inline WPoint operator-(double factor) const
     {
-        return WPoint(_x-factor,_y-factor);
+        return WPoint(p_x-factor,p_y-factor);
     }
 
-    inline WPoint operator*(double factor)
+    inline WPoint operator*(double factor) const
     {
-        return WPoint(_x*factor,_y*factor);
+        return WPoint(p_x*factor,p_y*factor);
     }
 
-    inline WPoint operator/(double factor)
+    inline WPoint operator/(double factor) const
     {
-        return WPoint(_x/factor,_y/factor);
+        return WPoint(p_x/factor,p_y/factor);
     }
 
-    inline WPoint operator+(const WPoint &p)
+    inline WPoint operator+(const WPoint &p) const
     {
-        return WPoint(_x+p._x,_y+p._y);
+        return WPoint(p_x+p.p_x,p_y+p.p_y);
     }
 
-    inline WPoint operator-(const WPoint &p)
+    inline WPoint operator-(const WPoint &p) const
     {
-        return WPoint(_x-p._x,_y-p._y);
+        return WPoint(p_x-p.p_x,p_y-p.p_y);
     }
 
-    inline WPoint operator*(const WPoint &p)
+    inline WPoint operator*(const WPoint &p) const
     {
-        return WPoint(_x*p._x,_y*p._y);
+        return WPoint(p_x*p.p_x,p_y*p.p_y);
     }
 
-    inline WPoint operator/(const WPoint &p)
+    inline WPoint operator/(const WPoint &p) const
     {
-        return WPoint(_x/p._x,_y/p._y);
+        return WPoint(p_x/p.p_x,p_y/p.p_y);
     }
 
-    inline WPoint operator+(const WPointF &p);
-    inline WPoint operator-(const WPointF &p);
-    inline WPoint operator*(const WPointF &p);
-    inline WPoint operator/(const WPointF &p);
+    WPoint operator+(const WPointF &p) const;
+    WPoint operator-(const WPointF &p) const;
+    WPoint operator*(const WPointF &p) const;
+    WPoint operator/(const WPointF &p) const;
 
-    inline bool operator==(const WPoint &p)
+
+    inline bool operator==(const WPoint &p) const
     {
-        return _x == p._x && _y == p._y;
+        return p_x == p.p_x && p_y == p.p_y;
     }
 
-    inline bool operator!=(const WPoint &p)
+    inline bool operator!=(const WPoint &p) const
     {
-        return _x != p._x || _y != p._y;
+        return p_x != p.p_x || p_y != p.p_y;
     }
 
 private:
     friend class WRect;
     friend class WPointF;
-    Int32 _x,_y;
+    Int32 p_x,p_y;
 };
 
 #endif // WPOINT_H

@@ -1,7 +1,6 @@
 #include <MyCompositor.h>
 #include <math.h>
 #include <WOpenGL.h>
-#include <unistd.h>
 #include <WWayland.h>
 #include <linux/input-event-codes.h>
 #include <stdio.h>
@@ -11,6 +10,7 @@
 #include <WOutput.h>
 #include <WPositioner.h>
 #include <WCursor.h>
+#include <WRegion.h>
 #include "MySeat.h"
 
 MyCompositor::MyCompositor():WCompositor()
@@ -55,61 +55,36 @@ void MyCompositor::paintGL(WOutput *output)
      *  Each output has its own OpenGL context.
      *  Never invoke this method directly,
      *  use WOutput::repaint() instead to schedule
-     *  the next frame for a specific output.
+     *  the next frame for a specific output,
+     *  or WCompositor::repaintAllOutputs() to
+     *  repaint all outputs added to the compositor.
      *************************************************/
 
     // Get the painter
     WOpenGL *GL = output->painter();
 
     // Background
-    GL->drawTexture(backgroundTexture, WRect(WPoint(0,0),backgroundTexture->size()), WRect(0,0,output->size.w()/output->getOutputScale(),output->size.h()/output->getOutputScale()));
+    GL->drawTexture(backgroundTexture, WRect(WPoint(),backgroundTexture->size()), WRect(WPoint(),output->size/output->getOutputScale()));
 
     // Draw surfaces
-    for(list<MySurface*>::iterator s = surfacesList.begin(); s != surfacesList.end(); s++)
-        drawSurfaceTree(output,*s);
+    for(MySurface *surface : surfacesList)
+    {
+        if( surface->type() != SurfaceType::Undefined && surface->type() != SurfaceType::Cursor)
+            GL->drawTexture(surface->texture(),WRect(WPoint(),surface->texture()->size()),WRect(surface->pos,surface->size()/surface->bufferScale()));
 
+        surface->requestNextFrame();
+    }
+
+    // Draw the cursor if hardware composition is not supported
     if(!cursor->hasHardwareSupport())
         cursor->paint();
-
 }
 
 WSeat *MyCompositor::configureSeat()
 {
-    return new MySeat();
+    return new MySeat(this);
 }
 
-void MyCompositor::drawSurfaceTree(WOutput *output, MySurface *surface)
-{
-
-    if( surface->type() == SurfaceType::Undefined || surface->type() == SurfaceType::Cursor)
-        return;
-
-    // Get the painter
-    WOpenGL *GL = output->painter();
-
-    // If surface has no parent
-    if(surface->type() == SurfaceType::Toplevel)
-    {
-        GL->drawTexture(surface->texture(),
-                 WRect(0,0,surface->texture()->size().w(),surface->texture()->size().h()),
-                 WRect(surface->pos,surface->size()/surface->bufferScale()));
-    }
-    else if(surface->type() == SurfaceType::Popup && surface->positioner() != nullptr)
-    {
-        GL->drawTexture(surface->texture(),
-                 WRect(WPoint(),surface->texture()->size()),
-                 WRect(surface->pos,surface->size()/surface->bufferScale()));
-    }
-
-
-    surface->requestNextFrame();
-
-    /*
-    // Draw it's children
-    for(list<WSurface*>::iterator s = surface->_children.begin(); s != surface->_children.end(); s++)
-        drawSurfaceTree((MySurface*)*s);
-    */
-}
 
 WClient *MyCompositor::newClientRequest(wl_client *client)
 {
@@ -118,7 +93,6 @@ WClient *MyCompositor::newClientRequest(wl_client *client)
      * you can access with 'compositor->clients'
      *******************************************************************************/
 
-    printf("New client connected.\n");
     return new MyClient(client,this);
 }
 
@@ -131,7 +105,6 @@ void MyCompositor::clientDisconnectRequest(WClient *client)
      * are prevously notified.
      *******************************************************************************/
     (void)client;
-    printf("Client disconnected.\n");
 }
 
 
@@ -145,6 +118,16 @@ void MyCompositor::riseSurface(MySurface *surface)
     for(list<WSurface*>::iterator s = surface->children().begin(); s != surface->children().end(); s++)
         riseSurface((MySurface*)(*s));
 
+}
+
+MySurface *MyCompositor::surfaceAt(const WPoint &point)
+{
+    for(list<MySurface*>::reverse_iterator s = surfacesList.rbegin(); s != surfacesList.rend(); s++)
+        if((*s)->type() != SurfaceType::Undefined || (*s)->type() != SurfaceType::Cursor)
+            if((*s)->inputRegionContainsPoint((*s)->pos,point))
+                return *s;
+
+    return nullptr;
 }
 
 

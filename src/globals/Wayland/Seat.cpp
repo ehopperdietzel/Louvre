@@ -4,7 +4,6 @@
 
 #include <Pointer.h>
 #include <Keyboard.h>
-#include <WInput.h>
 #include <WSeat.h>
 
 #include <sys/mman.h>

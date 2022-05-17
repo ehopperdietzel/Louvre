@@ -1,5 +1,4 @@
 #include "WSeat.h"
-#include <WInput.h>
 #include <WCompositor.h>
 
 #include <string.h>
@@ -24,8 +23,10 @@
 
 using namespace Wpp;
 
-WSeat::WSeat()
+WSeat::WSeat(WCompositor *compositor)
 {
+    p_compositor = compositor;
+
     // Create XKB context
     p_xkbContext = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
@@ -47,7 +48,7 @@ void WSeat::setKeymap(const char *rules, const char *model, const char *layout, 
 
     p_xkbKeymapName.rules = rules;
     p_xkbKeymapName.model = model;
-    p_xkbKeymapName.layout = layout;
+    p_xkbKeymapName.layout = "latam";
     p_xkbKeymapName.variant = variant;
     p_xkbKeymapName.options = options;
 
@@ -86,9 +87,24 @@ void WSeat::setKeymap(const char *rules, const char *model, const char *layout, 
     p_xkbKeymapState = xkb_state_new(p_xkbKeymap);
 }
 
-Int32 WSeat::libinputFd()
+Int32 WSeat::libinputFd() const
 {
     return libinput_get_fd(p_li);
+}
+
+WSurface *WSeat::pointerFocus() const
+{
+    return p_pointerFocusSurface;
+}
+
+WSurface *WSeat::keyboardFocus() const
+{
+    return p_keyboardFocusSurface;
+}
+
+WSurface *WSeat::touchFocus() const
+{
+    return p_touchFocusSurface;
 }
 
 void WSeat::processInput()

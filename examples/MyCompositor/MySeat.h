@@ -12,7 +12,7 @@ using namespace Wpp;
 class MySeat : public WSeat
 {
 public:
-    MySeat();
+    MySeat(WCompositor *compositor);
 
     void setCursorRequest(WSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY) override;
     void pointerMoveEvent(float dx, float dy) override;
@@ -20,15 +20,13 @@ public:
     void keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) override;
     void keyEvent(UInt32 keyCode, UInt32 keyState) override;
 
-    WSurface *pointerFocusSurface = nullptr;
-    WSurface *keyboardFocusSurface = nullptr;
+    MyCompositor *comp;
 
     WPoint movingSurfaceInitPos, movingSurfaceInitCursorPos;
 
     bool isLeftMouseButtonPressed = false;
 
     // Active surfaces
-    MySurface *focusSurface = nullptr;
     MySurface *movingSurface = nullptr;
     MySurface *resizingSurface = nullptr;
     MySurface *cursorSurface = nullptr;

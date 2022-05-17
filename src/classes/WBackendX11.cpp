@@ -202,11 +202,11 @@ bool WBackend::hasHardwareCursorSupport()
     return false;
 }
 
-void WBackend::setCursor(WOutput *, WTexture *, WSizeF)
+void WBackend::setCursor(WOutput *, WTexture *, const WSizeF&)
 {
 
 }
-void WBackend::setCursorPosition(WOutput *, WPoint)
+void WBackend::setCursorPosition(WOutput *, const WPoint&)
 {
 
 }

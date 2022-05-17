@@ -1,7 +1,7 @@
 #ifndef WBACKEND
 #define WBACKEND
 
-#define W_BACKEND 1
+#define W_BACKEND 2
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -18,8 +18,8 @@ public:
     static bool hasHardwareCursorSupport();
 
 
-    static void setCursor(WOutput *output, WTexture *texture,WSizeF size);
-    static void setCursorPosition(WOutput *output, WPoint position);
+    static void setCursor(WOutput *output, WTexture *texture, const WSizeF &size);
+    static void setCursorPosition(WOutput *output, const WPoint &position);
 
 };
 

@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <WClient.h>
 
-#include <sys/time.h>
 #include <WNamespaces.h>
 #include <condition_variable>
 #include <sys/eventfd.h>
@@ -34,20 +33,18 @@ public:
     virtual void clientDisconnectRequest(WClient *client) = 0;
 
 
-    WSeat *seat(){return p_seat;}
+    WSeat *seat() const {return p_seat;}
 
     // Output
     void repaintAllOutputs();
     void addOutput(WOutput *output);
     void removeOutput(WOutput *output);
-    const list<WOutput*>&outputs(){ return p_outputs; };
+    const list<WOutput*>&outputs() const { return p_outputs; };
 
-    UInt32 getMilliseconds();
-    timespec getNanoseconds();
 
     list<WClient*>clients;
 
-    std::thread::id mainThreadId(){return p_threadId;}
+    std::thread::id mainThreadId() const {return p_threadId;}
 
     mutex renderMutex;
 

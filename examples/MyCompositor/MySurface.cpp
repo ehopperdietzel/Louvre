@@ -66,7 +66,7 @@ void MySurface::typeChangeRequest()
 
     printf("Surface changed type to %i.\n",type());
 
-   comp->repaintAllOutputs();
+    comp->repaintAllOutputs();
 }
 
 void MySurface::positionerChangeRequest()
@@ -116,22 +116,7 @@ void MySurface::bufferSizeChangeRequest()
 
 void MySurface::grabSeatRequest()
 {
-    MySeat *seat = (MySeat*)compositor()->seat();
-
-    if(seat->keyboardFocusSurface && seat->keyboardFocusSurface != this)
-        seat->keyboardFocusSurface->sendKeyboardLeaveEvent();
-
-    seat->keyboardFocusSurface = this;
-    this->sendKeyboardEnterEvent();
-
-    /*
-    if(comp->pointerFocusSurface && comp->pointerFocusSurface != this)
-        comp->pointerFocusSurface->sendPointerLeaveEvent();
-
-    comp->pointerFocusSurface = this;
-    this->sendPointerEnterEvent(20,20);
-    */
-
+    keyboard().setFocus();
 }
 
 void MySurface::configureToplevelRequest()

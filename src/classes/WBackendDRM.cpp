@@ -535,7 +535,7 @@ bool WBackend::hasHardwareCursorSupport()
 }
 
 
-void WBackend::setCursor(WOutput *output, WTexture *texture, WSizeF size)
+void WBackend::setCursor(WOutput *output, WTexture *texture, const WSizeF &size)
 {
 
     DRM *data = (DRM*)output->data;
@@ -584,7 +584,7 @@ void WBackend::setCursor(WOutput *output, WTexture *texture, WSizeF size)
 
 }
 
-void WBackend::setCursorPosition(WOutput *output, WPoint position)
+void WBackend::setCursorPosition(WOutput *output, const WPoint &position)
 {
     DRM *data = (DRM*)output->data;
     drmModeMoveCursor(data->deviceFd, data->crtc_id,position.x(),position.y());

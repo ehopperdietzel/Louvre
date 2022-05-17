@@ -6,7 +6,10 @@
 #include "MySeat.h"
 #include <WCursor.h>
 
-MyClient::MyClient(wl_client *client, WCompositor *compositor) : WClient::WClient(client,compositor){}
+MyClient::MyClient(wl_client *client, WCompositor *compositor) : WClient::WClient(client,compositor)
+{
+    comp = (MyCompositor*)compositor;
+}
 
 MyClient::~MyClient()
 {
@@ -15,8 +18,6 @@ MyClient::~MyClient()
 
 WSurface *MyClient::newSurfaceRequest(wl_resource *surfaceResource)
 {
-    MyCompositor *comp = (MyCompositor*)compositor();
-
     // Create your own surface instance
     MySurface *surface = new MySurface(surfaceResource,this,1);
 
@@ -29,30 +30,21 @@ WSurface *MyClient::newSurfaceRequest(wl_resource *surfaceResource)
     return surface;
 }
 
-void MyClient::surfaceDestroyRequest(WSurface *surf)
+void MyClient::surfaceDestroyRequest(WSurface *surface)
 {
-    MyCompositor *comp = (MyCompositor*)compositor();
 
     MySeat *seat = (MySeat*)compositor()->seat();
-    MySurface *surface = (MySurface*)surf;
 
     if(seat->cursorSurface == surface)
         seat->cursorSurface = nullptr;
 
-
-    if(seat->keyboardFocusSurface == surface)
-        seat->keyboardFocusSurface = nullptr;
-
-    if(seat->pointerFocusSurface == surface)
-    {
-        seat->pointerFocusSurface = nullptr;
-        comp->cursor->setTexture(comp->defaultCursorTexture,WPointF(0,0));
-    }
-
     if(seat->movingSurface == surface)
         seat->movingSurface = nullptr;
 
-    comp->surfacesList.remove(surface);
+    if(surface->type() == SurfaceType::Cursor)
+        comp->cursor->setTexture(comp->defaultCursorTexture,WPointF());
+
+    comp->surfacesList.remove((MySurface*)surface);
 
     /* Afer this method the compositor will call delete "YourSurface",
      * so make sure to implement all the cleaning up logic in your

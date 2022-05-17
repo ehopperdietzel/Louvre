@@ -4,25 +4,41 @@
 //#include <wayland-server.h>
 #include <list>
 #include <WNamespaces.h>
+#include <WRect.h>
 
 using namespace std;
 
 class Wpp::WRegion
 {
 public:
-    WRegion(UInt32 id, wl_resource *resource, WClient *client);
+    WRegion();
 
-    wl_resource *getResource();
-    UInt32 getId();
-    WClient *getClient();
+    void copy(const WRegion &region);
+    void clear();
+    void addRect(const WRect &rect);
+    void subtractRect(const WRect &rect);
+    void multiply(double factor);
+    bool containsPoint(const WPoint &point);
 
-    void addRect(Int32 x, Int32 y, Int32 width, Int32 height);
-    void subtractRect(Int32 x, Int32 y, Int32 width, Int32 height);
-    list<WRegionRect>rects;
+    struct WRegionRect
+    {
+        WRect rect;
+        bool add = true;
+    };
+
+
+    list<WRegionRect>&rects(){return p_rects;}
 private:
-    UInt32 _id;
-    wl_resource *_resource = nullptr;
-    WClient *_client = nullptr;
+    friend class Wpp::Globals::Compositor;
+    friend class Wpp::Globals::Region;
+    friend class Wpp::Globals::Surface;
+
+    list<WRegionRect>p_rects;
+
+    // Wayland
+    wl_resource     *p_resource = nullptr;
+    WClient         *p_client   = nullptr;
+
 };
 
 #endif // WREGION_H

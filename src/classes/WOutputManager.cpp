@@ -6,17 +6,17 @@ using namespace Wpp;
 
 WOutputManager::WOutputManager(WCompositor *compositor)
 {
-    _outputs = WBackend::getAvaliableOutputs();
-    _compositor = compositor;
+    p_outputs = WBackend::getAvaliableOutputs();
+    p_compositor = compositor;
 }
 
-WCompositor *WOutputManager::getCompositor()
+WCompositor *WOutputManager::getCompositor() const
 {
-    return _compositor;
+    return p_compositor;
 }
 
 const list<WOutput *> *WOutputManager::getOutputsList()
 {
-    return &_outputs;
+    return &p_outputs;
 }
 

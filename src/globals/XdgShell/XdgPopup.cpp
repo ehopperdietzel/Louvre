@@ -10,7 +10,7 @@ void Extensions::XdgShell::Popup::destroy_resource(wl_resource *resource)
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
     if(surface->parent() != nullptr)
-        surface->parent()->_children.remove(surface);
+        surface->parent()->p_children.remove(surface);
 
     surface->client()->surfaceDestroyRequest(surface);
 

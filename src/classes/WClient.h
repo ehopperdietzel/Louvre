@@ -13,8 +13,14 @@ public:
     WClient(wl_client *client, WCompositor *compositor);
     virtual ~WClient();
 
-    WCompositor *compositor();
-    wl_client *client();
+    WCompositor *compositor() const;
+    wl_client *client() const;
+    UInt32 id() const;
+
+    wl_resource *seatResource() const;
+    wl_resource *pointerResource() const;
+    wl_resource *keyboardResource() const;
+    wl_resource *touchResource() const;
 
     // Requests
     virtual WSurface *newSurfaceRequest(wl_resource *surface) = 0;
@@ -27,9 +33,11 @@ public:
     list<WSurface*>surfaces;
     list<WPositioner*>positioners;
 
-    UInt32 id();
+
+
 private:
     friend class WSurface;
+    friend class WPointer;
     friend class Globals::Seat;
     friend class Globals::Compositor;
     friend class Globals::Keyboard;

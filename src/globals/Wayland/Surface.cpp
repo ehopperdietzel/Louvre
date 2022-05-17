@@ -20,6 +20,13 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     // Get surface
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
+    // Remove focus
+    if(surface->compositor()->seat()->p_keyboardFocusSurface == surface)
+        surface->compositor()->seat()->p_keyboardFocusSurface = nullptr;
+
+    if(surface->compositor()->seat()->p_pointerFocusSurface == surface)
+        surface->compositor()->seat()->p_pointerFocusSurface = nullptr;
+
     WClient *client = surface->client();
 
     if(client != nullptr)
@@ -30,6 +37,7 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
         // Notify from client
         surface->client()->surfaceDestroyRequest(surface);
     }
+
 
 
     surface->texture()->deleteTexture();
@@ -52,10 +60,10 @@ void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 ca
     Int32 version = wl_resource_get_version(resource);
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    if(surface->frameCallback)
-        wl_resource_destroy(surface->frameCallback);
+    if(surface->p_frameCallback)
+        wl_resource_destroy(surface->p_frameCallback);
 
-    surface->frameCallback = wl_resource_create(client, &wl_callback_interface, version, callback);
+    surface->p_frameCallback = wl_resource_create(client, &wl_callback_interface, version, callback);
 }
 
 void Globals::Surface::destroy(wl_client *client, wl_resource *resource)
@@ -74,13 +82,16 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     // Get surface reference
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
+    // Makes the pending buffer the current buffer
     surface->current.buffer = surface->pending.buffer;
 
+    // If the buffer is empty
     if(surface->current.buffer == nullptr)
     {
-        if(surface->xdg_shell)
+
+        if(surface->p_xdg_shell)
         {
-            xdg_surface_send_configure(surface->xdg_shell,surface->configureSerial);
+            xdg_surface_send_configure(surface->p_xdg_shell,surface->configureSerial);
             surface->configureSerial++;
         }
 
@@ -95,21 +106,33 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
         return;
     }
 
+    // Copy pending damages to current damages
     surface->texture()->damages.clear();
-    for(list<WRect>::iterator r = surface->texture()->pendingDamages.begin(); r != surface->texture()->pendingDamages.end(); ++r)
-    {
-        surface->texture()->damages.push_back(*r);
-    }
+    std::copy(surface->texture()->pendingDamages.begin(),
+              surface->texture()->pendingDamages.end(),
+              std::back_inserter(surface->texture()->damages));
     surface->texture()->pendingDamages.clear();
 
-    surface->_isDamaged = true;
+    surface->p_isDamaged = true;
 
+    // Convert the buffer to OpenGL texture
     surface->applyDamages();
 
-    if(surface->type() == Cursor)
+    // Input region
+    if(surface->pending.inputRegion.p_rects.empty())
     {
-        surface->compositor()->seat()->setCursorRequest(surface,surface->hotspot().x(),surface->hotspot().y());
+        surface->current.inputRegion.clear();
+        surface->current.inputRegion.addRect(WRect(WPoint(),surface->texture()->size()));
+        surface->current.inputRegion.multiply(1.f/double(surface->bufferScale()));
     }
+    else
+        surface->current.inputRegion.copy(surface->pending.inputRegion);
+
+
+    // Notify that the cursor changed content
+    if(surface->type() == Cursor)
+        surface->compositor()->seat()->setCursorRequest(surface,surface->hotspot().x(),surface->hotspot().y());
+
 
     // FALTA ENVIAR EVENTO
     surface->compositor()->repaintAllOutputs();
@@ -132,7 +155,18 @@ void Globals::Surface::set_opaque_region(wl_client *client, wl_resource *resourc
 
 void Globals::Surface::set_input_region(wl_client *client, wl_resource *resource, wl_resource *region)
 {
-    (void)client;(void)resource;(void)region;
+    (void)client;
+
+    WSurface *wSurface = (WSurface*)wl_resource_get_user_data(resource);
+
+    if(region == NULL)
+        wSurface->pending.inputRegion.clear();
+    else
+    {
+        WRegion *wRegion = (WRegion*)wl_resource_get_user_data(region);
+        wSurface->current.inputRegion.p_client = wRegion->p_client;
+        wSurface->pending.inputRegion.copy(*wRegion);
+    }
 }
 
 void Globals::Surface::set_buffer_transform(wl_client *client, wl_resource *resource, Int32 transform)
@@ -144,7 +178,7 @@ void Globals::Surface::set_buffer_transform(wl_client *client, wl_resource *reso
 void Globals::Surface::damage_buffer(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {
     (void)client;
-    WSurface *surface = (WSurface*)wl_resource_get_user_data (resource);
+    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->texture()->pendingDamages.push_back(WRect(x, y, width, height));
 }
 

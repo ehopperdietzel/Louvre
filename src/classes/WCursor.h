@@ -4,24 +4,25 @@
 #include <WNamespaces.h>
 #include <WPointF.h>
 #include <WBackend.h>
+#include <WPoint.h>
 
 class Wpp::WCursor
 {
 public:
     WCursor(WOutput *output);
 
-    void setTexture(WTexture *texture, WPointF hotspot);
+    void setTexture(WTexture *texture, const WPointF &hotspot);
     void setOutput(WOutput *output);
-    bool hasHardwareSupport(){return WBackend::hasHardwareCursorSupport();}
     void move(float x, float y);
-    void setPosition(WPointF position);
-    void setHotspot(WPointF hotspot);
+    void setPosition(const WPointF &position);
+    void setHotspot(const WPointF &hotspot);
     void paint();
-    void setSize(WSizeF size);
+    void setSize(const WSizeF &size);
 
-    WPointF position(){return p_pos;}
-    WPointF hotspot(){return p_hotspot;}
-    WTexture *texture(){return p_texture;}
+    bool hasHardwareSupport() const {return WBackend::hasHardwareCursorSupport();}
+    const WPointF &position() const {return p_pos;}
+    const WPointF &hotspot()  const {return p_hotspot;}
+    WTexture *texture()       const {return p_texture;}
 
 private:
     void update();
@@ -30,6 +31,7 @@ private:
     WPointF p_pos;
     WPointF p_hotspot;
     WSizeF p_size = WSizeF(64.f,64.f);
+    WPoint p_prevPos;
 };
 
 #endif // WCURSOR_H

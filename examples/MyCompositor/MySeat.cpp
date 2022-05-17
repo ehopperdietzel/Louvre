@@ -4,49 +4,40 @@
 #include <WWayland.h>
 #include <unistd.h>
 #include <WPoint.h>
+#include <WPointF.h>
 
-MySeat::MySeat():WSeat()
+MySeat::MySeat(WCompositor *compositor):WSeat(compositor)
 {
-
+    // To avoid parsing to MyCompositor every time
+    comp = (MyCompositor*)compositor;
 }
 
 void MySeat::setCursorRequest(WSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY)
 {
-
-    MyCompositor *comp = (MyCompositor*)compositor();
-
-    if(cursorSurface->isDamaged())
-        cursorSurface->applyDamages();
-    cursorSurface->requestNextFrame();
-
-
     if(cursorSurface)
-    {
         comp->cursor->setTexture(cursorSurface->texture(),WPointF(hotspotX,hotspotY));
-    }
     else
-    {
         comp->cursor->setTexture(comp->defaultCursorTexture,WPointF(0,0));
-    }
 }
 
 void MySeat::pointerMoveEvent(float dx, float dy)
 {
-    MyCompositor *comp = (MyCompositor*)compositor();
-    MySurface *surface;
-    comp->cursor->move(dx,dy);
 
-    float x = comp->cursor->position().x();
-    float y = comp->cursor->position().y();
+    // Update the cursor position
+    comp->cursor->move(dx,dy);
 
     if(!comp->cursor->hasHardwareSupport())
         comp->repaintAllOutputs();
 
+    float x = comp->cursor->position().x();
+    float y = comp->cursor->position().y();
+
+
     // Resizing
-    if(resizingSurface != nullptr)
+    if(resizingSurface)
     {
         WSize newSize = resizingSurface->calculateResizeRect(
-                    resizeInitMousePos-WPoint(comp->cursor->position()),
+                    resizeInitMousePos-comp->cursor->position(),
                     resizeInitSurfaceRect.bottomRight(),
                     resizeEdge);
 
@@ -58,7 +49,7 @@ void MySeat::pointerMoveEvent(float dx, float dy)
     }
 
     // Moving surface
-    if(movingSurface != nullptr)
+    if(movingSurface)
     {
         movingSurface->setXWithoutDecoration(movingSurfaceInitPos.x() + int( x - movingSurfaceInitCursorPos.x() ));
         movingSurface->setYWithoutDecoration(movingSurfaceInitPos.y() + int( y - movingSurfaceInitCursorPos.y() ));
@@ -66,46 +57,37 @@ void MySeat::pointerMoveEvent(float dx, float dy)
         return;
     }
 
-    for(list<MySurface*>::reverse_iterator s = comp->surfacesList.rbegin(); s != comp->surfacesList.rend(); s++)
+
+    // Find the surface at cursor positon
+    MySurface *surface = comp->surfaceAt(comp->cursor->position());
+
+    // If there is a surface with pointer focus
+    if(pointerFocus())
     {
+        bool cursorIsOverFocusSurface = surface == pointerFocus();
 
-        surface =*s;
-
-        if(surface->type() == SurfaceType::Undefined) continue;
-
-        // Mouse move event
-        if(surface->containsPoint(x,y,false) && pointerFocusSurface == surface)
+        // Send pointer move event if cursor is over, or if the pointer is dragging
+        if(cursorIsOverFocusSurface || isLeftMouseButtonPressed)
         {
-            surface->sendPointerMotionEvent(surface->mapXtoLocal(x),surface->mapYtoLocal(y),comp->getMilliseconds());
-            break;
+            surface->pointer().sendMotionEvent(surface->mapXtoLocal(x),surface->mapYtoLocal(y));
+            return;
         }
 
-        // Mouse leave surface
-        if(!surface->containsPoint(x,y,false) && pointerFocusSurface == surface)
+        // Unset focus if the cursor is not over the surface and its not being dragged
+        if(!cursorIsOverFocusSurface && !isLeftMouseButtonPressed)
         {
-            pointerFocusSurface->sendPointerLeaveEvent();
-            pointerFocusSurface = nullptr;
-            cursorSurface = nullptr;
+            pointerFocus()->pointer().unsetFocus();
             comp->cursor->setTexture(comp->defaultCursorTexture,WPointF(0,0));
-            printf("Mouse left surface\n");
-            continue;
         }
+    }
 
-        // Mouse enter surface
-        if(surface->containsPoint(x,y,false) && pointerFocusSurface != surface)
-        {
+    // Check if a surface was actually found
+    if(surface)
+    {
+        if(surface->type() == SurfaceType::Undefined || surface->type() == SurfaceType::Cursor) return;
 
-            if(pointerFocusSurface != nullptr)
-                pointerFocusSurface->sendPointerLeaveEvent();
-
-            surface->sendPointerEnterEvent(surface->mapXtoLocal(x),surface->mapXtoLocal(y));
-
-            pointerFocusSurface = surface;
-
-            printf("Mouse entered surface\n");
-
-            break;
-        }
+        // Set the focus
+        surface->pointer().setFocus(surface->mapXtoLocal(x),surface->mapXtoLocal(y));
     }
 
 }
@@ -114,13 +96,42 @@ void MySeat::pointerMoveEvent(float dx, float dy)
 void MySeat::pointerClickEvent(UInt32 button, UInt32 state)
 {
 
-    MyCompositor *comp = (MyCompositor*)compositor();
+    MySurface *surface = (MySurface*)pointerFocus();
 
-    if(state == LIBINPUT_BUTTON_STATE_RELEASED && button == 272)
+    if(surface)
+    {
+        surface->pointer().sendButtonEvent(button,state);
+
+        if(state == LIBINPUT_BUTTON_STATE_PRESSED && button == LEFT_BUTTON)
+        {
+            isLeftMouseButtonPressed = true;
+
+            surface->keyboard().setFocus();
+
+            // Raise view
+            if(surface->parent() == nullptr)
+                comp->riseSurface((MySurface*)surface);
+            else
+                comp->riseSurface((MySurface*)surface->topParent());
+
+        }
+    }
+
+    if(state == LIBINPUT_BUTTON_STATE_RELEASED && button == LEFT_BUTTON)
     {
         isLeftMouseButtonPressed = false;
 
-        if(resizingSurface != nullptr)
+        // Send a mouse leave event if the surface was being dragged
+        if(surface)
+        {
+            if(!surface->inputRegionContainsPoint(surface->pos,comp->cursor->position()))
+            {
+                surface->pointer().unsetFocus();
+                comp->cursor->setTexture(comp->defaultCursorTexture,WPointF(0,0));
+            }
+        }
+
+        if(resizingSurface)
         {
             resizingSurface->sendConfigureToplevelEvent(
                         resizingSurface->getRectWithoutDecoration().w(),
@@ -132,50 +143,20 @@ void MySeat::pointerClickEvent(UInt32 button, UInt32 state)
     }
 
 
-    if(pointerFocusSurface != nullptr)
-    {
-        pointerFocusSurface->sendPointerButtonEvent(button,state,comp->getMilliseconds());
 
-        if(state == LIBINPUT_BUTTON_STATE_PRESSED && button == 272)
-        {
-            isLeftMouseButtonPressed = true;
 
-            if(keyboardFocusSurface != pointerFocusSurface)
-            {
-                if(keyboardFocusSurface != nullptr)
-                    keyboardFocusSurface->sendKeyboardLeaveEvent();
-
-                pointerFocusSurface->sendKeyboardEnterEvent();
-                keyboardFocusSurface = pointerFocusSurface;
-            }
-
-            // Raise view
-            if(pointerFocusSurface->parent() == nullptr)
-                comp->riseSurface((MySurface*)pointerFocusSurface);
-            else
-                comp->riseSurface((MySurface*)pointerFocusSurface->topParent());
-
-        }
-    }
-
-    comp->repaintAllOutputs();
 }
 
 void MySeat::keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
-    if(keyboardFocusSurface)
-        keyboardFocusSurface->sendKeyModifiersEvent(depressed,latched,locked,group);
-
-    compositor()->repaintAllOutputs();
+    if(keyboardFocus())
+        keyboardFocus()->keyboard().sendKeyModifiersEvent(depressed,latched,locked,group);
 }
 
 void MySeat::keyEvent(UInt32 keyCode, UInt32 keyState)
 {
-    if(keyboardFocusSurface)
-    {
-        keyboardFocusSurface->sendKeyEvent(keyCode,keyState);
-        compositor()->repaintAllOutputs();
-    }
+    if(keyboardFocus())
+        keyboardFocus()->keyboard().sendKeyEvent(keyCode,keyState);
 
     printf("Key:%i State:%i\n",keyCode,keyState);
 

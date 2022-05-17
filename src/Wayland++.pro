@@ -5,6 +5,14 @@ CONFIG -= qt
 TARGET = Wpp
 DESTDIR = $$PWD/build
 
+# remove possible other optimization flags
+QMAKE_CXXFLAGS_RELEASE -= -O
+QMAKE_CXXFLAGS_RELEASE -= -O1
+QMAKE_CXXFLAGS_RELEASE -= -O2
+
+# add the desired -O3 if not present
+QMAKE_CXXFLAGS_RELEASE *= -O3
+
 LIBS += -L/usr/local/lib -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lXfixes -lxkbcommon -lSOIL
 INCLUDEPATH += /usr/include/drm ./classes ./globals/Wayland ./globals/XdgShell /usr/local/include
 
@@ -13,7 +21,7 @@ HEADERS += \
     classes/WClient.h \
     classes/WCompositor.h \
     classes/WCursor.h \
-    classes/WInput.h \
+    classes/WKeyboard.h \
     classes/WNamespaces.h \
     classes/WOpenGL.h \
     classes/WOutput.h \
@@ -21,6 +29,7 @@ HEADERS += \
     classes/WOutputMode.h \
     classes/WPoint.h \
     classes/WPointF.h \
+    classes/WPointer.h \
     classes/WPositioner.h \
     classes/WRect.h \
     classes/WRegion.h \
@@ -29,6 +38,7 @@ HEADERS += \
     classes/WSizeF.h \
     classes/WSurface.h \
     classes/WTexture.h \
+    classes/WTime.h \
     classes/WView.h \
     classes/WWayland.h \
     globals/Viewporter/Viewporter.h \
@@ -57,18 +67,20 @@ SOURCES += \
     classes/WClient.cpp \
     classes/WCompositor.cpp \
     classes/WCursor.cpp \
-    classes/WInput.cpp \
+    classes/WKeyboard.cpp \
     classes/WOpenGL.cpp \
     classes/WOutput.cpp \
     classes/WOutputManager.cpp \
     classes/WOutputMode.cpp \
     classes/WPoint.cpp \
     classes/WPointF.cpp \
+    classes/WPointer.cpp \
     classes/WPositioner.cpp \
     classes/WRegion.cpp \
     classes/WSeat.cpp \
     classes/WSurface.cpp \
     classes/WTexture.cpp \
+    classes/WTime.cpp \
     classes/WView.cpp \
     classes/WWayland.cpp \
     globals/Viewporter/Viewporter.cpp \

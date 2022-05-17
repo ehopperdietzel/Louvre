@@ -10,7 +10,7 @@ class Wpp::WOutputManager
 {
 public:
     WOutputManager(WCompositor *compositor);
-    WCompositor *getCompositor();
+    WCompositor *getCompositor() const;
     const list<WOutput*>*getOutputsList();
 
 protected:
@@ -18,8 +18,8 @@ protected:
     virtual void outputUnpluggedEvent(WOutput *output) = 0;
 
 private:
-    WCompositor *_compositor = nullptr;
-    list<WOutput*>_outputs;
+    WCompositor *p_compositor = nullptr;
+    list<WOutput*>p_outputs;
 };
 
 #endif // WOUTPUTMANAGER_H

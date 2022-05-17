@@ -11,7 +11,7 @@ void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
     (void)resource;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     if(surface->p_parent != nullptr)
-        surface->p_parent->children().remove(surface);
+        surface->p_parent->p_children.remove(surface);
 
     printf("TOP LEVEL DESTROYED.\n");
 }
@@ -29,13 +29,13 @@ void Extensions::XdgShell::Toplevel::set_parent (wl_client *client, wl_resource 
     if(parent == NULL)
     {
         if(surface->p_parent != nullptr)
-            surface->p_parent->children().remove(surface);
+            surface->p_parent->p_children.remove(surface);
         surface->p_parent = nullptr;
     }
     else
     {
         surface->p_parent = (WSurface*)wl_resource_get_user_data(parent);
-        surface->p_parent->children().push_back(surface);
+        surface->p_parent->p_children.push_back(surface);
     }
 
     surface->parentChangeRequest();
@@ -76,14 +76,14 @@ void Extensions::XdgShell::Toplevel::set_max_size (wl_client *client, wl_resourc
 {
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->_maxSize = {width,height};
+    surface->p_maxSize = {width,height};
     surface->maxSizeChangeRequest();
 }
 void Extensions::XdgShell::Toplevel::set_min_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
     (void)client;(void)resource;(void)width;(void)height;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->_minSize = {width,height};
+    surface->p_minSize = {width,height};
     surface->minSizeChangeRequest();
 }
 void Extensions::XdgShell::Toplevel::set_maximized (wl_client *client, wl_resource *resource)

@@ -27,7 +27,8 @@ void Wpp::Extensions::XdgShell::Positioner::set_size(wl_client *client, wl_resou
     }
 
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_size = WSize(width,height);
+    positioner->p_size.setW(width);
+    positioner->p_size.setH(height);
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_anchor_rect(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
@@ -41,49 +42,52 @@ void Wpp::Extensions::XdgShell::Positioner::set_anchor_rect(wl_client *client, w
     }
 
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_anchorRect = WRect(x,y,width,height);
+    positioner->p_anchorRect.setX(x);
+    positioner->p_anchorRect.setY(y);
+    positioner->p_anchorRect.setW(width);
+    positioner->p_anchorRect.setH(height);
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_anchor(wl_client *client, wl_resource *resource, UInt32 anchor)
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_anchor = (Anchor)anchor;
+    positioner->p_anchor = (Anchor)anchor;
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_gravity(wl_client *client, wl_resource *resource, UInt32 gravity)
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_gravity = (Gravity)gravity;
+    positioner->p_gravity = (Gravity)gravity;
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_constraint_adjustment(wl_client *client, wl_resource *resource, UInt32 constraintAdjustment)
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_constraintAdjustment = (ConstraintAdjustment)constraintAdjustment;
+    positioner->p_constraintAdjustment = (ConstraintAdjustment)constraintAdjustment;
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_offset(wl_client *client, wl_resource *resource, Int32 x, Int32 y)
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_offset = WPoint(x,y);
+    positioner->p_offset = WPoint(x,y);
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_reactive(wl_client *client, wl_resource *resource)
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_isReactive = true;
+    positioner->p_isReactive = true;
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_parent_size(wl_client *client, wl_resource *resource, Int32 parentWidth, Int32 parentHeight)
 {
     (void)client;
     WPositioner *positioner = (WPositioner*)wl_resource_get_user_data(resource);
-    positioner->_parentSize = WSize(parentWidth,parentHeight);
+    positioner->p_parentSize = WSize(parentWidth,parentHeight);
 }
 
 void Wpp::Extensions::XdgShell::Positioner::set_parent_configure(wl_client *client, wl_resource *resource, UInt32 serial)

@@ -23,7 +23,7 @@ public:
     WTexture(GLuint textureUnit = 0);
     void setData(Int32 width, Int32 height, void *data, Type textureType = SHM);
     void deleteTexture();
-    WSize size(){ return _size; }
+    const WSize &size() const { return _size; }
     bool isInitialized(){ return _initialized;}
     GLuint textureId(){return _textureId;}
     GLuint textureUnit(){return _textureUnit;}

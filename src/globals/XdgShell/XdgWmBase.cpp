@@ -58,8 +58,8 @@ void Extensions::XdgShell::WmBase::create_positioner(wl_client *client, wl_resou
     Int32 version = wl_resource_get_version(resource);
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
     WPositioner *positioner = new WPositioner(wClient);
-    positioner->_resource = wl_resource_create(client, &xdg_positioner_interface, version, id);
-    wl_resource_set_implementation(positioner->_resource, &xdg_positioner_implementation, positioner, &Wpp::Extensions::XdgShell::Positioner::destroy_resource);
+    positioner->p_resource = wl_resource_create(client, &xdg_positioner_interface, version, id);
+    wl_resource_set_implementation(positioner->p_resource, &xdg_positioner_implementation, positioner, &Wpp::Extensions::XdgShell::Positioner::destroy_resource);
 }
 void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *_surface)
 {
@@ -85,8 +85,8 @@ void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resourc
 
     Int32 version = wl_resource_get_version(resource);
     printf("Xdg Surface version: %i\n",version);
-    surface->xdg_shell = wl_resource_create(client, &xdg_surface_interface, version, id);// 4
-    wl_resource_set_implementation(surface->xdg_shell, &xdg_surface_implementation, surface, &Wpp::Extensions::XdgShell::Surface::resource_destroy);
+    surface->p_xdg_shell = wl_resource_create(client, &xdg_surface_interface, version, id);// 4
+    wl_resource_set_implementation(surface->p_xdg_shell, &xdg_surface_implementation, surface, &Wpp::Extensions::XdgShell::Surface::resource_destroy);
     //xdg_surface_send_configure(surface->xdg_shell, 0);
 }
 void Extensions::XdgShell::WmBase::pong(wl_client *client, wl_resource *resource, UInt32 serial)

@@ -3,57 +3,57 @@
 
 using namespace Wpp;
 
-inline WPoint &WPoint::operator+=(const WPointF &p)
+WPoint &WPoint::operator+=(const WPointF &p)
 {
-    _x += p._x;
-    _y += p._y;
+    p_x += p.p_x;
+    p_y += p.p_y;
     return *this;
 }
 
-inline WPoint &WPoint::operator-=(const WPointF &p)
+WPoint &WPoint::operator-=(const WPointF &p)
 {
-    _x -= p._x;
-    _y -= p._y;
+    p_x -= p.p_x;
+    p_y -= p.p_y;
     return *this;
 }
 
-inline WPoint &WPoint::operator*=(const WPointF &p)
+WPoint &WPoint::operator*=(const WPointF &p)
 {
-    _x *= p._x;
-    _y *= p._y;
+    p_x *= p.p_x;
+    p_y *= p.p_y;
     return *this;
 }
 
-inline WPoint &WPoint::operator/=(const WPointF &p)
+WPoint &WPoint::operator/=(const WPointF &p)
 {
-    _x /= p._x;
-    _y /= p._y;
+    p_x /= p.p_x;
+    p_y /= p.p_y;
     return *this;
 }
 
-inline WPoint WPoint::operator+(const WPointF &p)
+WPoint WPoint::operator+(const WPointF &p) const
 {
-    return WPoint(_x+p._x,_y+p._y);
+    return WPoint(p_x+p.p_x,p_y+p.p_y);
 }
 
-inline WPoint WPoint::operator-(const WPointF &p)
+WPoint WPoint::operator-(const WPointF &p) const
 {
-    return WPoint(_x-p._x,_y-p._y);
+    return WPoint(p_x-p.p_x,p_y-p.p_y);
 }
 
-inline WPoint WPoint::operator*(const WPointF &p)
+WPoint WPoint::operator*(const WPointF &p) const
 {
-    return WPoint(_x*p._x,_y*p._y);
+    return WPoint(p_x*p.p_x,p_y*p.p_y);
 }
 
-inline WPoint WPoint::operator/(const WPointF &p)
+WPoint WPoint::operator/(const WPointF &p) const
 {
-    return WPoint(_x/p._x,_y/p._y);
+    return WPoint(p_x/p.p_x,p_y/p.p_y);
 }
 
 
 WPoint::WPoint(const WPointF &pointF)
 {
-    _x = pointF._x;
-    _y = pointF._y;
+    p_x = pointF.p_x;
+    p_y = pointF.p_y;
 }

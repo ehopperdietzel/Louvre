@@ -10,12 +10,21 @@ class Wpp::WSeat
 public:
 
     /* Configuration */
-    WSeat();
+    WSeat(WCompositor *compositor);
     void setKeymap(const char *rules = NULL, const char *model = NULL, const char *layout = NULL, const char *variant = NULL, const char *options = NULL);
-    Int32 keymapFd()    {return p_xkbKeymapFd;}
-    Int32 keymapSize()  {return p_xkbKeymapSize;}
-    Int32 libinputFd();
-    WCompositor *compositor() {return p_compositor;}
+    Int32 keymapFd()    const {return p_xkbKeymapFd;}
+    Int32 keymapSize()  const {return p_xkbKeymapSize;}
+    Int32 libinputFd()  const;
+    WCompositor *compositor() const {return p_compositor;}
+    WSurface *pointerFocus() const;
+    WSurface *keyboardFocus() const;
+    WSurface *touchFocus() const;
+
+protected:
+
+    friend class WSurface;
+    friend class Globals::Surface;
+    friend class Globals::Pointer;
 
     /* Libinput events */
     virtual void libinputEvent(libinput_event *ev){(void)ev;}
@@ -32,9 +41,14 @@ private:
 
     friend class WWayland;
     friend class WCompositor;
+    friend class WPointer;
+    friend class WKeyboard;
 
     // Wayland++
     WCompositor         *p_compositor               = nullptr;
+    WSurface            *p_pointerFocusSurface      = nullptr;
+    WSurface            *p_keyboardFocusSurface     = nullptr;
+    WSurface            *p_touchFocusSurface        = nullptr;
 
 
     // Libinput

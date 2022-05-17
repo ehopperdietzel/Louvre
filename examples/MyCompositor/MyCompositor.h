@@ -26,10 +26,10 @@ public:
     WTexture *defaultCursorTexture,*backgroundTexture;
     WPoint backgroundPos;
 
-    void drawSurfaceTree(WOutput *output, MySurface *surface);
     void riseSurface(MySurface *surface);
+    MySurface *surfaceAt(const WPoint &point);
 
-    WCursor *cursor;
+    WCursor *cursor = nullptr;
 
 };
 

@@ -27,20 +27,25 @@ namespace Wpp
     class WBackend;
     class WClient;
     class WCompositor;
-    class WCursor;
-    class WInput;
     class WOutput;
     class WOutputManager;
     class WOpenGL;
     class WPositioner;
     class WRegion;
-    class WSeat;
     class WSurface;
     class WTexture;
     class WTypes;
     class WView;
     class WWayland;
 
+    // Input related
+    class WSeat;
+    class WCursor;
+    class WPointer;
+    class WKeyboard;
+
+    // Utils
+    class WTime;
     class WPoint;
     class WPointF;
     class WRect;
@@ -50,6 +55,8 @@ namespace Wpp
     typedef int32_t         Int32;
     typedef uint64_t        UInt64;
     typedef int64_t         Int64;
+    typedef float           Float32;
+    typedef double          Float64;
     typedef unsigned char   SurfaceStateFlags;
     typedef xdg_positioner_anchor Anchor;
     typedef xdg_positioner_gravity Gravity;
@@ -91,14 +98,6 @@ namespace Wpp
         double height = 0;
     };
 
-    struct WRegionRect
-    {
-        Int32 x = 0;
-        Int32 y = 0;
-        Int32 width = 0;
-        Int32 height = 0;
-        bool add = true;
-    };
 
     enum ResizeEdge : UInt32
     {
@@ -132,6 +131,11 @@ namespace Wpp
         Popup = 2,
         Subsurface = 3,
         Cursor = 4
+    };
+
+    enum POINTER_BUTTON : UInt32
+    {
+        LEFT_BUTTON = 272
     };
 
 

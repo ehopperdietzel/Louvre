@@ -9,40 +9,40 @@ class Wpp::WPositioner
 public:
     WPositioner(WClient *client);
 
-    WClient     *client()   { return _client; };
-    wl_resource *resource() { return _resource; };
+    WClient *client()           const { return p_client; };
+    wl_resource *resource()     const { return p_resource; };
 
-    WSize   size()       { return _size; };
-    WRect   anchorRect() { return _anchorRect; };
-    Anchor  anchor()     { return _anchor; };
-    Gravity gravity()    { return _gravity; };
-    WPoint  offset()     { return _offset; };
-    bool    isReactive() { return _isReactive; }
+    const WSize &size()         const { return p_size; };
+    const WRect &anchorRect()   const { return p_anchorRect; };
+    Anchor anchor()             const { return p_anchor; };
+    Gravity gravity()           const { return p_gravity; };
+    const WPoint &offset()      const { return p_offset; };
+    bool isReactive()           const { return p_isReactive; }
 
     WPoint calculatePopupPosition(const WRect &outputRect, const WPoint &parentPosition);
 
-    ConstraintAdjustment constraintAdjustment() { return _constraintAdjustment; };
+    ConstraintAdjustment constraintAdjustment() const { return p_constraintAdjustment; };
 
 private:
     friend class Wpp::Extensions::XdgShell::WmBase;
     friend class Wpp::Extensions::XdgShell::Popup;
     friend class Wpp::Extensions::XdgShell::Positioner;
 
-    wl_resource *_resource = nullptr;
-    WClient *_client = nullptr;
+    wl_resource *p_resource = nullptr;
+    WClient *p_client = nullptr;
 
-    WSize _size;
-    WSize _parentSize;
-    WRect _anchorRect;
-    WPoint _offset;
+    WSize p_size;
+    WSize p_parentSize;
+    WRect p_anchorRect;
+    WPoint p_offset;
 
-    Anchor _anchor;
-    Gravity _gravity;
-    ConstraintAdjustment _constraintAdjustment;
+    Anchor p_anchor;
+    Gravity p_gravity;
+    ConstraintAdjustment p_constraintAdjustment;
 
-    WSurface *_linkedSurface = nullptr;
+    WSurface *p_linkedSurface = nullptr;
 
-    bool _isReactive = false;
+    bool p_isReactive = false;
 };
 
 #endif // WPOSITIONER_H

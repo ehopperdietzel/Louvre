@@ -1,6 +1,9 @@
 
 # Wayland++
-A friendly C++ library to create Wayland compositors with DRM or X11 backend support.
+
+A C++ library to create Wayland compositors with DRM or X11 backend support.
+
+> :warning: **Currently under development and not ready for use.**
 
 Wayland++ uses **libinput** and **evdev** for input listening and device discovering, **xkbcommon** for keyboard mapping and any version of **OpenGL** or **Vulkan** for painting (any **EGL** - compatible API).
 
@@ -17,8 +20,9 @@ Wayland++ uses **libinput** and **evdev** for input listening and device discove
 
 ## Todo
 
-* Multithreading ✅
-* Wayland Interface
+### Protocols
+
+* Wayland Interfaces
 	* Compositor
 		* create_surface ✅
 		* create_region ✅
@@ -66,7 +70,7 @@ Wayland++ uses **libinput** and **evdev** for input listening and device discove
 		* get_data_device
         * ...
 
-* XDG Shell Interface
+* XDG Shell Interfaces
 	* Xdg wm-base
 		* create_positioner
 		* destroy ✅
@@ -108,15 +112,33 @@ Wayland++ uses **libinput** and **evdev** for input listening and device discove
         * set_reactive
         * set_parent_size
         * set_parent_configure
-* Shared Memory Textures  ✅
-* EGL Texture Sharing ✅
-* Libinput Events ✅
-* OpenGL ES 2 Support ✅
-* OpenGL ES 3 Support
-* OpenGL 3.x Support
-* OpenGL 4.x Support
-* Vulkan Support
-* DRM Hardware Cursor
+* Presentation Time Interfaces
+* Viewporter Interfaces
+* zxdg_decoration_manager_v1
+
+### Buffer Sharing Mechanisms
+* Shared Memory ✅
+* EGL ✅
+* KMS
+
+### Input Support
+* Pointer ✅
+* Keyboard ✅
+* Touch
+
+### Supported Rendering APIs
+* OpenGL ES 2 ✅
+* OpenGL ES 3
+* OpenGL 3.x
+* OpenGL 4.x
+* Vulkan
+
+### Performance
+* Multithreading ✅
+* DRM Hardware Cursor ✅
+
+
+### Compatibility
 * XWayland Support
 
 

@@ -5,7 +5,6 @@
 #include <pthread.h>
 #include <xdg-shell.h>
 #include <WOpenGL.h>
-#include <WInput.h>
 #include <Region.h>
 
 #include <Compositor.h>
@@ -180,6 +179,11 @@ int WWayland::processSeat(int, unsigned int, void *userData)
     return 0;
 }
 
+UInt32 WWayland::nextSerial()
+{
+    return wl_display_next_serial(display);
+}
+
 int WWayland::initWayland(WCompositor *comp)
 {
     eglBindWaylandDisplayWL = (PFNEGLBINDWAYLANDDISPLAYWL) eglGetProcAddress ("eglBindWaylandDisplayWL");
@@ -230,8 +234,6 @@ int WWayland::initWayland(WCompositor *comp)
     wayland_fd = wl_event_loop_get_fd(event_loop);
 
     wl_event_loop_add_fd(event_loop,comp->libinputFd,WL_EVENT_READABLE,&WWayland::readFd,comp);
-
-    createNullKeys();
 
     printf("Wayland server initialized.\n");
 
@@ -285,6 +287,7 @@ void WWayland::runLoop()
     fds[1].events = POLLIN;
     fds[1].fd = compositor->libinputFd;
 
+
     fds[2].events = POLLIN;
     fds[2].fd = WInput::getLibinputFd();
     */
@@ -301,7 +304,7 @@ void WWayland::runLoop()
         {
             for(list<WSurface*>::iterator s = (*c)->surfaces.begin(); s != (*c)->surfaces.end(); ++s)
             {
-                if((*s)->pendingConfigure)
+                if((*s)->p_pendingConfigure)
                 {
                     (*s)->dispachLastConfiguration();
                 }
@@ -309,6 +312,8 @@ void WWayland::runLoop()
         }
 
         flushClients();
+
+
 
         compositor->renderMutex.unlock();
 
@@ -344,11 +349,11 @@ void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     WClient *disconnectedClient = nullptr;
 
     // Remove client from the compositor list
-    for(list<WClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
+    for(WClient *wClient: compositor->clients)
     {
-        if((*c)->client() == client)
+        if(wClient->client() == client)
         {
-            disconnectedClient = *c;
+            disconnectedClient = wClient;
             break;
         }
     }
@@ -356,17 +361,25 @@ void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     if(disconnectedClient == nullptr)
         return;
 
-    // Destroy surfaces events
-    for(list<WSurface*>::iterator s = disconnectedClient->surfaces.begin(); s != disconnectedClient->surfaces.end(); ++s)
-    {
-        disconnectedClient->surfaceDestroyRequest(*s);
-        (*s)->p_client = nullptr;
-    }
+    /*
+    // Destroy regions
+    for(WRegion *wRegion : disconnectedClient->regions)
+        wl_resource_destroy(wRegion->resource());
+    disconnectedClient->regions.clear();
+    */
 
+    // Destroy surfaces events
+    for(WSurface *wSurface : disconnectedClient->surfaces)
+    {
+        disconnectedClient->surfaceDestroyRequest(wSurface);
+        wSurface->p_client = nullptr;
+    }
     disconnectedClient->surfaces.clear();
 
+    // Remove the client from the list
     compositor->clients.remove(disconnectedClient);
 
+    // Notify the client desconection
     compositor->clientDisconnectRequest(disconnectedClient);
 
     delete disconnectedClient;

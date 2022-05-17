@@ -68,7 +68,9 @@ void Globals::Compositor::create_region (wl_client *client, wl_resource *resourc
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
 
     // Create region
-    WRegion *wRegion = new WRegion(id,region,wClient);
+    WRegion *wRegion = new WRegion();
+    wRegion->p_client = wClient;
+    wRegion->p_resource = resource;
 
     // Append region to client
     wClient->regions.push_back(wRegion);

@@ -6,8 +6,8 @@ using namespace Wpp;
 
 WPositioner::WPositioner(WClient *client)
 {
-    _client = client;
-    _client->positioners.push_back(this);
+    p_client = client;
+    p_client->positioners.push_back(this);
 }
 
 WPoint WPositioner::calculatePopupPosition(const WRect &outputRect, const WPoint &parentPosition)

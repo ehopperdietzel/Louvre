@@ -38,7 +38,7 @@ void Extensions::XdgShell::Surface::resource_destroy(wl_resource *resource)
 {
     printf("XDG SURFACE DESTROYED\n");
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->xdg_shell = nullptr;
+    surface->p_xdg_shell = nullptr;
 }
 
 void Extensions::XdgShell::Surface::destroy (wl_client *client, wl_resource *resource)
@@ -60,7 +60,7 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *
         return;
     }*/
 
-    if (surface->xdg_toplevel || surface->xdg_popup)
+    if (surface->p_xdg_toplevel || surface->p_xdg_popup)
     {
         const char msg[] = "xdg_surface already has a role object";
         printf("%s\n",msg);
@@ -68,10 +68,10 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *
         return;
     }
 
-    surface->xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
+    surface->p_xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
 
     surface->pending.type = SurfaceType::Toplevel;
-    wl_resource_set_implementation(surface->xdg_toplevel, &xdg_toplevel_implementation, surface, &Extensions::XdgShell::Toplevel::destroy_resource);
+    wl_resource_set_implementation(surface->p_xdg_toplevel, &xdg_toplevel_implementation, surface, &Extensions::XdgShell::Toplevel::destroy_resource);
     //surface->sendConfigureToplevelEvent(0,0,SurfaceState::Activated);
     //surface->dispachLastConfiguration();
     //surface->typeChangeRequest();
@@ -82,7 +82,7 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
 
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    if (surface->xdg_toplevel || surface->xdg_popup)
+    if (surface->p_xdg_toplevel || surface->p_xdg_popup)
     {
         wl_resource_post_error(resource, XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"xdg_surface already has a role object");
         return;
@@ -119,12 +119,12 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
         delete surface->p_positioner;
 
     surface->p_positioner = wPositioner;
-    surface->xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
+    surface->p_xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
     surface->current.type = SurfaceType::Popup;
     surface->p_parent = wParent;
-    wParent->_children.push_back(surface);
+    wParent->p_children.push_back(surface);
     surface->parentChangeRequest();
-    wl_resource_set_implementation(surface->xdg_popup, &xdg_popup_implementation, surface, &Extensions::XdgShell::Popup::destroy_resource);
+    wl_resource_set_implementation(surface->p_xdg_popup, &xdg_popup_implementation, surface, &Extensions::XdgShell::Popup::destroy_resource);
     surface->typeChangeRequest();
     surface->positionerChangeRequest();
 }

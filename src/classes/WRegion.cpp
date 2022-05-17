@@ -2,36 +2,52 @@
 
 using namespace Wpp;
 
-WRegion::WRegion(UInt32 id, wl_resource *resource, WClient *client)
+WRegion::WRegion()
 {
-    _id = id;
-    _resource = resource;
-    _client = client;
+
 }
 
-wl_resource *WRegion::getResource()
+void WRegion::copy(const WRegion &region)
 {
-    return _resource;
+    clear();
+    std::copy(region.p_rects.begin(),region.p_rects.end(),std::back_inserter(p_rects));
 }
 
-UInt32 WRegion::getId()
+void WRegion::clear()
 {
-    return _id;
+    p_rects.clear();
 }
 
-WClient *WRegion::getClient()
+void WRegion::addRect(const WRect &rect)
 {
-    return _client;
+    WRegionRect regionRect = {rect, true};
+    p_rects.push_back(regionRect);
 }
 
-void WRegion::addRect(Int32 x, Int32 y, Int32 width, Int32 height)
+void WRegion::subtractRect(const WRect &rect)
 {
-    WRegionRect rect = {x, y, width, height, true};
-    rects.push_back(rect);
+    WRegionRect regionRect = {rect, false};
+    p_rects.push_back(regionRect);
 }
 
-void WRegion::subtractRect(Int32 x, Int32 y, Int32 width, Int32 height)
+void WRegion::multiply(double factor)
 {
-    WRegionRect rect = {x, y, width, height, false};
-    rects.push_back(rect);
+    for(WRegionRect &rect : p_rects)
+        rect.rect *= factor;
+}
+
+bool WRegion::containsPoint(const WPoint &point)
+{
+    bool contains = false;
+
+    for(std::list<WRegionRect>::reverse_iterator r = p_rects.rbegin(); r != p_rects.rend(); r++)
+    {
+        if((*r).rect.containsPoint(point))
+        {
+            contains = (*r).add;
+            break;
+        }
+    }
+
+    return contains;
 }

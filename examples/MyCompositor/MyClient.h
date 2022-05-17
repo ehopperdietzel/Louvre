@@ -2,6 +2,7 @@
 #define MYCLIENT_H
 
 #include <WClient.h>
+#include <MyCompositor.h>
 
 using namespace Wpp;
 
@@ -12,6 +13,8 @@ public:
     ~MyClient();
     WSurface *newSurfaceRequest(wl_resource *surfaceResource) override;
     void surfaceDestroyRequest(WSurface *surface) override;
+
+    MyCompositor *comp;
     //void newRegionRequest(WRegion *region) = 0;
     //void regionDestroyRequest(WRegion *region) = 0;
     //void newPositionerRequest(WPositioner *positioner) = 0;

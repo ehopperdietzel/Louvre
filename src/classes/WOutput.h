@@ -32,26 +32,26 @@ public:
     WOutput();
     ~WOutput();
     void setOutputScale(Int32 scale);
-    Int32 getOutputScale();
+    Int32 getOutputScale() const;
     void repaint();
 
     EGLDisplay getDisplay();
     const drmModeModeInfo getCurrentMode();
     const drmModeConnector getCurrentConnector();
 
-    InitializeResult initializeResult(){ return p_initializeResult; }
+    InitializeResult initializeResult() const { return p_initializeResult; }
 
     UInt32 refreshRate = 60;
 
     WSize size;
 
     void setUserData(void *userData){p_userData = userData;}
-    void *userData(){return p_userData;}
+    void *userData() const {return p_userData;}
 
     void setPainter(WOpenGL *painter);
-    WOpenGL *painter(){return p_painter;}
+    WOpenGL *painter() const {return p_painter;}
 
-    void *getData(){ return data; };
+    void *getData() const { return data; };
 
 private:
 

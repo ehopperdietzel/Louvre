@@ -1,6 +1,5 @@
 #include "WCompositor.h"
 #include <stdio.h>
-#include <WInput.h>
 #include <WBackend.h>
 #include <WWayland.h>
 #include <sys/poll.h>
@@ -32,7 +31,6 @@ void WCompositor::start()
 
     // Ask the developer to return a WSeat
     p_seat = configureSeat();
-    p_seat->p_compositor = this;
     WWayland::setSeat(p_seat);
 
     // Init wayland
@@ -73,21 +71,6 @@ void WCompositor::addOutput(WOutput *output)
 void WCompositor::removeOutput(WOutput *output)
 {
 
-}
-
-
-UInt32 WCompositor::getMilliseconds()
-{
-    timespec endTime;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &endTime);
-    return endTime.tv_sec*1000 + endTime.tv_nsec/1000000;
-}
-
-timespec WCompositor::getNanoseconds()
-{
-    timespec endTime;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &endTime);
-    return endTime;
 }
 
 
