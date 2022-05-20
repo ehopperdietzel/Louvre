@@ -5,6 +5,7 @@
 #include <WSurface.h>
 #include <WCompositor.h>
 #include <WPositioner.h>
+#include <WToplevelRole.h>
 
 using namespace Wpp;
 
@@ -46,7 +47,7 @@ void Extensions::XdgShell::Surface::destroy (wl_client *client, wl_resource *res
     (void)client;
     Extensions::XdgShell::Surface::resource_destroy(resource);
 }
-void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *resource, UInt32 id)
+void Extensions::XdgShell::Surface::get_toplevel(wl_client *client, wl_resource *resource, UInt32 id)
 {
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
@@ -60,7 +61,7 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *
         return;
     }*/
 
-    if (surface->p_xdg_toplevel || surface->p_xdg_popup)
+    if (surface->type() != WSurface::Undefined)
     {
         const char msg[] = "xdg_surface already has a role object";
         printf("%s\n",msg);
@@ -68,13 +69,12 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client,wl_resource *
         return;
     }
 
-    surface->p_xdg_toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
+    wl_resource *toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
 
-    surface->pending.type = SurfaceType::Toplevel;
-    wl_resource_set_implementation(surface->p_xdg_toplevel, &xdg_toplevel_implementation, surface, &Extensions::XdgShell::Toplevel::destroy_resource);
-    //surface->sendConfigureToplevelEvent(0,0,SurfaceState::Activated);
-    //surface->dispachLastConfiguration();
-    //surface->typeChangeRequest();
+    surface->p_toplevelRole = surface->compositor()->createToplevelRequest(toplevel, surface);
+    surface->pending.type = WSurface::SurfaceType::Toplevel;
+    wl_resource_set_implementation(toplevel, &xdg_toplevel_implementation, surface->p_toplevelRole, &Extensions::XdgShell::Toplevel::destroy_resource);
+
 }
 void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *parent, wl_resource *positioner)
 {
@@ -82,7 +82,7 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
 
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    if (surface->p_xdg_toplevel || surface->p_xdg_popup)
+    if (surface->type() != WSurface::Undefined)
     {
         wl_resource_post_error(resource, XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"xdg_surface already has a role object");
         return;
@@ -120,7 +120,7 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
 
     surface->p_positioner = wPositioner;
     surface->p_xdg_popup = wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(resource), id); // 4
-    surface->current.type = SurfaceType::Popup;
+    surface->current.type = WSurface::Popup;
     surface->p_parent = wParent;
     wParent->p_children.push_back(surface);
     surface->parentChangeRequest();
@@ -133,6 +133,12 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *client, wl_re
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->pending.windowGeometry = WRect(x, y, width, height);
+
+    if(surface->type() == WSurface::Toplevel)
+    {
+        surface->toplevel()->p_windowGeometry = WRect(x, y, width, height);
+        surface->toplevel()->geometryChangeRequest();
+    }
 }
 void Extensions::XdgShell::Surface::ack_configure(wl_client *client, wl_resource *resource, UInt32 serial)
 {

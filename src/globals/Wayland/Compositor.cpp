@@ -1,6 +1,9 @@
-#include <Compositor.h>
+
+// Wayland++
 #include <WCompositor.h>
 
+// Globals
+#include <Compositor.h>
 #include <Region.h>
 #include <Surface.h>
 
@@ -49,10 +52,11 @@ void Globals::Compositor::create_surface(wl_client *client, wl_resource *resourc
     WClient *wClient = (WClient*)wl_resource_get_user_data(resource);
 
     // Create surface
-    WSurface *wSurface = wClient->newSurfaceRequest(surface);
+    WSurface *wSurface = wClient->compositor()->createSurfaceRequest(surface,wClient);
 
     // Append surface
     wClient->surfaces.push_back(wSurface);
+    wClient->compositor()->p_surfaces.push_back(wSurface);
 
     // Implement surface
     wl_resource_set_implementation(surface, &surface_implementation, wSurface, &Surface::resource_destroy);

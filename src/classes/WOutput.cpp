@@ -22,6 +22,7 @@
 #include <WCompositor.h>
 #include <WWayland.h>
 #include <WOpenGL.h>
+#include <WCursor.h>
 
 using namespace Wpp;
 
@@ -33,9 +34,54 @@ WOutput::~WOutput()
     //delete []_devName;
 }
 
+void WOutput::initializeGL()
+{
+    // Set clear screen color
+    glClearColor(0.02, 0.282, 0.675, 1.0f);
+}
+
+void WOutput::paintGL()
+{
+
+    // Get the painter
+    WOpenGL *GL = painter();
+
+    // Clear screen
+    GL->clearScreen();
+
+    // Draw surfaces
+    for(WSurface *surface : compositor()->surfaces())
+    {
+        if( surface->type() == WSurface::Undefined || surface->type() == WSurface::Cursor)
+            continue;
+
+        GL->drawTexture(surface->texture(),WRect(WPoint(),surface->texture()->size()),WRect(surface->pos(),surface->size()/surface->bufferScale()));
+        surface->requestNextFrame();
+    }
+
+}
+
+void WOutput::plugged()
+{
+
+}
+
+void WOutput::unplugged()
+{
+
+}
+
+
+
+
+WCompositor *WOutput::compositor()
+{
+    return p_compositor;
+}
+
 void WOutput::setCompositor(WCompositor *compositor)
 {
-    _compositor = compositor;
+    p_compositor = compositor;
     _renderThread = new std::thread(&WOutput::startRenderLoop,this);
     //WOutput::startRenderLoop(this);
 }
@@ -43,8 +89,6 @@ void WOutput::setCompositor(WCompositor *compositor)
 void WOutput::setOutputScale(Int32 scale)
 {
     _outputScale = scale;
-    if(p_painter)
-        p_painter->viewportToOutput();
 }
 
 Int32 WOutput::getOutputScale() const
@@ -69,7 +113,13 @@ void WOutput::initialize()
 
     WWayland::bindEGLDisplay(WBackend::getEGLDisplay(this));
 
-    _compositor->initializeGL(this);
+    setPainter(new WOpenGL());
+
+    // Create cursor
+    if(!compositor()->cursor())
+        compositor()->p_cursor = new WCursor(this);
+
+    initializeGL();
 
 }
 
@@ -79,6 +129,7 @@ void WOutput::startRenderLoop(void *data)
 
     output->initialize();
     output->repaint();
+
 
     uint64_t res;
     itimerspec ts;
@@ -100,9 +151,10 @@ void WOutput::startRenderLoop(void *data)
         eventfd_read(output->_renderFd,&output->_renderValue);
 
         // Let the user do his painting
-        output->_compositor->renderMutex.lock();
-        output->_compositor->paintGL(output);
-        output->_compositor->renderMutex.unlock();
+        output->p_compositor->renderMutex.lock();
+        output->paintGL();
+        output->compositor()->cursor()->paint();
+        output->p_compositor->renderMutex.unlock();
 
         // Tell the input loop to process events
         WWayland::forceUpdate();
@@ -138,7 +190,6 @@ void WOutput::setPainter(WOpenGL *painter)
 {
     p_painter = painter;
     p_painter->p_output = this;
-    p_painter->viewportToOutput();
 }
 
 

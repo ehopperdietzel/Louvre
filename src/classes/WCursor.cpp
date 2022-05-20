@@ -4,12 +4,38 @@
 #include <WPointF.h>
 #include <WRect.h>
 #include <WOpenGL.h>
+#include <cursors/DefaultCursor.h>
+
+#include <X11/Xcursor/Xcursor.h>
+#include <string.h>
 
 using namespace Wpp;
 
 WCursor::WCursor(WOutput *output)
 {
     setOutput(output);
+    p_x11Texture = new WTexture();
+    setSize(WPoint(24,24));
+    setCursor("arrow");
+}
+
+void WCursor::setCursorTheme(const char *themeName)
+{
+    if(p_cursorTheme != NULL)
+        delete []p_cursorTheme;
+
+    Int32 length = strlen(themeName);
+    p_cursorTheme = new char(length+1);
+    p_cursorTheme[length] = '\0';
+    memcpy(p_cursorTheme,themeName,length);
+}
+
+void WCursor::setCursor(const char *cursorName)
+{
+    XcursorImage *cursor =  XcursorLibraryLoadImage(cursorName,p_cursorTheme,64);
+    p_x11Texture->setData(cursor->width,cursor->height,cursor->pixels,GL_RGBA,GL_UNSIGNED_BYTE);
+    setTexture(p_x11Texture,WPointF(cursor->xhot,cursor->yhot));
+    XcursorImageDestroy(cursor);
 }
 
 void WCursor::setTexture(WTexture *texture, const WPointF &hotspot)
@@ -83,4 +109,7 @@ void WCursor::update()
         p_prevPos = pos;
         WBackend::setCursorPosition(p_output,pos);
     }
+
+    if(p_output)
+        p_output->repaint();
 }

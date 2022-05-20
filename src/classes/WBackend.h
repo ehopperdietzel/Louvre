@@ -11,7 +11,7 @@
 class Wpp::WBackend
 {
 public:
-    static std::list<WOutput*>getAvaliableOutputs();
+    static std::list<WOutput*>&getAvaliableOutputs(WCompositor *compositor);
     static EGLDisplay getEGLDisplay(WOutput *output);
     static void createGLContext(WOutput *output);
     static void flipPage(WOutput *output);

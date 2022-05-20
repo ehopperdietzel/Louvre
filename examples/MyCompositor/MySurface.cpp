@@ -1,9 +1,11 @@
+/*
 #include "MySurface.h"
 #include <MyCompositor.h>
 #include <WOutput.h>
 #include <WPositioner.h>
 #include <WCursor.h>
 #include <MySeat.h>
+#include <WToplevelRole.h>
 
 MySurface::MySurface(wl_resource *surfaceResource, WClient *client, GLuint textureUnit)
           :WSurface::WSurface(surfaceResource,client,textureUnit)
@@ -18,51 +20,9 @@ MySurface::~MySurface()
     // printf("Surface destoyed from child class\n");
 }
 
-// Event when window is grabbed (tipically by the topbar)
-void MySurface::moveStartRequest()
-{
-    MySeat *seat = (MySeat*)compositor()->seat();
-    if(!seat->isLeftMouseButtonPressed)
-        return;
-    seat->movingSurfaceInitPos = getRectWithoutDecoration().topLeft();
-    seat->movingSurfaceInitCursorPos = comp->cursor->position();
-    seat->movingSurface = this;
-}
-
-void MySurface::maxSizeChangeRequest()
-{
-}
-
-void MySurface::minSizeChangeRequest()
-{
-}
-
-void MySurface::resizeStartRequest(ResizeEdge edge)
-{
-    MySeat *seat = (MySeat*)compositor()->seat();
-
-    if(!seat->isLeftMouseButtonPressed)
-        return;
-
-    seat->resizingSurface = this;
-    seat->resizeEdge = edge;
-    seat->resizeInitMousePos = comp->cursor->position();
-    seat->resizeInitSurfaceRect = getRectWithoutDecoration();
-    seat->resizeInitSurfaceDecoration = WRect(pos,size()/bufferScale());
-}
-
-void MySurface::geometryChangeRequest()
-{
-    /* Geometry of the surface without client decorations
-     * x and y represent the decoration margin */
-
-
-}
 
 void MySurface::typeChangeRequest()
 {
-    /* Internally updated, can be accessed with the type() menthod.
-     * You should only draw surfaces with type different to Undefined */
 
     printf("Surface changed type to %i.\n",type());
 
@@ -71,30 +31,22 @@ void MySurface::typeChangeRequest()
 
 void MySurface::positionerChangeRequest()
 {
-    /* Internally updated, can be accessed with the positioner() menthod.
-     * The positoner is only avaliable if the surface type is Popup otherwise nullptr is returned */
     MySurface *parentSurface = (MySurface*)parent();
-    WPoint parentPos = parentSurface->pos + parentSurface->decorationGeometry().topLeft();
+    WPoint parentPos = parentSurface->pos + parentSurface->toplevel()->windowGeometry().topLeft();
     pos = positioner()->calculatePopupPosition(WRect(),parentPos);
     WPoint relPos = parentPos - pos;
-    pos+=decorationGeometry().topLeft();
+    pos+=toplevel()->windowGeometry().topLeft();
     sendConfigurePopupEvent(relPos.x(),relPos.y(),positioner()->size().w(),positioner()->size().h());
     comp->repaintAllOutputs();
 }
 
 void MySurface::parentChangeRequest()
 {
-    /* Internally updated, can be accessed with the parent() menthod.
-     * If the surface has no parent, nullptr is returned */
-
     comp->repaintAllOutputs();
 }
 
 void MySurface::bufferScaleChangeRequest()
 {
-    /* Internally updated, can be accessed with the getBufferScale() menthod.
-     * If the surface has no parent, nullptr is returned */
-
     comp->repaintAllOutputs();
 }
 
@@ -116,19 +68,9 @@ void MySurface::bufferSizeChangeRequest()
 
 void MySurface::grabSeatRequest()
 {
-    keyboard().setFocus();
+    //keyboard().setFocus();
 }
 
-void MySurface::configureToplevelRequest()
-{
-    sendConfigureToplevelEvent(0,0,Wpp::SurfaceState::Activated);
-    comp->repaintAllOutputs();
-}
-
-void MySurface::resizingChanged()
-{
-
-}
 
 Int32 MySurface::mapXtoLocal(int xGlobal)
 {
@@ -175,10 +117,9 @@ bool MySurface::containsPoint(Int32 x, Int32 y, bool withoutDecoration)
 WRect MySurface::getRectWithoutDecoration()
 {
     WRect rect;
-    WRect decoration = decorationGeometry();
 
-    if(type() != SurfaceType::Undefined)
-        rect = WRect(pos + decoration.topLeft(),decoration.bottomRight());
+    if(type() == SurfaceType::Toplevel || type() == SurfaceType::Popup)
+        rect = WRect(pos + toplevel()->windowGeometry().topLeft(),toplevel()->windowGeometry().bottomRight());
     else
         rect = WRect(pos.x(),pos.y(),width(),height());
 
@@ -188,11 +129,11 @@ WRect MySurface::getRectWithoutDecoration()
 
 void MySurface::setXWithoutDecoration(Int32 x)
 {
-    pos.setX(x-decorationGeometry().x());
+    pos.setX(x-toplevel()->windowGeometry().x());
 }
 
 void MySurface::setYWithoutDecoration(Int32 y)
 {
-    pos.setY(y-decorationGeometry().y());
+    pos.setY(y-toplevel()->windowGeometry().y());
 }
-
+*/

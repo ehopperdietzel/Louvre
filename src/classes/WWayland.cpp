@@ -21,6 +21,7 @@
 #include <WSurface.h>
 #include <WOutput.h>
 #include <WSeat.h>
+#include <WToplevelRole.h>
 
 using namespace std;
 using namespace Wpp;
@@ -225,7 +226,7 @@ int WWayland::initWayland(WCompositor *comp)
     wl_global_create(display, &wl_data_device_manager_interface, 3, comp, &Globals::DataDeviceManager::bind);//3
 
     // Create xdg shell global
-    wl_global_create(display, &xdg_wm_base_interface, 4, comp, &Extensions::XdgShell::WmBase::bind); //4
+    wl_global_create(display, &xdg_wm_base_interface, WPP_XDG_SHELL_VERSION, comp, &Extensions::XdgShell::WmBase::bind); //4
 
     wl_display_init_shm(display);
     //wl_data_device_manager_init(display);
@@ -300,14 +301,12 @@ void WWayland::runLoop()
 
         dispatchEvents();
 
-        for(list<WClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
+        for(WClient *client : compositor->clients)
         {
-            for(list<WSurface*>::iterator s = (*c)->surfaces.begin(); s != (*c)->surfaces.end(); ++s)
+            for(WSurface *surface : client->surfaces)
             {
-                if((*s)->p_pendingConfigure)
-                {
-                    (*s)->dispachLastConfiguration();
-                }
+                if(surface->toplevel())
+                    surface->toplevel()->dispachLastConfiguration();
             }
         }
 
@@ -330,7 +329,7 @@ void WWayland::clientConnectionEvent(wl_listener *listener, void *data)
     wl_client *client = (wl_client*)data;
 
     // Let the developer create his own client implementation
-    WClient *newClient = compositor->newClientRequest(client);
+    WClient *newClient = compositor->createClientRequest(client);
 
     // Listen for client disconnection
     wl_client_get_destroy_listener(client,&WWayland::clientDisconnectionEvent);
@@ -371,7 +370,7 @@ void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     // Destroy surfaces events
     for(WSurface *wSurface : disconnectedClient->surfaces)
     {
-        disconnectedClient->surfaceDestroyRequest(wSurface);
+        disconnectedClient->compositor()->destroySurfaceRequest(wSurface);
         wSurface->p_client = nullptr;
     }
     disconnectedClient->surfaces.clear();
@@ -380,7 +379,7 @@ void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     compositor->clients.remove(disconnectedClient);
 
     // Notify the client desconection
-    compositor->clientDisconnectRequest(disconnectedClient);
+    compositor->destroyClientRequest(disconnectedClient);
 
     delete disconnectedClient;
 }

@@ -1,8 +1,6 @@
 precision lowp float;
 precision lowp int;
-//precision mediump float;
 
-// Textura de la app a dibujar
 uniform sampler2D tex;
 uniform vec2 texSize;
 uniform vec4 srcRect;
@@ -15,15 +13,12 @@ void main()
 {
   if(mode == 0)
   {
-    float x = v_texcoord.x*(srcRect.z - srcRect.x)/texSize.x + srcRect.x/texSize.x;
-    float y = (1.0 - v_texcoord.y)*(srcRect.w - srcRect.y)/texSize.y + srcRect.y/texSize.y;
-    gl_FragColor = texture2D(tex,vec2(x,y));
+    float x = (srcRect.x)/texSize.x + v_texcoord.x*srcRect.z/texSize.x;
+    float y = (srcRect.y)/texSize.y + v_texcoord.y*srcRect.w/texSize.y;
+    gl_FragColor = texture2D(tex,vec2(x,-y));
   }
   else
-  {
     gl_FragColor = colorRGBA;
-  }
-  
 }
 
 

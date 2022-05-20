@@ -1,3 +1,4 @@
+/*
 #ifndef MYSURFACE_H
 #define MYSURFACE_H
 
@@ -14,20 +15,12 @@ public:
     ~MySurface();
 
     // Requests
-    void moveStartRequest() override;
-    void maxSizeChangeRequest() override;
-    void minSizeChangeRequest() override;
-    void resizeStartRequest(ResizeEdge edge) override;
-    void geometryChangeRequest() override;
     void typeChangeRequest() override;
     void positionerChangeRequest() override;
     void parentChangeRequest() override;
     void bufferScaleChangeRequest() override;
     void bufferSizeChangeRequest() override;
     void grabSeatRequest() override;
-    void configureToplevelRequest() override;
-
-    void resizingChanged() override;
 
     MyCompositor *comp = nullptr;
 
@@ -44,3 +37,4 @@ public:
 };
 
 #endif // MYSURFACE_H
+*/

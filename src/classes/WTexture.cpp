@@ -10,41 +10,42 @@ using namespace std;
 
 static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES = NULL;
 
-WTexture::WTexture(GLuint __textureUnit)
+WTexture::WTexture(GLuint textureUnit)
 {
-    _textureUnit = __textureUnit;
+    p_unit = textureUnit;
     glEGLImageTargetTexture2DOES = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress ("glEGLImageTargetTexture2DOES");
 }
 
-void WTexture::setData(Int32 width, Int32 height, void *data, Type textureType)
+void WTexture::setData(Int32 width, Int32 height, void *data, GLenum buffFormat, GLenum buffDepth, BufferType buffType)
 {
-    glActiveTexture(GL_TEXTURE0 + textureUnit());
-    //printf("Resize: W %i, H %i\n",width,height);
+    //GLenum depth = GL_
+    glActiveTexture(GL_TEXTURE0 + unit());
+
     // Prevent gen a new texture if the buffer size is the same
-    if(width != _size.w() || height != _size.h() || textureType == Type::EGL)
+    if(width != p_size.w() || height != p_size.h() || buffType == BufferType::EGL)
     {
         UInt32 newTexture;
 
-        _size = WSize(width,height);
+        p_size.setW(width);
+        p_size.setH(height);
+
         glGenTextures(1, &newTexture);
         glBindTexture (GL_TEXTURE_2D, newTexture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-        if(textureType == Type::EGL)
+        if(buffType == BufferType::EGL)
         {
-
             glEGLImageTargetTexture2DOES(GL_TEXTURE_2D,*(EGLImage*)data);
-            WOpenGL::checkGLError("35");
         }
         else
         {
             damages.clear();
-            glTexImage2D(GL_TEXTURE_2D, 0, _format, _size.w(), _size.h(), 0, _format, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, buffFormat, width, height, 0, buffFormat, buffDepth, data);
         }
 
         deleteTexture();
-        _textureId = newTexture;
+        p_id = newTexture;
     }
     else
     {
@@ -60,12 +61,12 @@ void WTexture::setData(Int32 width, Int32 height, void *data, Type textureType)
                 (*t).setX(0);
             if((*t).y() < 0)
                 (*t).setY(0);
-            if((*t).w() + (*t).x() > _size.w() || (*t).w() < 0)
-                (*t).setW(_size.w() - (*t).x());
-            if((*t).h() + (*t).y() > _size.h() || (*t).h() < 0)
-                (*t).setH(_size.h() - (*t).y());
+            if((*t).w() + (*t).x() > p_size.w() || (*t).w() < 0)
+                (*t).setW(p_size.w() - (*t).x());
+            if((*t).h() + (*t).y() > p_size.h() || (*t).h() < 0)
+                (*t).setH(p_size.h() - (*t).y());
 
-            if((*t).w() <= 0 || (*t).h() <= 0 || (*t).x() + (*t).w() > _size.w() || (*t).y() + (*t).h() > _size.h())
+            if((*t).w() <= 0 || (*t).h() <= 0 || (*t).x() + (*t).w() > p_size.w() || (*t).y() + (*t).h() > p_size.h())
             {
                 t = damages.erase(t);
                 continue;
@@ -111,26 +112,53 @@ void WTexture::setData(Int32 width, Int32 height, void *data, Type textureType)
         */
 
         UInt32 newTexture;
-        _size = WSize(width,height);
+
+        p_size.setW(width);
+        p_size.setH(height);
+
         glGenTextures(1, &newTexture);
         glBindTexture (GL_TEXTURE_2D, newTexture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, _format, _size.w(), _size.h(), 0, _format, GL_UNSIGNED_BYTE, data);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, buffFormat, p_size.w(), p_size.h(), 0, buffFormat, buffDepth, data);
         deleteTexture();
-        _textureId = newTexture;
-        _type = textureType;
+        p_id = newTexture;
     }
-    _initialized = true;
+
+    p_initialized = true;
 }
 
 void WTexture::deleteTexture()
 {
-    if(_initialized)
+    if(initialized())
     {
-        glDeleteTextures(1, &_textureId);
-        WOpenGL::checkGLError("38");
-        _initialized = false;
+        glDeleteTextures(1, &p_id);
+        p_initialized = false;
     }
+}
+
+const WSize &WTexture::size() const
+{
+    return p_size;
+}
+
+bool WTexture::initialized()
+{
+    return p_initialized;
+}
+
+GLuint WTexture::id()
+{
+    return p_id;
+}
+
+GLuint WTexture::unit()
+{
+    return p_unit;
+}
+
+WTexture::BufferType WTexture::bufferType()
+{
+    return p_bufferType;
 }
 

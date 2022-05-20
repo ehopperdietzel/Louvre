@@ -18,10 +18,13 @@
 #include <WOutput.h>
 #include <WWayland.h>
 #include <WSizeF.h>
+#include <WCursor.h>
 
 #if W_BACKEND == 2
 
 using namespace Wpp;
+
+std::list<WOutput*>outputs;
 
 struct X11_Window{
     Window window;
@@ -149,13 +152,12 @@ static void create_window(WOutput *output)
 
 
 
-std::list<WOutput*> WBackend::getAvaliableOutputs()
+std::list<WOutput *> &WBackend::getAvaliableOutputs(WCompositor *compositor)
 {
-    std::list<WOutput*>outputs;
 
-    WOutput *output = new WOutput();
+    WOutput *output = compositor->createOutputRequest();
     output->data = malloc(sizeof(X11));
-    output->refreshRate = 60;
+    output->refreshRate = 59;
     X11 *data = (X11*)output->data;
     data->x_display = XOpenDisplay(NULL);
     data->egl_display = eglGetDisplay(data->x_display);
@@ -194,7 +196,6 @@ void WBackend::flipPage(WOutput *output)
 {
     X11 *data = (X11*)output->data;
     eglSwapBuffers(data->egl_display, data->window.surface);
-    XWarpPointer(data->x_display, None, data->window.window, 0, 0, 0, 0, W_WIDTH/2, W_HEIGHT/2);
 }
 
 bool WBackend::hasHardwareCursorSupport()
@@ -206,9 +207,10 @@ void WBackend::setCursor(WOutput *, WTexture *, const WSizeF&)
 {
 
 }
-void WBackend::setCursorPosition(WOutput *, const WPoint&)
+void WBackend::setCursorPosition(WOutput *output, const WPoint&)
 {
-
+    X11 *data = (X11*)output->data;
+    XWarpPointer(data->x_display, None, data->window.window, 0, 0, 0, 0, W_WIDTH/2, W_HEIGHT/2);
 }
 
 #endif

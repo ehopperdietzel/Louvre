@@ -12,13 +12,24 @@ class MyCompositor : public WCompositor
 public:
     MyCompositor();
 
-    // Virtual methods to override
-    void initializeGL(WOutput *output) override;
-    void paintGL(WOutput *output) override;
-    virtual WSeat *configureSeat() override;
+    /***************
+     **  FACTORY  **
+     ***************/
 
-    WClient *newClientRequest(wl_client *client) override;
-    void clientDisconnectRequest(WClient *client) override;
+    /*
+
+    // Output
+    WOutput *createOutputRequest() override;
+
+    // Surface
+    WSurface *createSurfaceRequest(wl_resource *surface, WClient *client) override;
+    void destroySurfaceRequest(WSurface *surface) override;
+
+    // Surface roles
+    WToplevelRole *createToplevelRequest(wl_resource *toplevel, WSurface *surface) override;
+
+    // Seat
+    WSeat *createSeatRequest() override;
 
     // Surfaces list ( orderer from back to front )
     list<MySurface*>surfacesList;
@@ -30,6 +41,8 @@ public:
     MySurface *surfaceAt(const WPoint &point);
 
     WCursor *cursor = nullptr;
+
+    */
 
 };
 

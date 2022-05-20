@@ -79,6 +79,7 @@ struct DRM
     GL_CONF gl;
 
     gbm_bo *cursor_bo = nullptr;
+    unsigned char cursor_pixels[4*64*64];
 };
 
 struct FB_DATA
@@ -90,7 +91,6 @@ struct FB_DATA
 static int init_gbm(DRM *data)
 {
 
-    printf("DEVICE FD:%i\n",data->deviceFd);
     if(WWayland::isGlContextInitialized())
     {
         WOutput *mainOutput = WWayland::mainOutput();
@@ -534,7 +534,6 @@ bool WBackend::hasHardwareCursorSupport()
     return true;
 }
 
-
 void WBackend::setCursor(WOutput *output, WTexture *texture, const WSizeF &size)
 {
 
@@ -546,8 +545,6 @@ void WBackend::setCursor(WOutput *output, WTexture *texture, const WSizeF &size)
         GL = output->_compositor->p_painter;
     else
         GL = output->painter();
-
-    unsigned char pixels[4*64*64];
 
     // Create framebuffer to scale cursor
     unsigned int fbo;
@@ -561,26 +558,20 @@ void WBackend::setCursor(WOutput *output, WTexture *texture, const WSizeF &size)
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, 66, 66);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
 
-    GL->setViewport(WRect(0,0,66,66),1);
-    GL->drawColor(WRect(0,0,66,66),0,0,0,0);
-    GL->drawTexture(texture,WRect(0,0,texture->size().w(),-texture->size().h()),WRect(1,64+1-size.h(),size.w(),size.h()));
-    glReadPixels(1,1,64,64,GL_RGBA,GL_UNSIGNED_BYTE,&pixels);
+    GL->scaleCursor(texture,WRect(0,0,texture->size().w(),-texture->size().h()),WRect(1,64+1-size.h(),size.w(),size.h()));
 
-    gbm_bo_write(data->cursor_bo,pixels, 4*64*64);
+    glReadPixels(1,1,64,64,GL_RGBA,GL_UNSIGNED_BYTE,&data->cursor_pixels);
+
+    gbm_bo_write(data->cursor_bo,data->cursor_pixels, 4*64*64);
+
     uint32_t handle = gbm_bo_get_handle(data->cursor_bo).u32;
     drmModeSetCursor(data->deviceFd, data->crtc_id, handle, 64, 64);
-
+    glDeleteFramebuffers(1,&fbo);
+    //glDeleteBuffers(1,&rbo);
+    glDeleteRenderbuffers(1,&rbo);
 
     // Goes back to main framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0,0,output->size.w()/output->getOutputScale(),output->size.h()/output->getOutputScale());
-    glDeleteBuffers(1,&rbo);
-    glDeleteFramebuffers(1, &fbo);
-
-
-
-    output->painter()->viewportToOutput();
-
 
 }
 

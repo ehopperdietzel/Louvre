@@ -3,17 +3,25 @@
 #include <WSurface.h>
 #include <WCompositor.h>
 #include <xdg-shell.h>
+#include <WToplevelRole.h>
+#include <WSeat.h>
 
 using namespace Wpp;
 
 void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
 {
     (void)resource;
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    if(surface->p_parent != nullptr)
-        surface->p_parent->p_children.remove(surface);
+    WToplevelRole *topLevel = (WToplevelRole*)wl_resource_get_user_data(resource);
 
-    printf("TOP LEVEL DESTROYED.\n");
+    if(topLevel->seat()->resizingToplevel() == topLevel)
+        topLevel->seat()->stopResizingToplevel();
+
+    if(topLevel->seat()->movingTopLevel() == topLevel)
+        topLevel->seat()->stopMovingTopLevel();
+
+    topLevel->compositor()->destroyTopLevelRequest(topLevel);
+    delete topLevel;
+
 }
 
 void Extensions::XdgShell::Toplevel::destroy (wl_client *client, wl_resource *resource)
@@ -25,34 +33,32 @@ void Extensions::XdgShell::Toplevel::set_parent (wl_client *client, wl_resource 
 {
     (void)client;(void)resource;(void)parent;
 
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+    WToplevelRole *toplevel = (WToplevelRole*)wl_resource_get_user_data(resource);
     if(parent == NULL)
     {
-        if(surface->p_parent != nullptr)
-            surface->p_parent->p_children.remove(surface);
-        surface->p_parent = nullptr;
+        if(toplevel->surface()->parent())
+            toplevel->surface()->parent()->p_children.remove(toplevel->surface());
+        toplevel->surface()->p_parent = nullptr;
     }
     else
     {
-        surface->p_parent = (WSurface*)wl_resource_get_user_data(parent);
-        surface->p_parent->p_children.push_back(surface);
+        toplevel->surface()->p_parent = (WSurface*)wl_resource_get_user_data(parent);
+        toplevel->surface()->p_parent->p_children.push_back(toplevel->surface());
     }
 
-    surface->parentChangeRequest();
+    toplevel->surface()->parentChangeRequest();
 }
 void Extensions::XdgShell::Toplevel::set_title (wl_client *client, wl_resource *resource, const char *title)
 {
     (void)client;
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->setTitle(title);
-    //printf("App Title: %s\n",title);
+    WToplevelRole *toplevel = (WToplevelRole*)wl_resource_get_user_data(resource);
+    toplevel->setTitle(title);
 }
 void Extensions::XdgShell::Toplevel::set_app_id (wl_client *client, wl_resource *resource, const char *app_id)
 {
     (void)client;
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->setAppId(app_id);
-    //printf("App Id: %s\n",app_id);
+    WToplevelRole *toplevel = (WToplevelRole*)wl_resource_get_user_data(resource);
+    toplevel->setAppId(app_id);
 }
 void Extensions::XdgShell::Toplevel::show_window_menu (wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial, Int32 x, Int32 y)
 {
@@ -61,30 +67,31 @@ void Extensions::XdgShell::Toplevel::show_window_menu (wl_client *client, wl_res
 void Extensions::XdgShell::Toplevel::move(wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial)
 {
     (void)client;(void)seat;(void)serial;
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->moveStartRequest();
+    WToplevelRole *toplevel = (WToplevelRole*)wl_resource_get_user_data(resource);
+    toplevel->startMoveRequest();
 
 }
-void Extensions::XdgShell::Toplevel::resize (wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial, UInt32 edges)
+void Extensions::XdgShell::Toplevel::resize(wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial, UInt32 edges)
 {
-    printf("Resize\n");
     (void)client;(void)seat;(void)serial;
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->resizeStartRequest((ResizeEdge)edges);
+    WToplevelRole *toplevel = (WToplevelRole*)wl_resource_get_user_data(resource);
+    toplevel->startResizeRequest((WToplevelRole::Edge)edges);
 }
 void Extensions::XdgShell::Toplevel::set_max_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
     (void)client;
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->p_maxSize = {width,height};
-    surface->maxSizeChangeRequest();
+    WToplevelRole *toplevel = (WToplevelRole*)wl_resource_get_user_data(resource);
+    toplevel->p_maxSize.setW(width);
+    toplevel->p_maxSize.setH(height);
+    toplevel->maxSizeChanged();
 }
 void Extensions::XdgShell::Toplevel::set_min_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
-    (void)client;(void)resource;(void)width;(void)height;
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->p_minSize = {width,height};
-    surface->minSizeChangeRequest();
+    (void)client;(void)resource;
+    WToplevelRole *toplevel = (WToplevelRole*)wl_resource_get_user_data(resource);
+    toplevel->p_minSize.setW(width);
+    toplevel->p_minSize.setH(height);
+    toplevel->minSizeChanged();
 }
 void Extensions::XdgShell::Toplevel::set_maximized (wl_client *client, wl_resource *resource)
 {

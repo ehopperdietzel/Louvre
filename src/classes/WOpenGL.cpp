@@ -14,15 +14,41 @@ WOpenGL::WOpenGL()
     GLuint vertexShader,fragmentShader,programObject;
 
     // Open the vertex/fragment shaders
-    GLchar *vShaderStr = WOpenGL::openShader("/opt/MyCompositor/res/shaders/Vertex.glsl");
-    GLchar *fShaderStr = WOpenGL::openShader("/opt/MyCompositor/res/shaders/Fragment.glsl");
+    GLchar vShaderStr[] =
+       "precision lowp float;\
+        precision lowp int;\
+        attribute vec4 vertexPosition;\
+        varying vec2 v_texcoord;\
+        void main()\
+        {\
+            gl_Position = vec4(vertexPosition.xy,0.0,1.0);\
+            v_texcoord = vertexPosition.zw;\
+        }";
+
+    GLchar fShaderStr[] =
+       "precision lowp float;\
+        precision lowp int;\
+        uniform sampler2D tex;\
+        uniform vec2 texSize;\
+        uniform vec4 srcRect;\
+        uniform int mode;\
+        uniform vec4 colorRGBA;\
+        varying vec2 v_texcoord;\
+        void main()\
+        {\
+          if(mode == 0)\
+          {\
+            float x = (srcRect.x)/texSize.x + v_texcoord.x*srcRect.z/texSize.x;\
+            float y = (srcRect.y)/texSize.y + v_texcoord.y*srcRect.w/texSize.y;\
+            gl_FragColor = texture2D(tex,vec2(x,-y));\
+          }\
+          else\
+            gl_FragColor = colorRGBA;\
+        }";
 
     // Load the vertex/fragment shaders
     vertexShader = WOpenGL::LoadShader(GL_VERTEX_SHADER, vShaderStr);
     fragmentShader = WOpenGL::LoadShader(GL_FRAGMENT_SHADER, fShaderStr);
-
-    free(vShaderStr);
-    free(fShaderStr);
 
     // Create the program object
     programObject = glCreateProgram();
@@ -50,12 +76,11 @@ WOpenGL::WOpenGL()
 
     // Enable alpha blending
     glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_SCISSOR_TEST);
 
     // Set blend mode
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Set clear screen color
-    glClearColor(0.0f, 0.3f, 0.5f, 1.0f);
 
     // Use the program object
     glUseProgram(programObject);
@@ -67,10 +92,8 @@ WOpenGL::WOpenGL()
     glEnableVertexAttribArray(0);
 
     // Get Uniform Variables
-    screenSizeUniform = glGetUniformLocation(programObject, "screenSize");
     texSizeUniform = glGetUniformLocation(programObject, "texSize");
     srcRectUniform = glGetUniformLocation(programObject, "srcRect");
-    dstRectUniform = glGetUniformLocation(programObject, "dstRect");
     activeTextureUniform = glGetUniformLocation(programObject, "tex");
     modeUniform = glGetUniformLocation(programObject, "mode");
     colorUniform = glGetUniformLocation(programObject, "colorRGBA");
@@ -152,6 +175,8 @@ GLuint WOpenGL::LoadShader(GLenum type, const char *shaderSrc)
 
         glDeleteShader(shader);
 
+        exit(0);
+
         return 0;
     }
 
@@ -161,50 +186,70 @@ GLuint WOpenGL::LoadShader(GLenum type, const char *shaderSrc)
 WTexture *WOpenGL::loadTexture(const char *fileName)
 {
     int w,h;
-    WTexture *texture = new WTexture();
+    WTexture *texture = new WTexture(1);
     unsigned char * img = SOIL_load_image(fileName, &w, &h, 0, SOIL_LOAD_RGBA);
-    texture->setData(w,h,img);
+    texture->setData(w,h,img,GL_RGBA,GL_UNSIGNED_BYTE);
     SOIL_free_image_data(img);
     return texture;
 }
 
-
-void WOpenGL::drawTexture(WTexture *texture, WRect src, WRect dst)
+void WOpenGL::scaleCursor(WTexture *texture, const WRect &src, const WRect &dst)
 {
-    glActiveTexture(GL_TEXTURE0 + texture->textureUnit());
+    glScissor(dst.x(),dst.y(),dst.w(),dst.h());
+    glViewport(dst.x(),dst.y(),dst.w(),dst.h());
+
+    glClearColor(0,0,0,0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glActiveTexture(GL_TEXTURE0 + texture->unit());
     glUniform1i(modeUniform,0);
-    glUniform1i(activeTextureUniform,texture->textureUnit());
-    glBindTexture(GL_TEXTURE_2D,texture->textureId());
+    glUniform1i(activeTextureUniform,texture->unit());
+    glBindTexture(GL_TEXTURE_2D,texture->id());
     glUniform2f(texSizeUniform,texture->size().w(), texture->size().h());
     glUniform4f(srcRectUniform,src.x(), src.y(), src.w(), src.h());
-    glUniform4f(dstRectUniform,dst.x(), dst.y(), dst.w(), dst.h());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void WOpenGL::drawColor(WRect dst, float r, float g, float b, float a)
+
+void WOpenGL::drawTexture(WTexture *texture, const WRect &src, const WRect &dst)
 {
+    setViewport(dst);
+    glActiveTexture(GL_TEXTURE0 + texture->unit());
+    glUniform1i(modeUniform,0);
+    glUniform1i(activeTextureUniform,texture->unit());
+    glBindTexture(GL_TEXTURE_2D,texture->id());
+    glUniform2f(texSizeUniform,texture->size().w(), texture->size().h());
+    glUniform4f(srcRectUniform,src.x(), src.y(), src.w(), src.h());
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+
+void WOpenGL::drawColor(const WRect &dst, Float32 r, Float32 g, Float32 b, Float32 a)
+{
+    setViewport(dst);
     glUniform4f(colorUniform,r,g,b,a);
     glUniform1i(modeUniform,1);
-    glUniform4f(dstRectUniform,dst.x(), dst.y(), dst.w(), dst.h());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void WOpenGL::setViewport(WRect rect, Int32 scale)
-{
-    // Set the viewport
-    glViewport(0, 0, rect.w(), rect.h());
-
-    // Set screen size
-    glUniform2f(
-        screenSizeUniform,
-        rect.w() / scale,
-        rect.h() / scale);
-}
-
-void WOpenGL::viewportToOutput()
+void WOpenGL::setViewport(const WRect &rect)
 {
     if(p_output)
-        setViewport(WRect(WPoint(0,0),p_output->size), p_output->getOutputScale());
+    {
+        WRect r = rect*p_output->getOutputScale();
+        r.setY(p_output->size.h()-r.y()-r.h());
+        glScissor(r.x(),r.y(),r.w(),r.h());
+        glViewport(r.x(),r.y(),r.w(),r.h());
+    }
 }
+
+void WOpenGL::clearScreen()
+{
+    glDisable(GL_BLEND);
+    glScissor(0,0,p_output->size.w(),p_output->size.h());
+    glViewport(0,0,p_output->size.w(),p_output->size.h());
+    glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_BLEND);
+}
+
 
 

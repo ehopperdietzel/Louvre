@@ -23,8 +23,6 @@ public:
     wl_resource *touchResource() const;
 
     // Requests
-    virtual WSurface *newSurfaceRequest(wl_resource *surface) = 0;
-    virtual void surfaceDestroyRequest(WSurface *surface) = 0;
     //virtual void newRegionRequest(WRegion *region) = 0;
     //virtual void regionDestroyRequest(WRegion *region) = 0;
     //virtual void newPositionerRequest(WPositioner *positioner) = 0;

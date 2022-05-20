@@ -1,4 +1,6 @@
 #include "XdgPopup.h"
+
+#include <WCompositor.h>
 #include <WSurface.h>
 #include <WClient.h>
 #include <WPositioner.h>
@@ -12,7 +14,7 @@ void Extensions::XdgShell::Popup::destroy_resource(wl_resource *resource)
     if(surface->parent() != nullptr)
         surface->parent()->p_children.remove(surface);
 
-    surface->client()->surfaceDestroyRequest(surface);
+    surface->compositor()->destroySurfaceRequest(surface);
 
     printf("POPUP DESTROYED.\n");
 }

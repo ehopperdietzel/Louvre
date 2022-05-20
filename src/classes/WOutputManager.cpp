@@ -1,12 +1,13 @@
 #include <WOutputManager.h>
 #include <WOutput.h>
 #include <WBackend.h>
+#include <WCompositor.h>
 
 using namespace Wpp;
 
 WOutputManager::WOutputManager(WCompositor *compositor)
 {
-    p_outputs = WBackend::getAvaliableOutputs();
+    p_outputs = WBackend::getAvaliableOutputs(compositor);
     p_compositor = compositor;
 }
 

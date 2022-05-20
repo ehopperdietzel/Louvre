@@ -1,3 +1,4 @@
+/*
 #ifndef MYSEAT_H
 #define MYSEAT_H
 
@@ -29,7 +30,7 @@ public:
     // Active surfaces
     MySurface *movingSurface = nullptr;
     MySurface *resizingSurface = nullptr;
-    MySurface *cursorSurface = nullptr;
+    MySurface *dragginSurface = nullptr;
 
     // Active resize edge
     ResizeEdge resizeEdge;
@@ -43,3 +44,4 @@ public:
 };
 
 #endif // MYSEAT_H
+*/

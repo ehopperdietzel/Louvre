@@ -31,6 +31,15 @@ public:
 
     WOutput();
     ~WOutput();
+
+
+    virtual void initializeGL();
+    virtual void paintGL();
+    virtual void plugged();
+    virtual void unplugged();
+
+    WCompositor *compositor();
+
     void setOutputScale(Int32 scale);
     Int32 getOutputScale() const;
     void repaint();
@@ -81,7 +90,7 @@ private:
     static void startRenderLoop(void *data);
 
     // Compositor
-    WCompositor *_compositor = nullptr;
+    WCompositor *p_compositor = nullptr;
 
     // Params
     char *_devName = nullptr;

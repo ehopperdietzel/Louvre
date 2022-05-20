@@ -34,19 +34,19 @@ QMAKE_EXTRA_TARGETS += first copydata copydata2
 QMAKE_LFLAGS += -Wl,-rpath=.
 
 SOURCES += \
-        MyClient.cpp \
         MyCompositor.cpp \
-        MyOutputManager.cpp \
+        MyOutput.cpp \
         MySeat.cpp \
         MySurface.cpp \
+        MyToplevel.cpp \
         main.cpp
 
 HEADERS += \
-    MyClient.h \
     MyCompositor.h \
-    MyOutputManager.h \
+    MyOutput.h \
     MySeat.h \
-    MySurface.h
+    MySurface.h \
+    MyToplevel.h
 
 DISTFILES += \
     shaders/Fragment.glsl \

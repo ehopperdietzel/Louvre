@@ -6,7 +6,6 @@
 
 #include <time.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include <xdg-shell.h>
 
@@ -16,7 +15,7 @@
 #include <WOutput.h>
 
 #include <unistd.h>
-
+#include <WToplevelRole.h>
 
 
 #include <WTime.h>
@@ -32,6 +31,11 @@ void get_egl_func()
      eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
 }
 
+WToplevelRole *WSurface::toplevel() const
+{
+    return p_toplevelRole;
+}
+
 WSurface::WSurface(wl_resource *surface, WClient *client, GLuint textureUnit)
 {
     get_egl_func();
@@ -41,33 +45,37 @@ WSurface::WSurface(wl_resource *surface, WClient *client, GLuint textureUnit)
     p_client = client;
 }
 
-WPointer &WSurface::pointer()
+const WPoint &WSurface::pos() const
 {
-    return p_pointer;
+    return p_pos;
 }
 
-WKeyboard &WSurface::keyboard()
+void WSurface::setPos(const WPoint &newPos)
 {
-    return p_keyboard;
+    p_pos = newPos;
+}
+
+void WSurface::setPos(Int32 x, Int32 y)
+{
+    setX(x);
+    setY(y);
+}
+
+void WSurface::setX(Int32 x)
+{
+    p_pos.setX(x);
+}
+
+void WSurface::setY(Int32 y)
+{
+    p_pos.setY(y);
 }
 
 WSurface::~WSurface()
 {
-    delete []p_appId;
-    delete []p_title;
+
 }
 
-
-void WSurface::sendConfigureToplevelEvent(Int32 width, Int32 height, SurfaceStateFlags states)
-{
-    p_pendingConfigure = true;
-    p_pendingConfigureSize.setW(width);
-    p_pendingConfigureSize.setH(height);
-    p_pendingConfigureStates = states;
-    //dispachLastConfiguration();
-    //eventfd_write(compositor()->libinputFd,1);
-    //compositor()->repaintAllOutputs();
-}
 
 void WSurface::sendConfigurePopupEvent(Int32 x, Int32 y, Int32 width, Int32 height)
 {
@@ -75,159 +83,23 @@ void WSurface::sendConfigurePopupEvent(Int32 x, Int32 y, Int32 width, Int32 heig
         xdg_popup_send_configure(p_xdg_popup,x,y,width,height);
 }
 
-WSize WSurface::calculateResizeRect(const WPoint &cursorPosDelta, const WSize &initialSize, ResizeEdge edge)
+WSeat *WSurface::seat() const
 {
-    WSize newSize = initialSize;
-    switch(edge)
-    {
-        case ResizeEdge::Bottom:
-        {
-            newSize.setH(initialSize.h() - cursorPosDelta.y());
-        }break;
-        case ResizeEdge::Right:
-        {
-            newSize.setW(initialSize.w() - cursorPosDelta.x());
-        }break;
-        case ResizeEdge::BottomRight:
-        {
-            newSize.setH(initialSize.h() - cursorPosDelta.y());
-            newSize.setW(initialSize.w() - cursorPosDelta.x());
-        }break;
-        case ResizeEdge::Top:
-        {
-            newSize.setH(initialSize.h() + cursorPosDelta.y());
-        }break;
-        case ResizeEdge::Left:
-        {
-            newSize.setW(initialSize.w() + cursorPosDelta.x());
-        }break;
-        case ResizeEdge::TopLeft:
-        {
-            newSize.setH(initialSize.h() + cursorPosDelta.y());
-            newSize.setW(initialSize.w() + cursorPosDelta.x());
-        }break;
-        case ResizeEdge::BottomLeft:
-        {
-            newSize.setH(initialSize.h() - cursorPosDelta.y());
-            newSize.setW(initialSize.w() + cursorPosDelta.x());
-        }break;
-        case ResizeEdge::TopRight:
-        {
-            newSize.setH(initialSize.h() + cursorPosDelta.y());
-            newSize.setW(initialSize.w() - cursorPosDelta.x());
-        }break;
-    }
-
-    return newSize;
+    return compositor()->seat();
 }
+
 
 bool WSurface::inputRegionContainsPoint(const WPoint &surfacePos, const WPoint &point)
 {
     return current.inputRegion.containsPoint(point-surfacePos);
 }
 
-void WSurface::setAppId(const char *appId)
+WPoint WSurface::mapToLocal(const WPoint &point)
 {
-    delete []p_appId;
-    p_appId = new char[strlen(appId)+1];
-    strcpy(p_appId,appId);
+    return point - pos();
 }
 
-void WSurface::setTitle(const char *title)
-{
-    delete []p_title;
-    p_title = new char[strlen(title)+1];
-    strcpy(p_title,title);
-}
 
-void WSurface::dispachLastConfiguration()
-{
-    ack_configure = false;
-
-    if(type() == SurfaceType::Toplevel)
-    {
-        if(p_xdg_toplevel != nullptr)
-        {
-            wl_array dummy;
-            wl_array_init(&dummy);
-            UInt32 index = 0;
-
-            if((p_pendingConfigureStates & (SurfaceStateFlags)SurfaceState::Activated))
-            {
-                wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-                xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-                s[index] = XDG_TOPLEVEL_STATE_ACTIVATED;
-                index++;
-            }
-            if(p_pendingConfigureStates & (SurfaceStateFlags)SurfaceState::Fullscreen)
-            {
-                wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-                xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-                s[index] = XDG_TOPLEVEL_STATE_FULLSCREEN;
-                index++;
-            }
-            if(p_pendingConfigureStates & (SurfaceStateFlags)SurfaceState::Maximized)
-            {
-                wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-                xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-                s[index] = XDG_TOPLEVEL_STATE_MAXIMIZED;
-                index++;
-            }
-            if(p_pendingConfigureStates & (SurfaceStateFlags)SurfaceState::Resizing)
-            {
-                wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-                xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-                s[index] = XDG_TOPLEVEL_STATE_RESIZING;
-                index++;
-            }
-
-            if(wl_resource_get_version(p_xdg_toplevel) >= 2)
-            {
-                if(p_pendingConfigureStates & (SurfaceStateFlags)SurfaceState::TiledBottom)
-                {
-                    wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-                    xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-                    s[index] = XDG_TOPLEVEL_STATE_TILED_BOTTOM;
-                    index++;
-                }
-                if(p_pendingConfigureStates & (SurfaceStateFlags)SurfaceState::TiledLeft)
-                {
-                    wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-                    xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-                    s[index] = XDG_TOPLEVEL_STATE_TILED_LEFT;
-                    index++;
-                }
-                if(p_pendingConfigureStates & (SurfaceStateFlags)SurfaceState::TiledRight)
-                {
-                    wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-                    xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-                    s[index] = XDG_TOPLEVEL_STATE_TILED_RIGHT;
-                    index++;
-                }
-                if(p_pendingConfigureStates & (SurfaceStateFlags)SurfaceState::TiledTop)
-                {
-                    wl_array_add(&dummy, sizeof(xdg_toplevel_state));
-                    xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
-                    s[index] = XDG_TOPLEVEL_STATE_TILED_TOP;
-                    index++;
-                }
-            }
-
-            xdg_toplevel_send_configure(p_xdg_toplevel,p_pendingConfigureSize.w(),p_pendingConfigureSize.h(),&dummy);
-            wl_array_release(&dummy);
-        }
-    }
-
-    if(p_xdg_shell != nullptr)
-    {
-        xdg_surface_send_configure(p_xdg_shell,configureSerial);
-        //printf("CONFIGURE serial %i\n",configureSerial);
-        configureSerial++;
-    }
-
-    p_pendingConfigure = false;
-
-}
 void WSurface::applyDamages()
 {
 
@@ -244,10 +116,9 @@ void WSurface::applyDamages()
 
         eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_WIDTH, &width);
         eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_HEIGHT, &height);
-        p_texture->_format = texture_format;
         EGLAttrib attribs = EGL_NONE;
         EGLImage image = eglCreateImage(output->getDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, current.buffer, &attribs);
-        p_texture->setData(width, height, &image, WTexture::Type::EGL);
+        p_texture->setData(width, height, &image, texture_format, GL_UNSIGNED_BYTE, WTexture::BufferType::EGL);
         eglDestroyImage (output->getDisplay(), image);
     }
     else
@@ -260,15 +131,17 @@ void WSurface::applyDamages()
         void *data = wl_shm_buffer_get_data(shm_buffer);
         UInt32 format =  wl_shm_buffer_get_format(shm_buffer);
 
+        GLenum bufferFormat;
+
         //printf("STRIDE %i %i\n",wl_shm_buffer_get_stride(shm_buffer),width);
 
         if( format == WL_SHM_FORMAT_XRGB8888)
         {
-            p_texture->_format = GL_BGR;
+            bufferFormat = GL_BGR;
         }
         else if(format == WL_SHM_FORMAT_ARGB8888)
         {
-            p_texture->_format = GL_BGRA;
+            bufferFormat = GL_BGRA;
         }
         else
         {
@@ -276,7 +149,7 @@ void WSurface::applyDamages()
             exit(1);
         }
 
-        p_texture->setData(width, height, data);
+        p_texture->setData(width, height, data, bufferFormat, GL_UNSIGNED_BYTE);
         wl_shm_buffer_end_access(shm_buffer);
     }
 
@@ -287,7 +160,9 @@ void WSurface::applyDamages()
     if(current.windowGeometry != pending.windowGeometry)
     {
         current.windowGeometry = pending.windowGeometry;
-        geometryChangeRequest();
+
+        if(type() == WSurface::Toplevel)
+            toplevel()->geometryChangeRequest();
     }
 
     if(prevSize != size())

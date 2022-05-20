@@ -61,12 +61,12 @@ void Extensions::XdgShell::WmBase::create_positioner(wl_client *client, wl_resou
     positioner->p_resource = wl_resource_create(client, &xdg_positioner_interface, version, id);
     wl_resource_set_implementation(positioner->p_resource, &xdg_positioner_implementation, positioner, &Wpp::Extensions::XdgShell::Positioner::destroy_resource);
 }
-void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *_surface)
+void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *surface)
 {
     (void)resource;
 
     // Get surface reference
-    WSurface *surface = (WSurface*)wl_resource_get_user_data(_surface);
+    WSurface *wSurface = (WSurface*)wl_resource_get_user_data(surface);
 
     // Check errors
     /*
@@ -77,7 +77,7 @@ void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resourc
     }
     */
 
-    if(surface->type() != SurfaceType::Undefined)
+    if(wSurface->type() != WSurface::Undefined)
     {
         wl_resource_post_error(resource,XDG_WM_BASE_ERROR_ROLE,"Given wl_surface has another role.");
         return;
@@ -85,9 +85,8 @@ void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resourc
 
     Int32 version = wl_resource_get_version(resource);
     printf("Xdg Surface version: %i\n",version);
-    surface->p_xdg_shell = wl_resource_create(client, &xdg_surface_interface, version, id);// 4
-    wl_resource_set_implementation(surface->p_xdg_shell, &xdg_surface_implementation, surface, &Wpp::Extensions::XdgShell::Surface::resource_destroy);
-    //xdg_surface_send_configure(surface->xdg_shell, 0);
+    wSurface->p_xdg_shell = wl_resource_create(client, &xdg_surface_interface, version, id);// 4
+    wl_resource_set_implementation(wSurface->p_xdg_shell, &xdg_surface_implementation, wSurface, &Wpp::Extensions::XdgShell::Surface::resource_destroy);
 }
 void Extensions::XdgShell::WmBase::pong(wl_client *client, wl_resource *resource, UInt32 serial)
 {

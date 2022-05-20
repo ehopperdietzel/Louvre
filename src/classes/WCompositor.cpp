@@ -1,14 +1,18 @@
 #include "WCompositor.h"
-#include <stdio.h>
+#include <WNamespaces.h>
 #include <WBackend.h>
 #include <WWayland.h>
+#include <WOutput.h>
+#include <WSeat.h>
+
+#include <stdio.h>
 #include <sys/poll.h>
-#include <WNamespaces.h>
 #include <thread>
 #include <unistd.h>
 #include <signal.h>
-#include <WOutput.h>
-#include <WSeat.h>
+#include <WToplevelRole.h>
+#include <WCursor.h>
+
 
 using namespace Wpp;
 
@@ -24,18 +28,89 @@ WCompositor::WCompositor()
     WWayland::initWayland(this);
 }
 
+WOutput *WCompositor::createOutputRequest()
+{
+    return new WOutput();
+}
+
+WClient *WCompositor::createClientRequest(wl_client *client)
+{
+    return new WClient(client,this);
+}
+
+WSurface *WCompositor::createSurfaceRequest(wl_resource *surface, WClient *client)
+{
+    return new WSurface(surface,client);
+}
+
+WSeat *WCompositor::createSeatRequest()
+{
+    return new WSeat(this);
+}
+
+WToplevelRole *WCompositor::createToplevelRequest(wl_resource *toplevel, WSurface *surface)
+{
+    return new WToplevelRole(toplevel, surface);
+}
+
+void WCompositor::destroyOutputRequest(WOutput *output)
+{
+
+}
+
+void WCompositor::destroyClientRequest(WClient *client)
+{
+
+}
+
+void WCompositor::destroySurfaceRequest(WSurface *surface)
+{
+    if(seat()->cursorSurface() == surface)
+    {
+        cursor()->setCursor("arrow");
+        seat()->setCursorSurface(nullptr);
+    }
+}
+
+void WCompositor::destroyTopLevelRequest(WToplevelRole *topLevel)
+{
+    repaintAllOutputs();
+}
+
+
 void WCompositor::start()
 {    
     if(_started)
         return;
 
     // Ask the developer to return a WSeat
-    p_seat = configureSeat();
+    p_seat = createSeatRequest();
     WWayland::setSeat(p_seat);
 
     // Init wayland
     _started = true;
     WWayland::runLoop();
+}
+
+void WCompositor::riseSurface(WSurface *surface)
+{
+    p_surfaces.remove(surface);
+    p_surfaces.push_back(surface);
+
+    // Rise its children
+    for(WSurface *children : surface->children())
+        riseSurface(children);
+}
+
+WCursor *WCompositor::cursor() const
+{
+    return p_cursor;
+}
+
+
+WSeat *WCompositor::seat() const
+{
+    return p_seat;
 }
 
 void WCompositor::repaintAllOutputs()
@@ -65,12 +140,23 @@ void WCompositor::addOutput(WOutput *output)
          * immediatly to allow them to reuse it.
          * This fix the Qt clients decoration bug while resizing. */
         WWayland::initGLContext();
+
     }
 }
 
 void WCompositor::removeOutput(WOutput *output)
 {
 
+}
+
+const list<WSurface *> &WCompositor::surfaces() const
+{
+    return p_surfaces;
+}
+
+const list<WOutput *> &WCompositor::outputs() const
+{
+    return p_outputs;
 }
 
 

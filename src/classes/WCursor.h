@@ -11,6 +11,8 @@ class Wpp::WCursor
 public:
     WCursor(WOutput *output);
 
+    void setCursorTheme(const char *themeName);
+    void setCursor(const char *cursorName);
     void setTexture(WTexture *texture, const WPointF &hotspot);
     void setOutput(WOutput *output);
     void move(float x, float y);
@@ -26,6 +28,9 @@ public:
 
 private:
     void update();
+
+    char *p_cursorTheme = NULL;
+    WTexture *p_x11Texture;
     WTexture *p_texture = nullptr;
     WOutput *p_output = nullptr;
     WPointF p_pos;

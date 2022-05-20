@@ -14,23 +14,22 @@ class Wpp::WTexture
 
 public:
 
-    enum Type
+    enum BufferType
     {
         SHM = 0,
         EGL = 1
     };
 
     WTexture(GLuint textureUnit = 0);
-    void setData(Int32 width, Int32 height, void *data, Type textureType = SHM);
+    void setData(Int32 width, Int32 height, void *data, GLenum buffFormat, GLenum buffDepth, BufferType buffType = SHM);
     void deleteTexture();
-    const WSize &size() const { return _size; }
-    bool isInitialized(){ return _initialized;}
-    GLuint textureId(){return _textureId;}
-    GLuint textureUnit(){return _textureUnit;}
-    Type type(){return _type;}
-    UInt32 format(){return _format;}
+    const WSize &size() const;
+    bool initialized();
+    GLuint id();
+    GLuint unit();
+    BufferType bufferType();
 
-    WPoint resizeDirection;
+    //WPoint resizeDirection;
     std::list<WRect>damages;
     std::list<WRect>pendingDamages;
 
@@ -39,11 +38,10 @@ private:
     friend class Wpp::WSurface;
 
 
-    WSize _size;
-    GLuint _textureId,_textureUnit = 0;
-    bool _initialized = false;
-    Type _type = SHM;
-    UInt32 _format = GL_RGBA;
+    WSize p_size;
+    GLuint p_id,p_unit = 0;
+    bool p_initialized = false;
+    BufferType p_bufferType = SHM;
 
 };
 

@@ -1,17 +1,21 @@
 #include "Surface.h"
-#include <xdg-shell.h>
+
 #include <WBackend.h>
+#include <WCompositor.h>
+#include <WSurface.h>
+#include <WClient.h>
+#include <WSeat.h>
+
+#include <xdg-shell.h>
 
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <WSurface.h>
-#include <WClient.h>
 #include <stdio.h>
-#include <WCompositor.h>
 #include <unistd.h>
 #include <sys/eventfd.h>
-#include <WSeat.h>
+
+#include <WToplevelRole.h>
 
 using namespace Wpp;
 
@@ -34,11 +38,12 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
         // Remove surface from its client list
         surface->client()->surfaces.remove(surface);
 
+        // Remove the surface from the compositor list
+        surface->compositor()->p_surfaces.remove(surface);
+
         // Notify from client
-        surface->client()->surfaceDestroyRequest(surface);
+        surface->compositor()->destroySurfaceRequest(surface);
     }
-
-
 
     surface->texture()->deleteTexture();
     delete surface;
@@ -50,7 +55,6 @@ void Globals::Surface::attach(wl_client *client, wl_resource *resource, wl_resou
     (void)client;(void)x;(void)y;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
     surface->pending.buffer = buffer;
-    surface->texture()->resizeDirection = WPoint(x,y);
 }
 
 void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 callback)
@@ -90,17 +94,14 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     {
 
         if(surface->p_xdg_shell)
-        {
-            xdg_surface_send_configure(surface->p_xdg_shell,surface->configureSerial);
-            surface->configureSerial++;
-        }
+            xdg_surface_send_configure(surface->p_xdg_shell,1);
 
-        if(surface->pending.type == SurfaceType::Toplevel)
+        if(surface->pending.type == WSurface::SurfaceType::Toplevel)
         {
             surface->current.type = surface->pending.type;
-            surface->pending.type = SurfaceType::Undefined;
+            surface->pending.type = WSurface::SurfaceType::Undefined;
 
-            surface->configureToplevelRequest();
+            surface->toplevel()->configureRequest();
             surface->typeChangeRequest();
         }
         return;
@@ -130,7 +131,7 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
 
 
     // Notify that the cursor changed content
-    if(surface->type() == Cursor)
+    if(surface->type() == WSurface::Cursor)
         surface->compositor()->seat()->setCursorRequest(surface,surface->hotspot().x(),surface->hotspot().y());
 
 

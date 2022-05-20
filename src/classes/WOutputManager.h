@@ -13,10 +13,6 @@ public:
     WCompositor *getCompositor() const;
     const list<WOutput*>*getOutputsList();
 
-protected:
-    virtual void outputPluggedEvent(WOutput *output) = 0;
-    virtual void outputUnpluggedEvent(WOutput *output) = 0;
-
 private:
     WCompositor *p_compositor = nullptr;
     list<WOutput*>p_outputs;

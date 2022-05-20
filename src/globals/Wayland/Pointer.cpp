@@ -21,7 +21,7 @@ void Wpp::Globals::Pointer::set_cursor(wl_client *client, wl_resource *resource,
         return;
 
     WSurface *cursorSurface = (WSurface*)wl_resource_get_user_data(surface);
-    cursorSurface->current.type = Wpp::SurfaceType::Cursor;
+    cursorSurface->current.type = WSurface::SurfaceType::Cursor;
     cursorSurface->p_hotspot = WPoint(hotspot_x,hotspot_y)*cursorSurface->bufferScale();
     cursorSurface->typeChangeRequest();
 

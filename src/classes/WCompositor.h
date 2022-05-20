@@ -23,23 +23,33 @@ class Wpp::WCompositor
 {
 public:
     WCompositor();
+
+    /* Create requests */
+    virtual WOutput *createOutputRequest();
+    virtual WClient *createClientRequest(wl_client *client);
+    virtual WSurface *createSurfaceRequest(wl_resource *surface, WClient *client);
+    virtual WSeat *createSeatRequest();
+    virtual WToplevelRole *createToplevelRequest(wl_resource *toplevel, WSurface *surface);
+
+    /* Destroy requests */
+    virtual void destroyOutputRequest(WOutput *output);
+    virtual void destroyClientRequest(WClient *client);
+    virtual void destroySurfaceRequest(WSurface *surface);
+    virtual void destroyTopLevelRequest(WToplevelRole *topLevel);
+
+
     void start();
+    void riseSurface(WSurface *surface);
 
-    virtual void initializeGL(WOutput *output) = 0;
-    virtual void paintGL(WOutput *output) = 0;
-
-    virtual WSeat *configureSeat() = 0;
-    virtual WClient *newClientRequest(wl_client *client) = 0;
-    virtual void clientDisconnectRequest(WClient *client) = 0;
-
-
-    WSeat *seat() const {return p_seat;}
+    WCursor *cursor() const;
+    WSeat *seat() const;
 
     // Output
     void repaintAllOutputs();
     void addOutput(WOutput *output);
     void removeOutput(WOutput *output);
-    const list<WOutput*>&outputs() const { return p_outputs; };
+    const list<WSurface*>&surfaces() const;
+    const list<WOutput*>&outputs() const;
 
 
     list<WClient*>clients;
@@ -54,10 +64,12 @@ private:
     friend class WInput;
     friend class WSurface;
     friend class WOutput;
+    friend class Globals::Compositor;
     friend class Globals::Surface;
     friend class Wpp::Globals::Pointer;
 
 
+    WCursor *p_cursor = nullptr;
     WSeat *p_seat = nullptr;
 
 
@@ -66,6 +78,9 @@ private:
 
     // Outputs
     list<WOutput*>p_outputs;
+
+    // Surfaces
+    list<WSurface*>p_surfaces;
 
     int libinputFd, waylandFd;
     eventfd_t libinputVal, waylandVal = 1;

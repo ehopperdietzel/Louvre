@@ -16,7 +16,7 @@
 
 // Globals versions
 #define WPP_SEAT_VERSION 7
-
+#define WPP_XDG_SHELL_VERSION 2
 
 #define W_WIDTH 1440*2
 #define W_HEIGHT 900*2
@@ -34,15 +34,14 @@ namespace Wpp
     class WRegion;
     class WSurface;
     class WTexture;
-    class WTypes;
-    class WView;
     class WWayland;
+
+    // Surface roles
+    class WToplevelRole;
 
     // Input related
     class WSeat;
     class WCursor;
-    class WPointer;
-    class WKeyboard;
 
     // Utils
     class WTime;
@@ -63,6 +62,7 @@ namespace Wpp
     typedef xdg_positioner_constraint_adjustment ConstraintAdjustment;
     typedef WPoint WSize;
     typedef WPointF WSizeF;
+    typedef UInt32 WKey;
 
     struct Point
     {
@@ -98,40 +98,6 @@ namespace Wpp
         double height = 0;
     };
 
-
-    enum ResizeEdge : UInt32
-    {
-        Top = 1,
-        Bottom = 2,
-        Left = 4,
-        TopLeft = 5,
-        BottomLeft = 6,
-        Right = 8,
-        TopRight = 9,
-        BottomRight = 10
-    };
-
-    enum SurfaceState : unsigned char
-    {
-        Maximized = 1, // 1
-        Fullscreen = 2, // 2
-        Resizing = 4, // 3
-        Activated = 8, // 4
-        TiledLeft = 16, // 5
-        TiledRight = 32, // 6
-        TiledTop = 64, // 7
-        TiledBottom = 128 // 8
-    };
-
-
-    enum SurfaceType : UInt32
-    {
-        Undefined = 0,
-        Toplevel = 1,
-        Popup = 2,
-        Subsurface = 3,
-        Cursor = 4
-    };
 
     enum POINTER_BUTTON : UInt32
     {
