@@ -5,3 +5,4 @@ executable(
         'MyCompositor.cpp'
     ],
     dependencies : wpplib_dep)
+

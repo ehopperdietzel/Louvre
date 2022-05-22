@@ -24,10 +24,13 @@ $ meson compile
 ```
 3. Run the 'MyCompositor' example.
 ```
-$ cd MyCompositor
+$ cd examples/MyCompositor
 $ ./MyCompositor
 ```
 4. Press fn + F2 to launch weston-terminal.
+
+![Example](screenshots/Screenshot-01.png)
+
 5. Press ESC to quit.
 
 ## Todo
