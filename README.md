@@ -3,7 +3,7 @@
 
 A C++ library to create Wayland compositors with DRM and X11 backend support.
 
-> :warning: **Currently under development and not ready for use.**
+> :warning: **Currently under development.**
 
 Wayland++ uses **libinput** and **evdev** for input listening and device discovering, **xkbcommon** for keyboard mapping and any version of **OpenGL** or **Vulkan** for painting (any **EGL** - compatible API).
 
