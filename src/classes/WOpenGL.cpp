@@ -118,7 +118,8 @@ char *WOpenGL::openShader(const char *fname)
 
     char *data = (char*)malloc(fileSize+1);
 
-    fread(data,fileSize,1,fp);
+    size_t r = fread(data,fileSize,1,fp);
+    (void)r;
 
     data[fileSize] = '\0';
 

@@ -129,6 +129,27 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     else
         surface->current.inputRegion.copy(surface->pending.inputRegion);
 
+    
+    // Toplevel configure
+    if(surface->type() == WSurface::Toplevel)
+    {
+        WToplevelRole *topLevel = surface->toplevel();
+
+        if(topLevel->p_pendingConf.set)
+        {
+            unsigned char prevState = topLevel->p_stateFlags;
+            topLevel->p_stateFlags = topLevel->p_sentConf.flags;
+
+            if(!(prevState & WToplevelRole::Maximized) && (topLevel->p_sentConf.flags & WToplevelRole::Maximized))
+                topLevel->maximizeChanged();
+            if((prevState & WToplevelRole::Maximized) && !(topLevel->p_sentConf.flags & WToplevelRole::Maximized))
+                topLevel->maximizeChanged();
+
+            topLevel->p_pendingConf.set = false;
+        }
+    }
+            
+
 
     // Notify that the cursor changed content
     if(surface->type() == WSurface::Cursor)

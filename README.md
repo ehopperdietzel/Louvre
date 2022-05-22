@@ -104,14 +104,14 @@ $ ./MyCompositor
 		* set_app_id ✅
 		* set_fullscreen
 		* set_max_size ✅
-		* set_maximized
+		* set_maximized ✅
 		* set_min_size ✅
 		* set_minimized
 		* set_parent ✅
 		* set_title ✅
 		* show_window_menu
 		* unset_fullscreen
-		* unset_maximized
+		* unset_maximized ✅
 	* Xdg popup
 		* destroy
 		* grab ✅

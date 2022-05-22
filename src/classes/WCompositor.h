@@ -24,6 +24,8 @@ class Wpp::WCompositor
 public:
     WCompositor();
 
+    virtual ~WCompositor(){};
+
     /* Create requests */
     virtual WOutput *createOutputRequest();
     virtual WClient *createClientRequest(wl_client *client);

@@ -122,6 +122,7 @@ private:
     WPoint               p_resizingToplevelInitPos;
     WPoint               p_resizingToplevelInitCursorPos;
     WSize                p_resizingToplevelInitSize;
+    WSize                p_resizingToplevelInitWindowSize;
     WToplevelRole::Edge  p_resizingToplevelEdge;
 
 

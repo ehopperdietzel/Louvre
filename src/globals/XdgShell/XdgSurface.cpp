@@ -132,7 +132,6 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *client, wl_re
 {
     (void)client;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
-    surface->pending.windowGeometry = WRect(x, y, width, height);
 
     if(surface->type() == WSurface::Toplevel)
     {
@@ -144,6 +143,17 @@ void Extensions::XdgShell::Surface::ack_configure(wl_client *client, wl_resource
 {
     (void)client;(void)serial;
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
+
+    if(surface->type() == WSurface::Toplevel)
+    {
+        WToplevelRole *topLevel = surface->toplevel();
+
+        if(topLevel->p_sentConf.serial == serial)
+        {
+            topLevel->p_pendingConf = topLevel->p_sentConf;
+            topLevel->p_pendingConf.set = true;
+        }
+    }
 
     //printf("ACK serial %i\n",serial);
     surface->ack_configure = true;

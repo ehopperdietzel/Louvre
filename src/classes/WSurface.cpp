@@ -3,6 +3,7 @@
 #include <WCompositor.h>
 #include <WBackend.h>
 #include <WWayland.h>
+#include <WSeat.h>
 
 #include <time.h>
 #include <stdlib.h>
@@ -31,6 +32,12 @@ void get_egl_func()
      eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
 }
 
+void WSurface::bufferSizeChangeRequest()
+{
+    if(type() == Toplevel && toplevel() == seat()->resizingToplevel())
+        seat()->updateResizingToplevelPos();
+}
+
 WToplevelRole *WSurface::toplevel() const
 {
     return p_toplevelRole;
@@ -47,6 +54,15 @@ WSurface::WSurface(wl_resource *surface, WClient *client, GLuint textureUnit)
 
 const WPoint &WSurface::pos() const
 {
+    if(type() == Toplevel)
+    {
+        p_xdgPos = p_pos - toplevel()->windowGeometry().topLeft();
+        return p_xdgPos;
+    }
+
+    //if(type() == Popup)
+        //return p_pos - toplevel()->windowGeometry().topLeft();
+
     return p_pos;
 }
 
@@ -157,13 +173,6 @@ void WSurface::applyDamages()
     wl_buffer_send_release(current.buffer);
     p_isDamaged = false;
 
-    if(current.windowGeometry != pending.windowGeometry)
-    {
-        current.windowGeometry = pending.windowGeometry;
-
-        if(type() == WSurface::Toplevel)
-            toplevel()->geometryChangeRequest();
-    }
 
     if(prevSize != size())
         bufferSizeChangeRequest();

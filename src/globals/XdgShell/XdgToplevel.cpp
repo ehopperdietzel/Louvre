@@ -87,7 +87,7 @@ void Extensions::XdgShell::Toplevel::set_max_size (wl_client *client, wl_resourc
 }
 void Extensions::XdgShell::Toplevel::set_min_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
 {
-    (void)client;(void)resource;
+    (void)client;
     WToplevelRole *toplevel = (WToplevelRole*)wl_resource_get_user_data(resource);
     toplevel->p_minSize.setW(width);
     toplevel->p_minSize.setH(height);
@@ -95,12 +95,15 @@ void Extensions::XdgShell::Toplevel::set_min_size (wl_client *client, wl_resourc
 }
 void Extensions::XdgShell::Toplevel::set_maximized (wl_client *client, wl_resource *resource)
 {
-    (void)client;(void)resource;
-    //printf ("surface requested maximize\n");
+    (void)client;
+    WToplevelRole *topLevel = (WToplevelRole*)wl_resource_get_user_data(resource);
+    topLevel->maximizeRequest();
 }
 void Extensions::XdgShell::Toplevel::unset_maximized (wl_client *client, wl_resource *resource)
 {
-    (void)client;(void)resource;
+    (void)client;
+    WToplevelRole *topLevel = (WToplevelRole*)wl_resource_get_user_data(resource);
+    topLevel->unmaximizeRequest();
 }
 void Extensions::XdgShell::Toplevel::set_fullscreen(wl_client *client, wl_resource *resource, wl_resource *output)
 {

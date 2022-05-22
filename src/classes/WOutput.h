@@ -26,7 +26,7 @@ public:
     };
 
     WOutput();
-    ~WOutput();
+    virtual ~WOutput();
 
 
     virtual void initializeGL();

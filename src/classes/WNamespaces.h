@@ -56,7 +56,6 @@ namespace Wpp
     typedef int64_t         Int64;
     typedef float           Float32;
     typedef double          Float64;
-    typedef unsigned char   SurfaceStateFlags;
     typedef xdg_positioner_anchor Anchor;
     typedef xdg_positioner_gravity Gravity;
     typedef xdg_positioner_constraint_adjustment ConstraintAdjustment;

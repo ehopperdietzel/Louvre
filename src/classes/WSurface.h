@@ -38,7 +38,7 @@ public:
     virtual void positionerChangeRequest(){};
     virtual void parentChangeRequest(){};
     virtual void bufferScaleChangeRequest(){};
-    virtual void bufferSizeChangeRequest(){};
+    virtual void bufferSizeChangeRequest();
     virtual void grabSeatRequest(){};
 
     void sendConfigurePopupEvent(Int32 x, Int32 y, Int32 width, Int32 height);
@@ -87,7 +87,6 @@ public:
     {
         SurfaceType type = SurfaceType::Undefined;
         wl_resource *buffer = nullptr;
-        WRect windowGeometry = WRect();
         WRegion inputRegion;
     };
 
@@ -131,7 +130,8 @@ public:
 
     bool p_isDamaged = false;
 
-    WPoint p_pos;
+    WPoint p_pos = WPoint(200,200);
+    mutable WPoint p_xdgPos;
 
     // Configure event
     void dispachLastConfiguration();

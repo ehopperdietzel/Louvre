@@ -10,19 +10,12 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <xf86drm.h>
-#include <xf86drmMode.h>
-
-
-#include <assert.h>
-
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-
 #include <WBackend.h>
 #include <WCompositor.h>
 #include <WWayland.h>
 #include <WOpenGL.h>
 #include <WCursor.h>
+#include <WToplevelRole.h>
 
 using namespace Wpp;
 
@@ -54,7 +47,7 @@ void WOutput::paintGL()
     {
         if( surface->type() == WSurface::Undefined || surface->type() == WSurface::Cursor)
             continue;
-
+   
         GL->drawTexture(surface->texture(),WRect(WPoint(),surface->texture()->size()),WRect(surface->pos(),surface->size()/surface->bufferScale()));
         surface->requestNextFrame();
     }
@@ -166,7 +159,9 @@ void WOutput::startRenderLoop(void *data)
         // Wait for the next frame
         poll(&output->timerPoll,1,-1);
 
-        read(output->timerPoll.fd, &res, sizeof(res));
+        ssize_t r = read(output->timerPoll.fd, &res, sizeof(res));
+        (void)r;
+        
         timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
 
         // Show buffer on screen

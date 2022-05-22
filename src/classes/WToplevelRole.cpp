@@ -5,8 +5,14 @@
 #include <WCompositor.h>
 #include <WSeat.h>
 #include <WWayland.h>
+#include <WOutput.h>
+#include <WPoint.h>
 
 using namespace Wpp;
+
+
+/***************** Virtual Methods *****************/
+
 
 WToplevelRole::WToplevelRole(wl_resource *toplevel, WSurface *surface)
 {
@@ -22,6 +28,9 @@ WToplevelRole::~WToplevelRole()
 void WToplevelRole::startMoveRequest()
 {
     seat()->startMovingTopLevel(this);
+
+    if(maximized())
+        configure(state()&~Maximized);
 }
 
 void WToplevelRole::startResizeRequest(Edge edge)
@@ -41,13 +50,61 @@ void WToplevelRole::appIdChanged()
 
 void WToplevelRole::geometryChangeRequest()
 {
-    if(seat()->resizingToplevel() == this)
-        seat()->updateResizingToplevelPos();
+
+}
+
+void WToplevelRole::maximizeRequest()
+{
+    // Get the main output
+    WOutput *output = compositor()->outputs().front();
+
+    // Tell the toplevel to maximize
+    configure(output->size / output->getOutputScale(), Activated | Maximized);
+
+    // We now wait for the maximizeChanged() event to move it to the top left corner
+}
+
+void WToplevelRole::unmaximizeRequest()
+{
+    // Get the main output
+    WOutput *output = compositor()->outputs().front();
+
+    // Tell the toplevel to maximize
+    configure(output->size / output->getOutputScale() - WSize(200,200), Activated);
+
+    // We now wait for the maximizeChanged() event to move it to (200,200)
+
+    printf("Unmaximize\n");
+
+}
+
+void WToplevelRole::maximizeChanged()
+{
+    if(maximized())
+        surface()->setPos(0,0);
+    else
+    {
+        if(seat()->movingTopLevel() != this)
+            surface()->setPos(100,100);
+    }
+}
+
+/***************** Normal Methods *****************/
+
+
+bool WToplevelRole::maximized() const
+{
+    return (p_stateFlags & Maximized);
 }
 
 WSurface *WToplevelRole::surface() const
 {
     return p_surface;
+}
+
+WToplevelRole::StateFlags WToplevelRole::state() const
+{
+    return p_stateFlags;
 }
 
 wl_resource *WToplevelRole::resource() const
@@ -75,20 +132,20 @@ const WSize &WToplevelRole::maxSize() const
     return p_maxSize;
 }
 
-void WToplevelRole::configure(Int32 width, Int32 height, SurfaceStateFlags states)
+void WToplevelRole::configure(Int32 width, Int32 height, StateFlags states)
 {
-    p_pendingConfigure = true;
-    p_pendingConfigureSize.setW(width);
-    p_pendingConfigureSize.setH(height);
-    p_pendingConfigureStates = states;
+    p_currentConf.set = true;
+    p_currentConf.size.setW(width);
+    p_currentConf.size.setH(height);
+    p_currentConf.flags = states;
 }
 
-void WToplevelRole::configure(const WSize &size, SurfaceStateFlags states)
+void WToplevelRole::configure(const WSize &size, StateFlags states)
 {
     configure(size.w(),size.h(),states);
 }
 
-void WToplevelRole::configure(SurfaceStateFlags states)
+void WToplevelRole::configure(StateFlags states)
 {
     configure(windowGeometry().bottomRight(),states);
 }
@@ -156,8 +213,10 @@ WSeat *WToplevelRole::seat() const
 
 void WToplevelRole::dispachLastConfiguration()
 {
-    if(!p_pendingConfigure)
+    if(!p_currentConf.set)
         return;
+
+    p_currentConf.serial = WWayland::nextSerial();
 
     surface()->ack_configure = false;
 
@@ -165,7 +224,7 @@ void WToplevelRole::dispachLastConfiguration()
     wl_array_init(&dummy);
     UInt32 index = 0;
 
-    if((p_pendingConfigureStates & (SurfaceStateFlags)State::Activated))
+    if((p_currentConf.flags & (StateFlags)Activated))
     {
         wl_array_add(&dummy, sizeof(xdg_toplevel_state));
         xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
@@ -173,26 +232,26 @@ void WToplevelRole::dispachLastConfiguration()
         index++;
 
         if(seat()->activeTopLevel() && seat()->activeTopLevel() != this)
-            seat()->activeTopLevel()->configure(seat()->activeTopLevel()->p_pendingConfigureStates & ~State::Activated);
+            seat()->activeTopLevel()->configure(seat()->activeTopLevel()->p_currentConf.flags & ~Activated);
 
         seat()->p_activeTopLevel = this;
 
     }
-    if(p_pendingConfigureStates & (SurfaceStateFlags)State::Fullscreen)
+    if(p_currentConf.flags & (StateFlags)Fullscreen)
     {
         wl_array_add(&dummy, sizeof(xdg_toplevel_state));
         xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
         s[index] = XDG_TOPLEVEL_STATE_FULLSCREEN;
         index++;
     }
-    if(p_pendingConfigureStates & (SurfaceStateFlags)State::Maximized)
+    if(p_currentConf.flags & (StateFlags)Maximized)
     {
         wl_array_add(&dummy, sizeof(xdg_toplevel_state));
         xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
         s[index] = XDG_TOPLEVEL_STATE_MAXIMIZED;
         index++;
     }
-    if(p_pendingConfigureStates & (SurfaceStateFlags)State::Resizing)
+    if(p_currentConf.flags & (StateFlags)Resizing)
     {
         wl_array_add(&dummy, sizeof(xdg_toplevel_state));
         xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
@@ -202,28 +261,28 @@ void WToplevelRole::dispachLastConfiguration()
 
     if(wl_resource_get_version(resource()) >= 2)
     {
-        if(p_pendingConfigureStates & (SurfaceStateFlags)State::TiledBottom)
+        if(p_currentConf.flags & (StateFlags)TiledBottom)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_TILED_BOTTOM;
             index++;
         }
-        if(p_pendingConfigureStates & (SurfaceStateFlags)State::TiledLeft)
+        if(p_currentConf.flags & (StateFlags)TiledLeft)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_TILED_LEFT;
             index++;
         }
-        if(p_pendingConfigureStates & (SurfaceStateFlags)State::TiledRight)
+        if(p_currentConf.flags & (StateFlags)TiledRight)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_TILED_RIGHT;
             index++;
         }
-        if(p_pendingConfigureStates & (SurfaceStateFlags)State::TiledTop)
+        if(p_currentConf.flags & (StateFlags)TiledTop)
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
@@ -232,16 +291,18 @@ void WToplevelRole::dispachLastConfiguration()
         }
     }
 
-    xdg_toplevel_send_configure(resource(),p_pendingConfigureSize.w(),p_pendingConfigureSize.h(),&dummy);
+    xdg_toplevel_send_configure(resource(),p_currentConf.size.w(),p_currentConf.size.h(),&dummy);
     wl_array_release(&dummy);
 
 
     if(surface()->p_xdg_shell != nullptr)
-        xdg_surface_send_configure(surface()->p_xdg_shell,WWayland::nextSerial());
+        xdg_surface_send_configure(surface()->p_xdg_shell,p_currentConf.serial);
 
 
 
-    p_pendingConfigure = false;
+    p_currentConf.set = false;
+
+    p_sentConf = p_currentConf;
 
 }
 

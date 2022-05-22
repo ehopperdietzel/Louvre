@@ -103,7 +103,7 @@ void WSeat::pointerClickEvent(UInt32 button, UInt32 state)
         setKeyboardFocus(pointerFocusSurface());
 
         if(pointerFocusSurface()->type() == WSurface::Toplevel)
-            pointerFocusSurface()->toplevel()->configure(WToplevelRole::Activated);
+            pointerFocusSurface()->toplevel()->configure(pointerFocusSurface()->toplevel()->state() | WToplevelRole::Activated);
 
         // Raise view
         if(pointerFocusSurface()->parent())
@@ -442,13 +442,14 @@ void WSeat::sendKeyboardModifiersEvent() const
     sendKeyboardModifiersEvent(p_modifiersState.depressed, p_modifiersState.latched, p_modifiersState.locked, p_modifiersState.group);
 }
 
-void WSeat::startResizingToplevel(WToplevelRole *toplevel, WToplevelRole::Edge edge)
+void WSeat::startResizingToplevel(WToplevelRole *topLevel, WToplevelRole::Edge edge)
 {
-    p_resizingToplevel = toplevel;
+    p_resizingToplevel = topLevel;
     p_resizingToplevelEdge = edge;
-    p_resizingToplevelInitSize = toplevel->windowGeometry().bottomRight();
+    p_resizingToplevelInitSize = topLevel->surface()->size();
+    p_resizingToplevelInitWindowSize = topLevel->windowGeometry().bottomRight();
     p_resizingToplevelInitCursorPos = cursor()->position();
-    p_resizingToplevelInitPos = toplevel->surface()->pos();
+    p_resizingToplevelInitPos = topLevel->surface()->pos() + topLevel->windowGeometry().topLeft();
 }
 
 bool WSeat::updateResizingToplevelSize()
@@ -456,10 +457,10 @@ bool WSeat::updateResizingToplevelSize()
     if(resizingToplevel())
     {
         WSize newSize = resizingToplevel()->calculateResizeRect(resizingToplevelInitCursorPos()-cursor()->position(),
-                                                                resizingToplevelInitSize(),
+                                                                p_resizingToplevelInitWindowSize,
                                                                 resizingToplevelEdge());
 
-        resizingToplevel()->configure(newSize,WToplevelRole::Activated | WToplevelRole::Resizing);
+        resizingToplevel()->configure(newSize ,WToplevelRole::Activated | WToplevelRole::Resizing);
         return true;
     }
     return false;
@@ -472,13 +473,14 @@ void WSeat::updateResizingToplevelPos()
     {
         WSize s = resizingToplevelInitSize();
         WPoint p = resizingToplevelInitPos();
+        Int32 bs = resizingToplevel()->surface()->bufferScale();
         WToplevelRole::Edge edge =  resizingToplevelEdge();
 
         if(edge ==  WToplevelRole::Edge::Top || edge ==  WToplevelRole::TopLeft || edge ==  WToplevelRole::TopRight)
-            resizingToplevel()->surface()->setY(p.y() + s.h() - resizingToplevel()->windowGeometry().h());
+            resizingToplevel()->surface()->setY(p.y() + (s.h() - resizingToplevel()->surface()->size().h())/bs);
 
         if(edge ==  WToplevelRole::Edge::Left || edge ==  WToplevelRole::Edge::TopLeft || edge ==  WToplevelRole::Edge::BottomLeft)
-            resizingToplevel()->surface()->setX(p.x() + s.w() - resizingToplevel()->windowGeometry().w());
+            resizingToplevel()->surface()->setX(p.x() + (s.w() - resizingToplevel()->surface()->size().w())/bs);
     }
 }
 
@@ -492,7 +494,7 @@ void WSeat::stopResizingToplevel()
 
 void WSeat::startMovingTopLevel(WToplevelRole *topLevel)
 {
-    p_movingTopLevelInitPos = topLevel->surface()->pos();
+    p_movingTopLevelInitPos = topLevel->surface()->pos() + topLevel->windowGeometry().topLeft();
     p_movingTopLevelInitCursorPos = cursor()->position();
     p_movingTopLevel = topLevel;
 }
@@ -598,7 +600,7 @@ WSurface *WSeat::surfaceAt(const WPoint &point)
         if((*s)->type() != WSurface::Undefined && (*s)->type() != WSurface::Cursor)
             if((*s)->inputRegionContainsPoint((*s)->pos(),point))
                 return *s;
-
+        
     return nullptr;
 }
 
@@ -650,7 +652,7 @@ void WSeat::processInput()
             xkb_state_update_key(p_xkbKeymapState,keyCode+8,(xkb_key_direction)keyState);
             keyEvent(keyCode,keyState);
             updateModifiers();
-                    }
+        }
 
 
         libinputEvent(ev);
