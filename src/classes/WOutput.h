@@ -1,10 +1,6 @@
 #ifndef WOUTPUT_H
 #define WOUTPUT_H
 
-#include <xf86drm.h>
-#include <xf86drmMode.h>
-#include <gbm.h>
-#include <drm/drm.h>
 #include <WNamespaces.h>
 #include <thread>
 
@@ -45,8 +41,8 @@ public:
     void repaint();
 
     EGLDisplay getDisplay();
-    const drmModeModeInfo getCurrentMode();
-    const drmModeConnector getCurrentConnector();
+    //const drmModeModeInfo getCurrentMode();
+    //const drmModeConnector getCurrentConnector();
 
     InitializeResult initializeResult() const { return p_initializeResult; }
 
@@ -92,12 +88,13 @@ private:
     // Compositor
     WCompositor *p_compositor = nullptr;
 
+   
     // Params
     char *_devName = nullptr;
-    drmModeConnector *_connector = nullptr;
+    //drmModeConnector *_connector = nullptr;
     UInt32 _crtc_id = 0;
     Int32 _outputScale = 1;
-
+    
 
     // Render thread
     int _renderFd;

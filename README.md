@@ -1,21 +1,33 @@
 
 # Wayland++
 
-A C++ library to create Wayland compositors with DRM or X11 backend support.
+A C++ library to create Wayland compositors with DRM and X11 backend support.
 
 > :warning: **Currently under development and not ready for use.**
 
 Wayland++ uses **libinput** and **evdev** for input listening and device discovering, **xkbcommon** for keyboard mapping and any version of **OpenGL** or **Vulkan** for painting (any **EGL** - compatible API).
 
 ## Libraries
-`sudo apt-get update & sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libinput-dev libegl-dev mesa-common-dev libgles2-mesa-dev libxkbcommon-dev libsoil-dev`
+`sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libinput-dev libegl-dev mesa-common-dev libgles2-mesa-dev libxkbcommon-dev libsoil-dev`
 
 ## Example
 
 1. Add your user to the **input** and **video** groups and then reboot.
-2. Compile the Examples project.
-3. Run it like a regular program when using the X11 backend and on a new tty when using the DRM backend.
-4. Press 1 to launch weston-terminal.
+2. Compile the library and examples (the X11 backend is used by default).
+
+```
+$ cd Wpp/src
+$ mkdir build
+$ meson build
+$ cd build
+$ meson compile
+```
+3. Run the 'MyCompositor' example.
+```
+$ cd MyCompositor
+$ ./MyCompositor
+```
+4. Press fn + F2 to launch weston-terminal.
 5. Press ESC to quit.
 
 ## Todo

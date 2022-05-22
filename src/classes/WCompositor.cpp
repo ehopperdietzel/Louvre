@@ -9,7 +9,6 @@
 #include <sys/poll.h>
 #include <thread>
 #include <unistd.h>
-#include <signal.h>
 #include <WToplevelRole.h>
 #include <WCursor.h>
 

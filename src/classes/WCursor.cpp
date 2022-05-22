@@ -4,7 +4,6 @@
 #include <WPointF.h>
 #include <WRect.h>
 #include <WOpenGL.h>
-#include <cursors/DefaultCursor.h>
 
 #include <X11/Xcursor/Xcursor.h>
 #include <string.h>
@@ -110,6 +109,6 @@ void WCursor::update()
         WBackend::setCursorPosition(p_output,pos);
     }
 
-    if(p_output)
+    if(p_output && !hasHardwareSupport())
         p_output->repaint();
 }

@@ -152,8 +152,12 @@ void WOutput::startRenderLoop(void *data)
 
         // Let the user do his painting
         output->p_compositor->renderMutex.lock();
+
         output->paintGL();
-        output->compositor()->cursor()->paint();
+
+        if(!output->compositor()->cursor()->hasHardwareSupport())
+            output->compositor()->cursor()->paint();
+
         output->p_compositor->renderMutex.unlock();
 
         // Tell the input loop to process events

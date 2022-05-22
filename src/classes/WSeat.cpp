@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <libudev.h>
 #include <libinput.h>
+#include <signal.h>
 
 
 #include <xkbcommon/xkbcommon-compat.h>
@@ -155,14 +156,13 @@ void WSeat::keyEvent(UInt32 keyCode, UInt32 keyState)
         }
         if(sym == XKB_KEY_F2)
         {
-            pid_t pid = fork();
-            if (pid==0)
+            if (fork()==0)
             {
+                setsid();
                 char *const envp[] = {"XDG_RUNTIME_DIR=/run/user/1000",0};
-
                 const char *argv[64] = {"/usr/bin/weston-terminal" , NULL, NULL , NULL};
                 execve(argv[0], (char **)argv, envp);
-                //exit(0);
+                exit(0);
             }
         }
     }

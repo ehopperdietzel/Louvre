@@ -36,6 +36,8 @@
 
 using namespace Wpp;
 
+// Store the found outputs
+std::list<WOutput*>outputs;
 
 struct GL_CONF
 {
@@ -267,7 +269,6 @@ static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsi
 }
 
 
-
 EGLDisplay WBackend::getEGLDisplay(WOutput *output)
 {
     DRM *data = (DRM*)output->data;
@@ -372,11 +373,8 @@ static uint32_t find_crtc_for_connector(int fd, const drmModeRes *resources, con
     return -1;
 }
 
-std::list<WOutput *> WBackend::getAvaliableOutputs()
+std::list<WOutput *> &WBackend::getAvaliableOutputs(WCompositor *compositor)
 {
-
-    // Store the found outputs
-    std::list<WOutput*>outputs;
 
     struct udev *udev;
     struct udev_enumerate *enumerate;
@@ -541,8 +539,8 @@ void WBackend::setCursor(WOutput *output, WTexture *texture, const WSizeF &size)
 
     WOpenGL *GL;
 
-    if(std::this_thread::get_id() == output->_compositor->mainThreadId())
-        GL = output->_compositor->p_painter;
+    if(std::this_thread::get_id() == output->compositor()->mainThreadId())
+        GL = output->compositor()->p_painter;
     else
         GL = output->painter();
 
