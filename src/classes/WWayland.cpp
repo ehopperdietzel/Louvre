@@ -73,15 +73,6 @@ void WWayland::initGLContext()
         EGL_NONE
     };
 
-    /*
-    // 1. Initialize EGL
-    if ((eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY)) == EGL_NO_DISPLAY)
-    {
-        printf("eglGetDisplay() returned error %d\n", eglGetError());
-        exit(0);
-    }
-    eglInitialize(eglDpy, 0, 0);
-    */
 
     eglDpy = sharedDisplay;
 
@@ -97,10 +88,6 @@ void WWayland::initGLContext()
         exit(-1);
     }
 
-    /*
-    EGLint visual_id;
-    eglGetConfigAttrib(eglDpy, config, EGL_NATIVE_VISUAL_ID, &visual_id);
-    */
 
     // 3. Create a context and make it current
     eglCtx = eglCreateContext(eglDpy, config, sharedContext,context_attribs);
@@ -111,30 +98,6 @@ void WWayland::initGLContext()
         exit(0);
     }
 
-    static const EGLint att[] = { EGL_WIDTH, 128, EGL_HEIGHT, 128, EGL_NONE };
-
-    /*
-    static const EGLint att[] = {
-        //EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 1,
-        EGL_GREEN_SIZE, 1,
-        EGL_BLUE_SIZE, 1,
-        EGL_ALPHA_SIZE, 0,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE
-    };
-    */
-
-    /*
-    EGLSurface surf = eglCreatePbufferSurface(eglDpy,config, att); // pbuffer surface is enough, we're not going to use
-
-
-    if(!surf)
-    {
-        printf("ERRRR\n");
-        exit(0);
-    }
-    */
 
     eglMakeCurrent(eglDpy, EGL_NO_SURFACE, EGL_NO_SURFACE, eglCtx);
 
@@ -387,6 +350,7 @@ void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
 int WWayland::apply_damage_emit(void *data)
 {
     wl_signal_emit(&sign,data);
+    return 0;
 }
 
 

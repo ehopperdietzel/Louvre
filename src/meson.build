@@ -4,7 +4,14 @@ project(
     default_options : ['cpp_std=c++14'],
     version : '1.0.0')
  
-add_project_arguments('-Ofast', '-g3',  language : 'cpp')
+add_project_arguments('-DDEBUG', '-O0', '-g', language : 'cpp')
+#if get_option('buildtype').startswith('debug')
+#    add_project_arguments('-DDEBUG', language : 'cpp')
+#else
+#    add_project_arguments('-Ofast', '-g3',  language : 'cpp')
+#endif
+
+
 
 wpplib = library(
     'wpplib', 

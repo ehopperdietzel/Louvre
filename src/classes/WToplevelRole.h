@@ -44,6 +44,7 @@ public:
     virtual void configureRequest(){};
     virtual void maximizeRequest();
     virtual void unmaximizeRequest();
+    virtual void minimizeRequest();
 
     // State change notification
     virtual void maximizeChanged();

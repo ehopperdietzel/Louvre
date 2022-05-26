@@ -14,12 +14,11 @@
 #include <wayland-egl.h>
 */
 
+#define WPP_TB_H 80
+
 // Globals versions
 #define WPP_SEAT_VERSION 7
 #define WPP_XDG_SHELL_VERSION 2
-
-#define W_WIDTH 1440*2
-#define W_HEIGHT 900*2
 
 namespace Wpp
 {

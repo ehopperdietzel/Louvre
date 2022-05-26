@@ -25,6 +25,7 @@
 #include <WSurface.h>
 #include <WCompositor.h>
 #include <WTime.h>
+#include <WOutput.h>
 
 using namespace Wpp;
 
@@ -42,6 +43,12 @@ void WSeat::pointerMoveEvent(float, float)
     // Moving surface
     if(updateMovingTopLevelPos())
     {
+        // Limits the top position
+        Int32 topbarHeight = (WPP_TB_H+2)/compositor()->outputs().front()->getOutputScale();
+
+        if(movingTopLevel()->surface()->pos().y() < topbarHeight)
+            movingTopLevel()->surface()->setY(topbarHeight);
+
         compositor()->repaintAllOutputs();
         return;
     }
@@ -56,7 +63,7 @@ void WSeat::pointerMoveEvent(float, float)
 
 
     // Find the surface at cursor positon
-    WSurface *surface = surfaceAt(cursor()->position());
+    WSurface *surface = surfaceAt(cursor()->position(),true);
 
     // If no surface was found
     if(!surface)
@@ -149,12 +156,12 @@ void WSeat::keyEvent(UInt32 keyCode, UInt32 keyState)
     if(keyState == LIBINPUT_KEY_STATE_RELEASED)
     {
         // Ends compositor if ESC is pressed
-        if(keyCode == 1)
+        if(sym == XKB_KEY_F7)
         {
             WWayland::terminateDisplay();
             exit(0);
         }
-        if(sym == XKB_KEY_F2)
+        else if(sym == XKB_KEY_F1)
         {
             if (fork()==0)
             {
@@ -321,7 +328,7 @@ void WSeat::setPointerFocus(WSurface *surface)
         if(surface->client()->pointerResource())
         {
             // Send focus event
-            sendPointerEnterEvent(surface,cursor()->position()-surface->pos());
+            sendPointerEnterEvent(surface,cursor()->position()-surface->pos(true));
             p_pointerFocusSurface = surface;
         }
         else
@@ -348,7 +355,7 @@ void WSeat::sendPointerMoveEvent()
         return;
 
     // Calculate local cursor position
-    WPoint pos = cursor()->position()-pointerFocusSurface()->pos();
+    WPoint pos = cursor()->position()-pointerFocusSurface()->pos(true);
 
     // Send pointer move event to the focused surface
     wl_pointer_send_motion(pointerFocusSurface()->client()->pointerResource(),WTime::ms(),wl_fixed_from_int(pos.x()),wl_fixed_from_int(pos.y()));
@@ -449,7 +456,7 @@ void WSeat::startResizingToplevel(WToplevelRole *topLevel, WToplevelRole::Edge e
     p_resizingToplevelInitSize = topLevel->surface()->size();
     p_resizingToplevelInitWindowSize = topLevel->windowGeometry().bottomRight();
     p_resizingToplevelInitCursorPos = cursor()->position();
-    p_resizingToplevelInitPos = topLevel->surface()->pos() + topLevel->windowGeometry().topLeft();
+    p_resizingToplevelInitPos = topLevel->surface()->pos();
 }
 
 bool WSeat::updateResizingToplevelSize()
@@ -494,7 +501,7 @@ void WSeat::stopResizingToplevel()
 
 void WSeat::startMovingTopLevel(WToplevelRole *topLevel)
 {
-    p_movingTopLevelInitPos = topLevel->surface()->pos() + topLevel->windowGeometry().topLeft();
+    p_movingTopLevelInitPos = topLevel->surface()->pos();
     p_movingTopLevelInitCursorPos = cursor()->position();
     p_movingTopLevel = topLevel;
 }
@@ -594,11 +601,11 @@ WToplevelRole::Edge WSeat::resizingToplevelEdge() const
     return p_resizingToplevelEdge;
 }
 
-WSurface *WSeat::surfaceAt(const WPoint &point)
+WSurface *WSeat::surfaceAt(const WPoint &point, bool useRolePos)
 {
     for(list<WSurface*>::const_reverse_iterator s = compositor()->surfaces().rbegin(); s != compositor()->surfaces().rend(); s++)
-        if((*s)->type() != WSurface::Undefined && (*s)->type() != WSurface::Cursor)
-            if((*s)->inputRegionContainsPoint((*s)->pos(),point))
+        if((*s)->type() != WSurface::Undefined && (*s)->type() != WSurface::Cursor && !(*s)->minimized())
+            if((*s)->inputRegionContainsPoint((*s)->pos(useRolePos),point))
                 return *s;
         
     return nullptr;

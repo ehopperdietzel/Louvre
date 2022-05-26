@@ -21,13 +21,11 @@ public:
     WCompositor *compositor() const;
     WCursor *cursor() const;
 
-
     // Pointer
     void setPointerFocus(WSurface *surface);
     void sendPointerMoveEvent();
     void sendPointerButtonEvent(UInt32 button, UInt32 state);
     WSurface *pointerFocusSurface() const;
-
 
     // Keyboard
     void setKeyboardFocus(WSurface *surface);
@@ -70,7 +68,7 @@ public:
     const WSize &resizingToplevelInitSize() const;
     WToplevelRole::Edge resizingToplevelEdge() const;
 
-    WSurface *surfaceAt(const WPoint &point);
+    WSurface *surfaceAt(const WPoint &point, bool useRolePos = false);
     xkb_keysym_t keySymbol(UInt32 keyCode);
 
 protected:

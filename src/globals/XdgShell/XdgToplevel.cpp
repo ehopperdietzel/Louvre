@@ -115,6 +115,8 @@ void Extensions::XdgShell::Toplevel::unset_fullscreen(wl_client *client, wl_reso
 }
 void Extensions::XdgShell::Toplevel::set_minimized(wl_client *client, wl_resource *resource)
 {
-    (void)client;(void)resource;
+    (void)client;
+    WToplevelRole *topLevel = (WToplevelRole*)wl_resource_get_user_data(resource);
+    topLevel->minimizeRequest();
 }
 

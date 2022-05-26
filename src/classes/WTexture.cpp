@@ -31,8 +31,8 @@ void WTexture::setData(Int32 width, Int32 height, void *data, GLenum buffFormat,
 
         glGenTextures(1, &newTexture);
         glBindTexture (GL_TEXTURE_2D, newTexture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         if(buffType == BufferType::EGL)
         {
@@ -118,8 +118,8 @@ void WTexture::setData(Int32 width, Int32 height, void *data, GLenum buffFormat,
 
         glGenTextures(1, &newTexture);
         glBindTexture (GL_TEXTURE_2D, newTexture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, buffFormat, p_size.w(), p_size.h(), 0, buffFormat, buffDepth, data);
         deleteTexture();
         p_id = newTexture;

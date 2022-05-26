@@ -24,12 +24,29 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     // Get surface
     WSurface *surface = (WSurface*)wl_resource_get_user_data(resource);
 
-    // Remove focus
+    // Clear keyboard focus
     if(surface->compositor()->seat()->p_keyboardFocusSurface == surface)
         surface->compositor()->seat()->p_keyboardFocusSurface = nullptr;
 
+    // Clear pointer focus
     if(surface->compositor()->seat()->p_pointerFocusSurface == surface)
         surface->compositor()->seat()->p_pointerFocusSurface = nullptr;
+
+    // Clear dragging surface
+    if(surface->compositor()->seat()->p_draggingSurface == surface)
+        surface->compositor()->seat()->p_draggingSurface = nullptr;
+
+    // Clear active toplevel focus
+    if(surface->compositor()->seat()->p_activeTopLevel == surface->toplevel())
+        surface->compositor()->seat()->p_activeTopLevel = nullptr;
+
+    // Clear moving toplevel
+    if(surface->compositor()->seat()->p_movingTopLevel == surface->toplevel())
+        surface->compositor()->seat()->p_movingTopLevel = nullptr;
+
+    // Clear resizing toplevel
+    if(surface->compositor()->seat()->p_resizingToplevel == surface->toplevel())
+        surface->compositor()->seat()->p_resizingToplevel = nullptr;
 
     WClient *client = surface->client();
 

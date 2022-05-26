@@ -40,6 +40,8 @@ struct X11
     Int32 windowNumber;
 };
 
+
+
 static void create_window(WOutput *output)
 {
 
@@ -75,6 +77,13 @@ static void create_window(WOutput *output)
     int num_visuals_returned;
     XVisualInfo *visual = XGetVisualInfo(data->x_display, VisualIDMask, &visual_template, &num_visuals_returned);
 
+    // Get the screen size
+    int snum = DefaultScreen(data->x_display);
+    int width = DisplayWidth(data->x_display, snum);
+    int height = DisplayHeight(data->x_display, snum);
+
+    output->size = WSize(width, height);
+
     // create a window
     XSetWindowAttributes window_attributes;
     window_attributes.event_mask = ExposureMask | StructureNotifyMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterWindowMask | LeaveWindowMask | FocusChangeMask;
@@ -83,7 +92,7 @@ static void create_window(WOutput *output)
         data->x_display,
         RootWindow(data->x_display, DefaultScreen(data->x_display)),
         0, 0,
-        W_WIDTH, W_HEIGHT,
+        width, height,
         0, // border width
         visual->depth, // depth
         InputOutput, // class
@@ -92,13 +101,14 @@ static void create_window(WOutput *output)
         &window_attributes // attributes
     );
 
-    output->size = WSize(W_WIDTH, W_HEIGHT);
-
-
+    
+    
+    // Make it fullscreen
     unsigned long valuemask = CWOverrideRedirect;
     XSetWindowAttributes attributes;
     attributes.override_redirect = True;
     XChangeWindowAttributes(data->x_display, data->window.window, valuemask, &attributes);
+    
 
     // EGL context and surface
     if(!eglBindAPI(EGL_OPENGL_ES_API))
@@ -137,7 +147,7 @@ static void create_window(WOutput *output)
     if(data->windowNumber == 0)
         XMoveWindow(data->x_display,data->window.window,0,0);
     else
-        XMoveWindow(data->x_display,data->window.window,W_WIDTH/2,0);
+        XMoveWindow(data->x_display,data->window.window,width/2,0);
 
     XFixesHideCursor(data->x_display, data->window.window);
 
@@ -187,6 +197,7 @@ EGLDisplay WBackend::getEGLDisplay(WOutput *output)
 
 void WBackend::createGLContext(WOutput *output)
 {
+    XInitThreads();
     create_window(output);
     output->p_initializeResult = Wpp::WOutput::InitializeResult::Initialized;
     printf("X11 backend initialized.\n");
@@ -207,10 +218,16 @@ void WBackend::setCursor(WOutput *, WTexture *, const WSizeF&)
 {
 
 }
-void WBackend::setCursorPosition(WOutput *output, const WPoint&)
+void WBackend::setCursorPosition(WOutput *output, const WPoint &pos)
 {
+    /*
     X11 *data = (X11*)output->data;
-    XWarpPointer(data->x_display, None, data->window.window, 0, 0, 0, 0, W_WIDTH/2, W_HEIGHT/2);
+
+    WRect windowRect = WRect(WPoint(),output->size);
+    
+    if(windowRect.containsPoint(pos))
+        XWarpPointer(data->x_display, None, data->window.window, 0, 0, output->size.w(), output->size.h(), pos.x(), pos.y());
+        */
 }
 
 #endif

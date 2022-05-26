@@ -28,6 +28,8 @@ public:
     void setWidth(Int32 x){p_x = x;}
     void setHeight(Int32 y){p_y = y;}
 
+    WPoint constrainedToHeight(UInt32 size) const;
+
     inline WPoint &operator+=(Int32 factor)
     {
         p_x += factor;

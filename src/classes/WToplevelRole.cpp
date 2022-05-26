@@ -7,6 +7,7 @@
 #include <WWayland.h>
 #include <WOutput.h>
 #include <WPoint.h>
+#include <WCursor.h>
 
 using namespace Wpp;
 
@@ -27,10 +28,27 @@ WToplevelRole::~WToplevelRole()
 
 void WToplevelRole::startMoveRequest()
 {
-    seat()->startMovingTopLevel(this);
-
     if(maximized())
-        configure(state()&~Maximized);
+    {
+        // Get the main output
+        WOutput *output = compositor()->outputs().front();
+
+        // Topbar height
+        Int32 topbarHeight = (WPP_TB_H+2)/output->getOutputScale();
+
+        // Dest size
+        WSize destSize = (output->size - WSize(0,topbarHeight)) / 2 / output->getOutputScale();
+
+        // Tell the toplevel to maximize
+        configure(destSize, state()&~Maximized);
+
+        if(compositor()->cursor()->position().x() >= destSize.x())
+            surface()->setPos(destSize.w(), topbarHeight);
+        else
+            surface()->setPos(0, topbarHeight);
+    }
+    
+    seat()->startMovingTopLevel(this);
 }
 
 void WToplevelRole::startResizeRequest(Edge edge)
@@ -58,8 +76,11 @@ void WToplevelRole::maximizeRequest()
     // Get the main output
     WOutput *output = compositor()->outputs().front();
 
+    // Topbar height
+    Int32 topbarHeight = (WPP_TB_H+2)/output->getOutputScale();
+
     // Tell the toplevel to maximize
-    configure(output->size / output->getOutputScale(), Activated | Maximized);
+    configure(output->size / output->getOutputScale() - WSize(0,topbarHeight), Activated | Maximized);
 
     // We now wait for the maximizeChanged() event to move it to the top left corner
 }
@@ -69,10 +90,16 @@ void WToplevelRole::unmaximizeRequest()
     // Get the main output
     WOutput *output = compositor()->outputs().front();
 
-    // Tell the toplevel to maximize
-    configure(output->size / output->getOutputScale() - WSize(200,200), Activated);
+    // Topbar height
+    Int32 topbarHeight = (WPP_TB_H+2)/output->getOutputScale();
 
-    // We now wait for the maximizeChanged() event to move it to (200,200)
+    // Dest size
+    WSize destSize = (output->size - WSize(0,topbarHeight)) / 2 / output->getOutputScale();
+
+    // Tell the toplevel to maximize
+    configure(destSize, state()&~Maximized);
+
+    // Now we wait for the maximizeChanged()
 
     printf("Unmaximize\n");
 
@@ -80,14 +107,47 @@ void WToplevelRole::unmaximizeRequest()
 
 void WToplevelRole::maximizeChanged()
 {
+
+    // Topbar height
+    Int32 topbarHeight = (WPP_TB_H+2)/compositor()->outputs().front()->getOutputScale();
+
     if(maximized())
-        surface()->setPos(0,0);
+    {
+        surface()->setPos(0,topbarHeight);
+        surface()->setMinimized(false);
+    }
     else
     {
         if(seat()->movingTopLevel() != this)
-            surface()->setPos(100,100);
+        {
+            // Get the main output
+            WOutput *output = compositor()->outputs().front();
+
+            // Dest size
+            WSize destSize = (output->size - WSize(0,topbarHeight)) / 2 / output->getOutputScale();
+
+            surface()->setPos(destSize/2);
+        }
     }
 }
+
+void WToplevelRole::minimizeRequest()
+{
+    surface()->setMinimized(true);
+
+    if(surface() == seat()->pointerFocusSurface())
+        seat()->setPointerFocus(nullptr);
+
+    if(surface() == seat()->keyboardFocusSurface())
+        seat()->setKeyboardFocus(nullptr);
+
+    if(this == seat()->movingTopLevel())
+        seat()->stopMovingTopLevel();
+
+    if(this == seat()->resizingToplevel())
+        seat()->stopResizingToplevel();
+}
+
 
 /***************** Normal Methods *****************/
 
@@ -96,6 +156,7 @@ bool WToplevelRole::maximized() const
 {
     return (p_stateFlags & Maximized);
 }
+
 
 WSurface *WToplevelRole::surface() const
 {

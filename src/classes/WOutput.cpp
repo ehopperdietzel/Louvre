@@ -30,7 +30,7 @@ WOutput::~WOutput()
 void WOutput::initializeGL()
 {
     // Set clear screen color
-    glClearColor(0.02, 0.282, 0.675, 1.0f);
+    glClearColor(0.031f, 0.486f, 0.933f, 1.0f);
 }
 
 void WOutput::paintGL()
@@ -42,14 +42,43 @@ void WOutput::paintGL()
     // Clear screen
     GL->clearScreen();
 
+    // Store minimized surfaces
+    list<WSurface*>minimized;
+
     // Draw surfaces
     for(WSurface *surface : compositor()->surfaces())
     {
+        // Skip some types surfaces
         if( surface->type() == WSurface::Undefined || surface->type() == WSurface::Cursor)
             continue;
-   
-        GL->drawTexture(surface->texture(),WRect(WPoint(),surface->texture()->size()),WRect(surface->pos(),surface->size()/surface->bufferScale()));
+
+        // Skip if minimized
+        if(surface->minimized())
+        {
+            minimized.push_back(surface);
+            continue;
+        }
+
+        // Draw the surface
+        GL->drawTexture(surface->texture(),WRect(WPoint(),surface->texture()->size()),WRect(surface->pos(true),surface->size()/surface->bufferScale()));
+
+        // Tell the surface to render the next frame
         surface->requestNextFrame();
+    }
+
+    // Draw top bar
+    UInt32 topbarHeight = WPP_TB_H/getOutputScale();
+    GL->drawColor(WRect(0,0,size.x(),topbarHeight), 1.f, 1.f, 1.f, 0.7f);
+
+
+    // Draw minimized surfaces
+    Int32 xOffset = 4;
+    WSize thumbnailSize;
+    for(WSurface *surface : minimized)
+    {
+        thumbnailSize = surface->texture()->size().constrainedToHeight(topbarHeight-8);
+        GL->drawTexture(surface->texture(),WRect(WPoint(),surface->texture()->size()),WRect(WPoint(xOffset,4),thumbnailSize));
+        xOffset += thumbnailSize.w() + 4;
     }
 
 }

@@ -32,6 +32,7 @@ void get_egl_func()
      eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
 }
 
+
 void WSurface::bufferSizeChangeRequest()
 {
     if(type() == Toplevel && toplevel() == seat()->resizingToplevel())
@@ -52,8 +53,11 @@ WSurface::WSurface(wl_resource *surface, WClient *client, GLuint textureUnit)
     p_client = client;
 }
 
-const WPoint &WSurface::pos() const
+const WPoint &WSurface::pos(bool getRolePos) const
 {
+    if(!getRolePos)
+        return p_pos;
+
     if(type() == Toplevel)
     {
         p_xdgPos = p_pos - toplevel()->windowGeometry().topLeft();
@@ -62,8 +66,7 @@ const WPoint &WSurface::pos() const
 
     //if(type() == Popup)
         //return p_pos - toplevel()->windowGeometry().topLeft();
-
-    return p_pos;
+    
 }
 
 void WSurface::setPos(const WPoint &newPos)
@@ -82,9 +85,25 @@ void WSurface::setX(Int32 x)
     p_pos.setX(x);
 }
 
-void WSurface::setY(Int32 y)
+void WSurface::setY(Int32 y, bool useRolePos)
 {
-    p_pos.setY(y);
+    if(!useRolePos)
+        p_pos.setY(y);
+    else
+    {
+        if(type() == Toplevel)
+            p_pos.setY(p_pos.y() + toplevel()->windowGeometry().y());
+    }
+}
+
+void WSurface::setMinimized(bool state)
+{
+    p_minimized = state;
+}
+
+bool WSurface::minimized() const
+{
+    return p_minimized;
 }
 
 WSurface::~WSurface()

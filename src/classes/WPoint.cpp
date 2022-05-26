@@ -3,6 +3,19 @@
 
 using namespace Wpp;
 
+WPoint WPoint::constrainedToHeight(UInt32 size) const
+{
+    WPoint point;
+
+    if(size == 0 || h() == 0)
+        return point;
+
+    point.setW((w()*size)/h());
+    point.setH(size);
+    
+    return point;
+}
+
 WPoint &WPoint::operator+=(const WPointF &p)
 {
     p_x += p.p_x;

@@ -50,17 +50,20 @@ public:
     SurfaceType type() const { return current.type; }
 
     // Size in surface coordinates
-    const WPoint &pos() const;
+    const WPoint &pos(bool useRolePos = false) const;
     void setPos(const WPoint &newPos);
     void setPos(Int32 x, Int32 y);
     void setX(Int32 x);
-    void setY(Int32 y);
+    void setY(Int32 y, bool useRolePos = false);
     Int32 width()               const { return texture()->size().w(); }
     Int32 height()              const { return texture()->size().h(); }
     const WSize &size()         const { return texture()->size(); }
     const WRegion &inputRegion() const { return current.inputRegion; }
     bool inputRegionContainsPoint(const WPoint &surfacePos,const WPoint &point);
     WPoint mapToLocal(const WPoint &point);
+
+    bool minimized() const;
+    void setMinimized(bool state);
 
     // Popup positioner
     WPositioner *positioner() const { return p_positioner; }
@@ -131,6 +134,7 @@ public:
     bool p_isDamaged = false;
 
     WPoint p_pos = WPoint(200,200);
+    bool p_minimized = false;
     mutable WPoint p_xdgPos;
 
     // Configure event
