@@ -5,5 +5,5 @@ executable(
         'MyCompositor.h',
         'MyCompositor.cpp'
     ],
-    dependencies : wpplib_dep)
+    dependencies : libwpp_dep)
 
