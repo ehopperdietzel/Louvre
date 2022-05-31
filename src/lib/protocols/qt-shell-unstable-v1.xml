@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="qt_shell_unstable_v1">
+    <copyright>
+ Copyright (C) 2021 The Qt Company Ltd.
+ Contact: http://www.qt.io/licensing/
+
+ This file is part of the plugins of the Qt Toolkit.
+
+ $QT_BEGIN_LICENSE:BSD$
+ You may use this file under the terms of the BSD license as follows:
+
+ "Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are
+ met:
+   * Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in
+     the documentation and/or other materials provided with the
+     distribution.
+   * Neither the name of The Qt Company Ltd nor the names of its
+     contributors may be used to endorse or promote products derived
+     from this software without specific prior written permission.
+
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+
+ $QT_END_LICENSE$
+    </copyright>
+
+
+  <interface name="zqt_shell_surface_v1" version="1">
+
+    <description summary="create fully compliant surfaces for use with Qt applications">
+      The qt_shell_surface interface is part of a shell extension which allows clients to
+      access all windowing system features in Qt. These include mechanisms that may only be
+      advisable for trusted applications, and not for arbitrary third-party applications. The
+      qt_shell_surface provides an interface to windowing system features for a surface.
+    </description>
+
+    <request name="destroy" type="destructor">
+        <description summary="destroy the qt_shell_surface">
+          Destroys the qt_shell_surface object.
+        </description>
+    </request>
+
+    <event name="resize">
+      <description summary="suggest a new size for the window">
+        This event suggests a size for the window. This can be one of multiple configuration
+        events grouped together by a serial number. The client should store them until the
+        corresponding configure event is received. The suggested configuration is not effective
+        before the client has responded with an ack_configure request with the same serial number.
+        This allows the server to group together reposition and resize events to avoid stuttering
+        in updates.
+      </description>
+      <arg name="serial" type="uint" summary="the serial of the configuration" />
+      <arg name="width" type="int" summary="the suggested width of the window" />
+      <arg name="height" type="int" summary="the suggested height of the window" />
+    </event>
+
+    <event name="set_position">
+      <description summary="informs of a new position for the window">
+        This event informs the client that the position of the window is about to change.
+        This can be one of multiple configuration events grouped together by a serial number. The
+        client should store them until the corresponding configure event is received. The suggested
+        configuration is not effective before the client has responded with an ack_configure request
+        with the same serial number. This allows the server to group together reposition and resize
+        events to avoid stuttering in updates.
+      </description>
+      <arg name="serial" type="uint" summary="the serial of the configuration" />
+      <arg name="x" type="int" summary="the suggested horizontal position of the window" />
+      <arg name="y" type="int" summary="the suggested vertical position of the window" />
+    </event>
+
+    <enum name="window_state">
+      <entry name="no_state" value="0"/>
+      <entry name="minimized" value="1"/>
+      <entry name="maximized" value="2"/>
+      <entry name="fullscreen" value="4"/>
+    </enum>
+    <event name="set_window_state">
+      <description summary="suggest a new state for the window">
+        This event informs the client that the state of the window is about to change.
+        This can be one of multiple configuration events grouped together by a serial number. The
+        client should store them until the corresponding configure event is received. The suggested
+        configuration is not effective before the client has responded with an ack_configure request
+        with the same serial number. This allows the server to group together reposition and resize
+        events to avoid stuttering in updates.
+      </description>
+      <arg name="serial" type="uint" summary="the serial of the configuration" />
+      <arg name="state" type="uint" summary="a combination of the flags in the window_state enum" />
+    </event>
+
+    <event name="configure">
+      <description summary="commits a series of configuration events">
+        After sending one or more configuration events, the server sends a configure event with
+        the same serial to trigger the necessary updates on the client side. When the client has
+        made these changes, it should send an ack_configure request for the corresponding serial to
+        inform the server that the new configuration is valid.
+      </description>
+      <arg name="serial" type="uint"/>
+    </event>
+
+    <event name="set_frame_margins">
+      <description summary="informs of the frame margins of the window">
+        This event informs the client how much of the window geometry is reserved for decorations.
+        When a resize configuration is received, the frame margins must be subtracted from the size
+        to find the appropriate size of the surface used for application content. State changes can
+        trigger updates to frame margins, for instance if the window switches between windowed and
+        fullscreen modes.
+      </description>
+      <arg name="left" type="uint" summary="the left frame margin" />
+      <arg name="right" type="uint" summary="the right frame margin" />
+      <arg name="top" type="uint" summary="the top frame margin" />
+      <arg name="bottom" type="uint" summary="the bottom frame margin" />
+    </event>
+
+    <event name="close">
+      <description summary="closes the window">
+        The server sends a close event to instruct the window to close itself gracefully. This could
+        for instance be triggered by user interaction, when clicking on the close button in the
+        window decorations.
+      </description>
+    </event>
+
+    <enum name="capabilities">
+      <entry name="interactive_move" value="1" />
+      <entry name="interactive_resize" value="2" />
+    </enum>
+    <event name="set_capabilities">
+      <description summary="informs the client of the server's capabilities">
+        This event informs the client of which capabilities are available on the server-side. See
+        the capabilities enum for possible flags.
+      </description>
+      <arg name="capabilities" type="uint" summary="a mask of flags from the capabilities enum" />
+    </event>
+
+    <request name="reposition">
+      <description summary="requests a new position for the window">
+        A client can issue this to request a new position for the window. If the request is granted,
+        the server will respond with a configuration event.
+      </description>
+      <arg name="x" type="int" summary="the requested horizontal position of the window" />
+      <arg name="y" type="int" summary="the requested vertical position of the window" />
+    </request>
+
+    <request name="request_activate">
+      <description summary="requests that the window becomes active">
+        This requests that the window becomes active. The server may respond by giving keyboard
+        focus to the window. Only a single window may be active at any given time.
+      </description>
+    </request>
+
+    <request name="set_size">
+       <description summary="informs that the shell surface size has changed">
+         The client issues the set_size request when the window has been resized.
+       </description>
+      <arg name="width" type="int" summary="the new width of the window" />
+      <arg name="height" type="int" summary="the new height of the window" />
+    </request>
+
+    <request name="set_minimum_size">
+      <description summary="informs of the minimum size hint of the window">
+        The client issues this request to inform the server of the minimum size of the window. The
+        server should not attempt to resize the window below this size.
+      </description>
+      <arg name="width" type="int" summary="the minimum width of the window" />
+      <arg name="height" type="int" summary="the minimum height of the window" />
+    </request>
+
+    <request name="set_maximum_size">
+      <description summary="informs of the maximum size hint of the window">
+        The client issues this request to inform the server of the maximum size of the window. The
+        server should not attempt to resize the window above this size.
+      </description>
+      <arg name="width" type="int" summary="the maximum width of the window" />
+      <arg name="height" type="int" summary="the maximum height of the window" />
+    </request>
+
+    <request name="set_window_title">
+      <description summary="informs of the title of the window">
+        This request is issued to inform the server of the title of the window.
+      </description>
+      <arg name="window_title" type="string" summary="the title of the window" />
+    </request>
+
+    <request name="set_window_flags">
+      <description summary="informs of the flags of the window">
+        The client issues this request to inform the server of the current window flags set on
+        the window
+      </description>
+      <arg name="flags" type="uint" summary="values defined by Qt::WindowFlags"/>
+    </request>
+
+    <request name="start_system_resize">
+      <description summary="starts a system resize">
+        This request is triggered when an application calls QWindow::startSystemResize() and should
+        trigger interactive resizing on the server-side. Typical behavior is to have the selected
+        edge follow the mouse.
+      </description>
+      <arg name="serial" type="uint" summary="serial of the pointer event that triggered the resize."/>
+      <arg name="edge" type="uint" summary="values defined by Qt::Edges"/>
+    </request>
+
+    <request name="start_system_move">
+      <description summary="starts a system resize">
+        This request is triggered when an application calls QWindow::startSystemMove() and should
+        trigger interactive repositioning on the server-side. Typical behavior is to have the
+        window follow the mouse.
+      </description>
+      <arg name="serial" type="uint" summary="Serial of the pointer event that triggered the move."/>
+    </request>
+
+    <request name="change_window_state">
+      <description summary="requests a new window state">
+        This requests the server to update the state of the window. The server may respond with
+        a new configure event bundle that reflects all the changes in position, size and state
+        that occurred.
+      </description>
+      <arg name="state" type="uint" summary="a combinaion of the flags in the window_state enum" />
+    </request>
+
+    <request name="raise">
+      <description summary="raises the window">
+        This requests that the window is brought to the top of the window stack, so that it is
+        showing on top of all other windows.
+      </description>
+    </request>
+
+    <request name="lower">
+      <description summary="lowers the window">
+        This requests that the window is brought to the bottom of the window stack, so that it is
+        showing below all other windows.
+      </description>
+    </request>
+
+    <request name="ack_configure">
+      <description summary="acknowledges a given configure event">
+        This acknowledges that the given configure event bundle has been received and that the
+        necessary changes have been applied.
+      </description>
+      <arg name="serial" type="uint" summary="the serial of the configure event" />
+    </request>
+
+  </interface>
+
+  <interface name="zqt_shell_v1" version="1">
+    <description summary="interface for create qt_shell_surface objects">
+      This interface provides a way to request qt_shell_surface objects that correspond to
+      wl_surfaces.
+    </description>
+    <request name="surface_create">
+      <description summary="creates a new qt_shell_surface object">
+        Creates a qt_shell_surface object that corresponds to a surface. If the surface is already
+        assigned a different role, this will issue a protocol error (see the error enum)
+      </description>
+      <arg name="surface" type="object" interface="wl_surface"/>
+      <arg name="id" type="new_id" interface="zqt_shell_surface_v1"/>
+    </request>
+
+    <enum name="error">
+      <entry name="role" value="0" summary="wl_surface already has a different role"/>
+    </enum>
+  </interface>
+
+</protocol>
+
