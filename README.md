@@ -1,5 +1,5 @@
 
-<img style="position:relative;margin:0;padding:0;top:23px" src="https://i.imgur.com/cCT9KwN.png" width="118"/>
+<img style="position:relative;margin:0;padding:0;top:30px" src="https://i.imgur.com/cCT9KwN.png" width="112"/>
 <h1 style="margin-top:0;padding-top:0">Louvre</h1>
 
 A free and open source C++ library to create Wayland compositors.
