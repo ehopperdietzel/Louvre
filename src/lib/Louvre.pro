@@ -7,10 +7,10 @@ DEFINES += Desk
 
 DESTDIR = $$PWD/build
 
-QMAKE_CXXFLAGS_RELEASE -= -O
+#QMAKE_CXXFLAGS_RELEASE -= -O
 #QMAKE_CXXFLAGS_RELEASE -= -O1
 #QMAKE_CXXFLAGS_RELEASE -= -O2
-#QMAKE_CXXFLAGS_RELEASE *= -O3
+QMAKE_CXXFLAGS_RELEASE *= -O3
 
 LIBS += -L/usr/local/lib -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lXfixes -lXcursor -lxkbcommon -lSOIL
 INCLUDEPATH += /usr/include/drm ./classes ./globals/Wayland ./globals/XdgShell /usr/local/include

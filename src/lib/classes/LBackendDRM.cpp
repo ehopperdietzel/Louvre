@@ -508,7 +508,10 @@ std::list<LOutput *> &LBackend::getAvaliableOutputs(LCompositor *compositor)
                 data->encoder = encoder;
                 data->mode = defaultMode;
 
-                newOutput->size = LSize(defaultMode->hdisplay,defaultMode->vdisplay);
+                newOutput->p_rect.setW(defaultMode->hdisplay);
+                newOutput->p_rect.setH(defaultMode->vdisplay);
+                newOutput->p_rectScaled = newOutput->p_rect/newOutput->getOutputScale();
+
                 newOutput->refreshRate = defaultMode->vrefresh;
                 outputs.push_front(newOutput);
                 printf("New output with id: %i and vrefresh: %i, w: %i h: %i \n",crtc_id,defaultMode->vrefresh,defaultMode->hdisplay,defaultMode->vdisplay);
