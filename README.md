@@ -1,6 +1,6 @@
 
-<img style="position:relative;margin:0;padding:0;top:40px" src="https://i.imgur.com/cCT9KwN.png" width="112"/>
-<h1 style="margin-top:0;padding-top:0">Louvre</h1>
+<img style="position:relative;margin:0px;padding:0;top:40px" src="https://i.imgur.com/cCT9KwN.png" width="104"/>
+<h1 style="margin-top:0px;padding-top:0px">Louvre</h1>
 
 A free and open source C++ library to create Wayland compositors.
 
@@ -81,6 +81,6 @@ $ ./Minimal
 * Qt 5.x Clients :white_check_mark:
 * SDL :white_check_mark:
 * EFL :white_check_mark:
-* XWayland Support
+* XWayland
 
 
