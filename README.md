@@ -12,9 +12,7 @@ A free and open source C++ library to create Wayland compositors.
 
 ## 📚 Dependencies
 ```
-sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libxcursor-dev 
-libxfixes-dev libinput-dev libegl-dev mesa-common-dev libgles2-mesa-dev 
-libxkbcommon-dev libsoil-dev
+sudo apt install libwayland-dev libdrm-dev libgbm-dev libevdev-dev libxcursor-dev libxfixes-dev libinput-dev libegl-dev mesa-common-dev libgles2-mesa-dev libxkbcommon-dev libsoil-dev weston
 ```
 
 ## ✍️ Example
