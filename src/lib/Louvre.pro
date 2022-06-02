@@ -13,7 +13,7 @@ DESTDIR = $$PWD/build
 QMAKE_CXXFLAGS_RELEASE *= -O3
 
 LIBS += -L/usr/local/lib -lwayland-server -lEGL -lGL -ldrm -lGLESv2 -lgbm -linput -ludev -lpthread -lX11 -lXfixes -lXcursor -lxkbcommon -lSOIL
-INCLUDEPATH += /usr/include/drm ./classes ./globals/Wayland ./globals/XdgShell /usr/local/include
+INCLUDEPATH += /usr/include/libdrm ./classes ./globals/Wayland ./globals/XdgShell /usr/local/include
 
 
 # Default rules for deployment.
@@ -34,7 +34,7 @@ HEADERS += \
     classes/LOutputMode.h \
     classes/LPoint.h \
     classes/LPointF.h \
-    classes/LPopup.h \
+    classes/LPopupRole.h \
     classes/LPositioner.h \
     classes/LRect.h \
     classes/LRegion.h \
@@ -44,7 +44,7 @@ HEADERS += \
     classes/LSurface.h \
     classes/LTexture.h \
     classes/LTime.h \
-    classes/LToplevel.h \
+    classes/LToplevelRole.h \
     classes/LWayland.h \
     globals/Viewporter/Viewporter.h \
     globals/Viewporter/viewporter.h \
@@ -78,14 +78,14 @@ SOURCES += \
     classes/LOutputMode.cpp \
     classes/LPoint.cpp \
     classes/LPointF.cpp \
-    classes/LPopup.cpp \
+    classes/LPopupRole.cpp \
     classes/LPositioner.cpp \
     classes/LRegion.cpp \
     classes/LSeat.cpp \
     classes/LSurface.cpp \
     classes/LTexture.cpp \
     classes/LTime.cpp \
-    classes/LToplevel.cpp \
+    classes/LToplevelRole.cpp \
     classes/LWayland.cpp \
     globals/Viewporter/Viewporter.cpp \
     globals/Viewporter/viewporter.c \

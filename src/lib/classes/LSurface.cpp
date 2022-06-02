@@ -16,8 +16,8 @@
 #include <LOutput.h>
 
 #include <unistd.h>
-#include <LToplevel.h>
-#include <LPopup.h>
+#include <LToplevelRole.h>
+#include <LPopupRole.h>
 
 
 #include <LTime.h>
@@ -148,10 +148,9 @@ void LSurface::applyDamages()
     Int32 width, height;
     EGLint texture_format;
 
+    // EGL
     if(eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
-        //printf("EGL buffer\n");
-
         eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_WIDTH, &width);
         eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_HEIGHT, &height);
         EGLAttrib attribs = EGL_NONE;
@@ -159,9 +158,9 @@ void LSurface::applyDamages()
         p_texture->setData(width, height, &image, texture_format, GL_UNSIGNED_BYTE, LTexture::BufferType::EGL);
         eglDestroyImage (output->getDisplay(), image);
     }
+    // SHM
     else
     {
-        //printf("SHM buffer\n");
         wl_shm_buffer *shm_buffer = wl_shm_buffer_get(current.buffer);
         wl_shm_buffer_begin_access(shm_buffer);
         width = wl_shm_buffer_get_width(shm_buffer);
@@ -170,8 +169,6 @@ void LSurface::applyDamages()
         UInt32 format =  wl_shm_buffer_get_format(shm_buffer);
 
         GLenum bufferFormat;
-
-        //printf("STRIDE %i %i\n",wl_shm_buffer_get_stride(shm_buffer),width);
 
         if( format == WL_SHM_FORMAT_XRGB8888)
         {
@@ -204,6 +201,11 @@ void LSurface::requestNextFrame()
         wl_resource_destroy(p_frameCallback);
         p_frameCallback = nullptr;
     }
+}
+
+wl_resource *LSurface::xdgSurfaceResource() const
+{
+    return p_xdgSurfaceResource;
 }
 
 void LSurface::setBufferScale(Int32 scale)

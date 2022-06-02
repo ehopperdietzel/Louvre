@@ -4,6 +4,8 @@
 #include <XdgSurface.h>
 #include <XdgPositioner.h>
 #include <LPositioner.h>
+#include <LToplevelRole.h>
+#include <LPopupRole.h>
 
 using namespace Louvre;
 
@@ -11,45 +13,59 @@ using namespace Louvre;
 
 static struct xdg_positioner_interface xdg_positioner_implementation =
 {
-    &Extensions::XdgShell::Positioner::destroy,
-    &Extensions::XdgShell::Positioner::set_size,
-    &Extensions::XdgShell::Positioner::set_anchor_rect,
-    &Extensions::XdgShell::Positioner::set_anchor,
-    &Extensions::XdgShell::Positioner::set_gravity,
-    &Extensions::XdgShell::Positioner::set_constraint_adjustment,
-    &Extensions::XdgShell::Positioner::set_offset,
-    &Extensions::XdgShell::Positioner::set_reactive,
-    &Extensions::XdgShell::Positioner::set_parent_size,
-    &Extensions::XdgShell::Positioner::set_parent_configure
+    .destroy = &Extensions::XdgShell::Positioner::destroy,
+    .set_size = &Extensions::XdgShell::Positioner::set_size,
+    .set_anchor_rect = &Extensions::XdgShell::Positioner::set_anchor_rect,
+    .set_anchor = &Extensions::XdgShell::Positioner::set_anchor,
+    .set_gravity = &Extensions::XdgShell::Positioner::set_gravity,
+    .set_constraint_adjustment = &Extensions::XdgShell::Positioner::set_constraint_adjustment,
+    .set_offset = &Extensions::XdgShell::Positioner::set_offset,
+#if LOUVRE_XDG_WM_BASE_VERSION >=3
+    .set_reactive = &Extensions::XdgShell::Positioner::set_reactive,
+    .set_parent_size = &Extensions::XdgShell::Positioner::set_parent_size,
+    .set_parent_configure = &Extensions::XdgShell::Positioner::set_parent_configure
+#endif
 };
 
 static struct xdg_surface_interface xdg_surface_implementation =
 {
-    &Extensions::XdgShell::Surface::destroy,
-    &Extensions::XdgShell::Surface::get_toplevel,
-    &Extensions::XdgShell::Surface::get_popup,
-    &Extensions::XdgShell::Surface::set_window_geometry,
-    &Extensions::XdgShell::Surface::ack_configure
+    .destroy = &Extensions::XdgShell::Surface::destroy,
+    .get_toplevel = &Extensions::XdgShell::Surface::get_toplevel,
+    .get_popup = &Extensions::XdgShell::Surface::get_popup,
+    .set_window_geometry = &Extensions::XdgShell::Surface::set_window_geometry,
+    .ack_configure = &Extensions::XdgShell::Surface::ack_configure
 };
 
 static struct xdg_wm_base_interface xdg_wm_base_implementation =
 {
-    &Extensions::XdgShell::WmBase::destroy,
-    &Extensions::XdgShell::WmBase::create_positioner,
-    &Extensions::XdgShell::WmBase::get_xdg_surface,
-    &Extensions::XdgShell::WmBase::pong
+    .destroy = &Extensions::XdgShell::WmBase::destroy,
+    .create_positioner = &Extensions::XdgShell::WmBase::create_positioner,
+    .get_xdg_surface = &Extensions::XdgShell::WmBase::get_xdg_surface,
+    .pong = &Extensions::XdgShell::WmBase::pong
 };
 
 /* XDG_WM_BASE INTERFACE METHODS */
 
-void Extensions::XdgShell::WmBase::resource_destroy(wl_resource *)
+void Extensions::XdgShell::WmBase::resource_destroy(wl_resource *resource)
 {
-    /* No user data to free */
+    LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
+    lClient->p_xdgWmBaseResource = nullptr;
 }
 
 void Extensions::XdgShell::WmBase::destroy(wl_client *, wl_resource *resource)
 {
-    // Call WmBase::resource_destroy()
+    LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
+
+    // Check defunc surfaces error
+    for(LSurface *surface : lClient->compositor()->surfaces())
+    {
+        if(surface->p_xdgSurfaceResource)
+        {
+            wl_resource_post_error(resource, XDG_WM_BASE_ERROR_DEFUNCT_SURFACES, "xdg_wm_base was destroyed before children.");
+            return;
+        }
+    }
+
     wl_resource_destroy(resource);
 }
 
@@ -59,33 +75,26 @@ void Extensions::XdgShell::WmBase::create_positioner(wl_client *client, wl_resou
     Int32 version = wl_resource_get_version(resource);
 
     // Gets the LClient from user data
-    LClient *wClient = (LClient*)wl_resource_get_user_data(resource);
+    LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
 
     // Creates a new LPositioner
-    LPositioner *wPositioner = new LPositioner(wClient);
+    LPositioner *lPositioner = new LPositioner(lClient);
 
     // Creates the XDG_POSITIONER resource
-    wPositioner->p_resource = wl_resource_create(client, &xdg_positioner_interface, version, id);
+    lPositioner->p_resource = wl_resource_create(client, &xdg_positioner_interface, version, id);
 
     // Binds resource to the XDG_POSITIONER interface and destructor
-    wl_resource_set_implementation(wPositioner->p_resource, &xdg_positioner_implementation, wPositioner, &Louvre::Extensions::XdgShell::Positioner::destroy_resource);
+    wl_resource_set_implementation(lPositioner->p_resource, &xdg_positioner_implementation, lPositioner, &Louvre::Extensions::XdgShell::Positioner::destroy_resource);
 
 }
 
 void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *surface)
 {
     // Gets the LSurface from user data
-    LSurface *wSurface = (LSurface*)wl_resource_get_user_data(surface);
-
-    // The surface should't have a buffer attached
-    if(wSurface->pending.buffer != nullptr || wSurface->current.buffer != nullptr)
-    {
-        wl_resource_post_error(resource,XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"Given wl_surface already has a buffer attached.");
-        return;
-    }
+    LSurface *lSurface = (LSurface*)wl_resource_get_user_data(surface);
 
     // The surface should't have a previous role
-    if(wSurface->type() != LSurface::Undefined)
+    if(lSurface->type() != LSurface::Undefined)
     {
         wl_resource_post_error(resource,XDG_WM_BASE_ERROR_ROLE,"Given wl_surface has another role.");
         return;
@@ -95,42 +104,49 @@ void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resourc
     Int32 version = wl_resource_get_version(resource);
 
     // Creates the XDG_SURFACE resource
-    wSurface->p_xdg_shell = wl_resource_create(client, &xdg_surface_interface, version, id);
+    lSurface->p_xdgSurfaceResource = wl_resource_create(client, &xdg_surface_interface, version, id);
 
     // Binds the resource to the XDG_SURFACE interface and destructor
-    wl_resource_set_implementation(wSurface->p_xdg_shell, &xdg_surface_implementation, wSurface, &Louvre::Extensions::XdgShell::Surface::resource_destroy);
+    wl_resource_set_implementation(lSurface->p_xdgSurfaceResource, &xdg_surface_implementation, lSurface, &Louvre::Extensions::XdgShell::Surface::resource_destroy);
 }
 
-void Extensions::XdgShell::WmBase::pong(wl_client *client, wl_resource *resource, UInt32 serial)
+void Extensions::XdgShell::WmBase::pong(wl_client *, wl_resource *resource, UInt32 serial)
 {
-    /* TODO: NOT NEEDED YET */
-    (void)client;(void)resource;(void)serial;
+    LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
+
+    for(LSurface *lSurface : lClient->surfaces())
+    {
+        if(lSurface->type() == LSurface::Toplevel)
+            lSurface->toplevel()->pong(serial);
+        else if(lSurface->type() == LSurface::Popup)
+            lSurface->popup()->pong(serial);
+    }
 }
 
 void Extensions::XdgShell::WmBase::bind (wl_client *client, void *data, UInt32 version, UInt32 id)
 {
 
     // Gets the LCompositor from user data
-    LCompositor *wCompositor = (LCompositor*)data;
+    LCompositor *lCompositor = (LCompositor*)data;
 
     // Search the LClient
-    LClient *wClient = nullptr;
+    LClient *lClient = nullptr;
 
-    for(LClient *c : wCompositor->clients)
+    for(LClient *c : lCompositor->clients)
     {
         if(c->client() == client)
         {
-            wClient = c;
+            lClient = c;
             break;
         }
     }
 
     // If the LClient wasn't found
-    if(!wClient) return;
+    if(!lClient) return;
 
     // Creates the XDG_WM_BASE resource
-    wl_resource *resource = wl_resource_create (client, &xdg_wm_base_interface, version, id);
+    lClient->p_xdgWmBaseResource = wl_resource_create (client, &xdg_wm_base_interface, version, id);
 
     // Binds the resource to the XDG_WM_BASE interface and destructor
-    wl_resource_set_implementation (resource, &xdg_wm_base_implementation, wClient, &WmBase::resource_destroy);
+    wl_resource_set_implementation (lClient->p_xdgWmBaseResource, &xdg_wm_base_implementation, lClient, &WmBase::resource_destroy);
 }

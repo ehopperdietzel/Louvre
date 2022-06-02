@@ -5,7 +5,7 @@
 #include <LSurface.h>
 #include <LClient.h>
 #include <LSeat.h>
-#include <LPopup.h>
+#include <LPopupRole.h>
 
 #include <xdg-shell.h>
 
@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <sys/eventfd.h>
 
-#include <LToplevel.h>
+#include <LToplevelRole.h>
 
 using namespace Louvre;
 
@@ -53,12 +53,17 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     if(surface->parent() != nullptr)
         surface->parent()->p_children.remove(surface);
 
+    if(surface->toplevel())
+        surface->toplevel()->p_surface = nullptr;
+    else if(surface->popup())
+        surface->popup()->p_surface = nullptr;
+
     LClient *client = surface->client();
 
     if(client != nullptr)
     {
         // Remove surface from its client list
-        surface->client()->surfaces.remove(surface);
+        surface->client()->p_surfaces.remove(surface);
 
         // Remove the surface from the compositor list
         surface->compositor()->p_surfaces.remove(surface);
@@ -172,12 +177,12 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
 
         if(topLevel->p_pendingConf.set)
         {
-            unsigned char prevState = topLevel->p_stateFlags;
+            LToplevelStateFlags prevState = topLevel->p_stateFlags;
             topLevel->p_stateFlags = topLevel->p_sentConf.flags;
 
-            if((prevState & LToplevelRole::Maximized) != (topLevel->p_sentConf.flags & LToplevelRole::Maximized))
+            if((prevState & LToplevelStateFlags::Maximized) != (topLevel->p_sentConf.flags & LToplevelStateFlags::Maximized))
                 topLevel->maximizeChanged();
-            if((prevState & LToplevelRole::Fullscreen) != (topLevel->p_sentConf.flags & LToplevelRole::Fullscreen))
+            if((prevState & LToplevelStateFlags::Fullscreen) != (topLevel->p_sentConf.flags & LToplevelStateFlags::Fullscreen))
                 topLevel->fullscreenChanged();
 
             topLevel->p_pendingConf.set = false;

@@ -76,6 +76,7 @@ public:
 
     // References
     wl_resource *resource() const { return p_resource; }
+    wl_resource *xdgSurfaceResource() const;
     LClient *client() const { return p_client; }
     LCompositor *compositor() const;
 
@@ -96,7 +97,7 @@ public:
     State current,pending;
     bool ack_configure = true;
  private:
-    friend class WWayland;
+    friend class LWayland;
     friend class LCompositor;
     friend class LOutput;
     friend class LPointer;
@@ -124,7 +125,7 @@ public:
 
     wl_resource *p_resource       = nullptr;
 
-    wl_resource *p_xdg_shell       = nullptr;
+    wl_resource *p_xdgSurfaceResource = nullptr;
     wl_resource *p_frameCallback   = nullptr;
 
     LPoint p_hotspot;

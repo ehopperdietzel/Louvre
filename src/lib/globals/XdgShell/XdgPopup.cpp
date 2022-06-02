@@ -4,36 +4,61 @@
 #include <LSurface.h>
 #include <LClient.h>
 #include <LPositioner.h>
-#include <LPopup.h>
+#include <LPopupRole.h>
 
 using namespace Louvre;
 
 void Extensions::XdgShell::Popup::destroy_resource(wl_resource *resource)
 {
-    LPopupRole *wPopup = (LPopupRole*)wl_resource_get_user_data(resource);
+    LPopupRole *lPopup = (LPopupRole*)wl_resource_get_user_data(resource);
 
-    wPopup->surface()->compositor()->destroyPopupRequest(wPopup);
+    // Unset role
+    if(lPopup->surface())
+    {
+        lPopup->surface()->current.type = LSurface::Undefined;
+        lPopup->surface()->p_popupRole = nullptr;
+        lPopup->surface()->typeChangeRequest();
+    }
 
-    if(wPopup->positioner())
-        delete wPopup->p_positioner;
+    // Notify
+    lPopup->compositor()->destroyPopupRequest(lPopup);
 
-    delete wPopup;
+    if(lPopup->positioner())
+        delete lPopup->p_positioner;
 
-    printf("POPUP DESTROYED.\n");
+    delete lPopup;
 }
 
-void Extensions::XdgShell::Popup::destroy(wl_client *client, wl_resource *resource)
+void Extensions::XdgShell::Popup::destroy(wl_client *, wl_resource *resource)
 {
-    (void)client;
+    LPopupRole *lPopup = (LPopupRole*)wl_resource_get_user_data(resource);
+
+    if(!lPopup->surface()->children().empty())
+    {
+        wl_resource_post_error(
+                    lPopup->surface()->client()->xdgWmBaseResource(),
+                    XDG_WM_BASE_ERROR_NOT_THE_TOPMOST_POPUP,
+                    "The client tried to map or destroy a non-topmost popup.");
+        return;
+    }
+
     wl_resource_destroy(resource);
 }
-void Extensions::XdgShell::Popup::grab(wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial)
+void Extensions::XdgShell::Popup::grab(wl_client *, wl_resource *resource, wl_resource */*seat*/, UInt32 /*serial*/)
 {
-    (void)client;(void)resource;(void)seat;(void)serial;
-    //LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
-    //surface->grabSeatRequest();
-    // TODO add serial
+    LPopupRole *lPopup = (LPopupRole*)wl_resource_get_user_data(resource);
+
+    /* Parent popup must have focus (Not really necesary)
+    if(lPopup->surface()->parent()->type() == LSurface::Popup && )
+    {
+
+    }
+    */
+
+    lPopup->grabSeatRequest();
 }
+
+#if LOUVRE_XDG_WM_BASE_VERSION >= 3
 void Extensions::XdgShell::Popup::reposition(wl_client *client, wl_resource *resource, wl_resource *positioner, UInt32 serial)
 {
     (void)client;
@@ -47,5 +72,5 @@ void Extensions::XdgShell::Popup::reposition(wl_client *client, wl_resource *res
 
     wPopup->p_positioner = wPositioner;
     wPopup->configureRequest();
-
 }
+#endif

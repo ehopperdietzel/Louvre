@@ -55,7 +55,7 @@ void Globals::Compositor::create_surface(wl_client *client, wl_resource *resourc
     LSurface *wSurface = wClient->compositor()->createSurfaceRequest(surface,wClient);
 
     // Append surface
-    wClient->surfaces.push_back(wSurface);
+    wClient->p_surfaces.push_back(wSurface);
     wClient->compositor()->p_surfaces.push_back(wSurface);
 
     // Implement surface

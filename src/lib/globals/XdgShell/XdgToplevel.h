@@ -21,6 +21,10 @@ public:
     static void set_fullscreen(wl_client *client, wl_resource *resource, wl_resource *output);
     static void unset_fullscreen(wl_client *client, wl_resource *resource);
     static void set_minimized(wl_client *client, wl_resource *resource);
+
+#if LOUVRE_XDG_WM_BASE_VERSION >= 4
+    static void configure_bounds(wl_client *client, wl_resource *resource, Int32 width, Int32 height);
+#endif
 };
 
 #endif // XDGTOPLEVEL_H

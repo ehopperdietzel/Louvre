@@ -4,13 +4,13 @@
 #include <LWayland.h>
 #include <LOutput.h>
 #include <LSeat.h>
-#include <LPopup.h>
+#include <LPopupRole.h>
 
 #include <stdio.h>
 #include <sys/poll.h>
 #include <thread>
 #include <unistd.h>
-#include <LToplevel.h>
+#include <LToplevelRole.h>
 #include <LCursor.h>
 
 
@@ -25,7 +25,7 @@ LCompositor::LCompositor()
     p_threadId = std::this_thread::get_id();
 
     libinputFd = eventfd(0,EFD_SEMAPHORE);
-    WWayland::initWayland(this);
+    LWayland::initWayland(this);
 }
 
 LOutput *LCompositor::createOutputRequest()
@@ -96,11 +96,11 @@ void LCompositor::start()
 
     // Ask the developer to return a LSeat
     p_seat = createSeatRequest();
-    WWayland::setSeat(p_seat);
+    LWayland::setSeat(p_seat);
 
     // Init wayland
     _started = true;
-    WWayland::runLoop();
+    LWayland::runLoop();
 }
 
 void LCompositor::riseSurface(LSurface *surface)
@@ -139,7 +139,7 @@ void LCompositor::addOutput(LOutput *output)
     output->setCompositor(this);
 
     // If the main thread has no OpenGL context yet
-    if(!WWayland::isGlContextInitialized())
+    if(!LWayland::isGlContextInitialized())
     {
         // Wait for the added output to create his OpenGL context in his own thread
         while(output->initializeResult() == LOutput::Pending)
@@ -150,7 +150,7 @@ void LCompositor::addOutput(LOutput *output)
          * into OpenGL textures from the main thread and release clients buffers
          * immediatly to allow them to reuse it.
          * This fix the Qt clients decoration bug while resizing. */
-        WWayland::initGLContext();
+        LWayland::initGLContext();
 
     }
 }

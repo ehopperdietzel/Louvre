@@ -83,7 +83,12 @@ static void create_window(LOutput *output)
     int snum = DefaultScreen(data->x_display);
 
     data->window.width = DisplayWidth(data->x_display, snum);
+
+#if LOUBRE_DEBUG == 0
     data->window.height = DisplayHeight(data->x_display, snum);
+#else
+    data->window.height = DisplayHeight(data->x_display, snum)/2;
+#endif
 
     // create a window
     XSetWindowAttributes window_attributes;
@@ -119,8 +124,8 @@ static void create_window(LOutput *output)
 
     EGLContext ctx = EGL_NO_CONTEXT;
 
-    if(WWayland::isGlContextInitialized())
-        ctx = WWayland::eglContext();
+    if(LWayland::isGlContextInitialized())
+        ctx = LWayland::eglContext();
 
     data->window.context = eglCreateContext(data->egl_display, config, ctx, context_attribs);
 
@@ -144,13 +149,18 @@ static void create_window(LOutput *output)
 
     XMapWindow(data->x_display, data->window.window);
     XMoveWindow(data->x_display,data->window.window,0,0);
+
+#if LOUBRE_DEBUG == 0
     XFixesHideCursor(data->x_display, data->window.window);
     XSetInputFocus(data->x_display,data->window.window,RevertToParent,CurrentTime);
+#endif
+
+
 
     printf("X11 Window created.\n");
 
-    if(!WWayland::isGlContextInitialized())
-        WWayland::setContext(output,data->egl_display,data->window.context);
+    if(!LWayland::isGlContextInitialized())
+        LWayland::setContext(output,data->egl_display,data->window.context);
 
 }
 

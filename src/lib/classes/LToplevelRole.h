@@ -1,5 +1,5 @@
-#ifndef LTOPLEVEL_H
-#define LTOPLEVEL_H
+#ifndef LTOPLEVELROLE_H
+#define LTOPLEVELROLE_H
 
 #include <LNamespaces.h>
 #include <LSize.h>
@@ -23,22 +23,10 @@ public:
         BottomRight = 10
     };
 
-    typedef unsigned char StateFlags;
-
-    enum TopLevelStates : unsigned char
-    {
-        Deactivated = 0,
-        Maximized = 1,
-        Fullscreen = 2,
-        Resizing = 4,
-        Activated = 8,
-        TiledLeft = 16,
-        TiledRight = 32,
-        TiledTop = 64,
-        TiledBottom = 128
-    };
+    typedef LToplevelStateFlags State;
 
     // Requests
+    virtual void pong(UInt32 serial);
     virtual void startMoveRequest();
     virtual void startResizeRequest(Edge edge);
     virtual void configureRequest();
@@ -46,6 +34,7 @@ public:
     virtual void unmaximizeRequest();
     virtual void minimizeRequest();
     virtual void fullscreenRequest(LOutput *destOutput);
+    virtual void showWindowMenuRequest(Int32 x, Int32 y);
 
     // State change notification
     virtual void maximizeChanged();
@@ -61,9 +50,10 @@ public:
 
 
     // Events
-    void configure(StateFlags states);
-    void configure(const LSize &size, StateFlags states);
-    void configure(Int32 width, Int32 height, StateFlags states);
+    void ping(UInt32 serial);
+    void configure(LToplevelStateFlags states);
+    void configure(const LSize &size, LToplevelStateFlags states);
+    void configure(Int32 width, Int32 height, LToplevelStateFlags states);
 
 
     const LRect &windowGeometry() const;
@@ -82,9 +72,9 @@ public:
     bool maximized() const;
     bool fullscreen() const;
     bool activated() const;
-    StateFlags state() const;
+    LToplevelStateFlags state() const;
 private:
-    friend class WWayland;
+    friend class LWayland;
     friend class Globals::Surface;
     friend class Extensions::XdgShell::Surface;
     friend class Extensions::XdgShell::Toplevel;
@@ -93,17 +83,18 @@ private:
     {
         bool set = false;
         LSize size;
-        StateFlags flags;
+        LToplevelStateFlags flags;
         UInt32 serial;
     };
 
-    StateFlags p_stateFlags;
+    LToplevelStateFlags p_stateFlags;
     TopLevelConfiguration p_currentConf;
     TopLevelConfiguration p_sentConf;
     TopLevelConfiguration p_pendingConf;
 
     void dispachLastConfiguration();
     wl_resource *p_resource = nullptr;
+    LCompositor *p_compositor = nullptr;
     LSurface *p_surface = nullptr;
 
     LSize p_minSize, p_maxSize;
@@ -115,4 +106,4 @@ private:
     char *p_title = new char[1];
 };
 
-#endif // LTOPLEVEL_H
+#endif // LTOPLEVELROLE_H

@@ -10,6 +10,60 @@ LPositioner::LPositioner(LClient *client)
     p_client->positioners.push_back(this);
 }
 
+LClient *LPositioner::client() const
+{
+    return p_client;
+}
+
+wl_resource *LPositioner::resource() const
+{
+    return p_resource;
+}
+
+const LSize &LPositioner::size() const
+{
+    return p_size;
+}
+
+const LRect &LPositioner::anchorRect() const
+{
+    return p_anchorRect;
+}
+
+LPositioner::LAnchor LPositioner::anchor() const
+{
+    return p_anchor;
+}
+
+LPositioner::LGravity LPositioner::gravity() const
+{
+    return p_gravity;
+}
+
+const LPoint &LPositioner::offset() const
+{
+    return p_offset;
+}
+
+#if LOUVRE_XDG_WM_BASE_VERSION >=3
+
+    bool LPositioner::isReactive() const
+    {
+        return p_isReactive;
+    }
+
+    const LSize &LPositioner::parentSize() const
+    {
+        return p_parentSize;
+    }
+
+    UInt32 LPositioner::parentConfigureSerial() const
+    {
+        return p_parentConfigureSerial;
+    }
+
+#endif
+
 LPoint LPositioner::calculatePopupPosition(const LRect &outputRect, const LPoint &parentPosition)
 {
     // TODO use output rect + constrains
@@ -22,41 +76,41 @@ LPoint LPositioner::calculatePopupPosition(const LRect &outputRect, const LPoint
 
     switch(anchor())
     {
-        case XDG_POSITIONER_ANCHOR_NONE:
+        case LAnchor::LNone:
         {
             anchorPos = anchorRect().bottomRight()/2;
         }break;
-        case XDG_POSITIONER_ANCHOR_TOP:
+        case LAnchor::LTop:
         {
             anchorPos.setX(anchorRect().w()/2);
         }break;
-        case XDG_POSITIONER_ANCHOR_BOTTOM:
+        case LAnchor::LBottom:
         {
             anchorPos.setX(anchorRect().w()/2);
             anchorPos.setY(anchorRect().h());
         }break;
-        case XDG_POSITIONER_ANCHOR_LEFT:
+        case LAnchor::LLeft:
         {
             anchorPos.setY(anchorRect().h()/2);
         }break;
-        case XDG_POSITIONER_ANCHOR_RIGHT:
+        case LAnchor::LRight:
         {
             anchorPos.setX(anchorRect().w());
             anchorPos.setY(anchorRect().h()/2);
         }break;
-        case XDG_POSITIONER_ANCHOR_TOP_LEFT:
+        case LAnchor::LTopLeft:
         {
             // (0,0)
         }break;
-        case XDG_POSITIONER_ANCHOR_BOTTOM_LEFT:
+        case LAnchor::LBottomLeft:
         {
             anchorPos.setY(anchorRect().h());
         }break;
-        case XDG_POSITIONER_ANCHOR_TOP_RIGHT:
+        case LAnchor::LTopRight:
         {
             anchorPos.setX(anchorRect().w());
         }break;
-        case XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT:
+        case LAnchor::LBottomRight:
         {
             anchorPos = anchorRect().bottomRight();
         }break;
@@ -64,46 +118,51 @@ LPoint LPositioner::calculatePopupPosition(const LRect &outputRect, const LPoint
 
     switch(gravity())
     {
-        case XDG_POSITIONER_GRAVITY_NONE:
+        case LGravity::LNone:
         {
             popupOrigin = popupSize/2;
         }break;
-        case XDG_POSITIONER_GRAVITY_TOP:
+        case LGravity::LTop:
         {
             popupOrigin.setX(popupSize.w()/2);
             popupOrigin.setY(popupSize.h());
         }break;
-        case XDG_POSITIONER_GRAVITY_BOTTOM:
+        case LGravity::LBottom:
         {
             popupOrigin.setX(popupSize.w()/2);
         }break;
-        case XDG_POSITIONER_GRAVITY_LEFT:
+        case LGravity::LLeft:
         {
             popupOrigin.setX(popupSize.w());
             popupOrigin.setY(popupSize.h()/2);
         }break;
-        case XDG_POSITIONER_GRAVITY_RIGHT:
+        case LGravity::LRight:
         {
             popupOrigin.setY(popupSize.h()/2);
         }break;
-        case XDG_POSITIONER_GRAVITY_TOP_LEFT:
+        case LGravity::LTopLeft:
         {
             popupOrigin = popupSize;
         }break;
-        case XDG_POSITIONER_GRAVITY_BOTTOM_LEFT:
+        case LGravity::LBottomLeft:
         {
             popupOrigin.setX(popupSize.w());
         }break;
-        case XDG_POSITIONER_GRAVITY_TOP_RIGHT:
+        case LGravity::LTopRight:
         {
             popupOrigin.setY(popupSize.h());
         }break;
-        case XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT:
+        case LGravity::LBottomRight:
         {
             // (0,0)
         }break;
     }
 
     return parentPos + anchorRect().topLeft() + anchorPos - popupOrigin + offset();
+}
+
+LPositioner::LConstraintAdjustment LPositioner::constraintAdjustment() const
+{
+    return p_constraintAdjustment;
 }
 

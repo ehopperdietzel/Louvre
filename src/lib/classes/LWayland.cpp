@@ -21,7 +21,7 @@
 #include <LSurface.h>
 #include <LOutput.h>
 #include <LSeat.h>
-#include <LToplevel.h>
+#include <LToplevelRole.h>
 
 using namespace std;
 using namespace Louvre;
@@ -48,7 +48,7 @@ LOutput *p_mainOutput;
 bool updated = false;
 
 
-void WWayland::initGLContext()
+void LWayland::initGLContext()
 {
 
     if(contextInitialized == 1)
@@ -105,12 +105,12 @@ void WWayland::initGLContext()
     return;
 }
 
-bool WWayland::isGlContextInitialized()
+bool LWayland::isGlContextInitialized()
 {
     return contextInitialized == 2;
 }
 
-void WWayland::setContext(LOutput *output, EGLDisplay sharedDisp, EGLContext sharedCont)
+void LWayland::setContext(LOutput *output, EGLDisplay sharedDisp, EGLContext sharedCont)
 {
     p_mainOutput = output;
     sharedDisplay = sharedDisp;
@@ -118,37 +118,37 @@ void WWayland::setContext(LOutput *output, EGLDisplay sharedDisp, EGLContext sha
     contextInitialized = 1;
 }
 
-LOutput *WWayland::mainOutput()
+LOutput *LWayland::mainOutput()
 {
     return p_mainOutput;
 }
 
-void WWayland::forceUpdate()
+void LWayland::forceUpdate()
 {
     if(!updated)
         eventfd_write(compositor->libinputFd,1);
 }
 
-void WWayland::setSeat(LSeat *seat)
+void LWayland::setSeat(LSeat *seat)
 {
     // Create seat global
     wl_global_create(display, &wl_seat_interface, LOUVRE_SEAT_VERSION, seat->p_compositor, &Globals::Seat::bind);
-    wl_event_loop_add_fd(event_loop,seat->libinputFd(),WL_EVENT_READABLE,&WWayland::processSeat,seat);
+    wl_event_loop_add_fd(event_loop,seat->libinputFd(),WL_EVENT_READABLE,&LWayland::processSeat,seat);
 }
 
-int WWayland::processSeat(int, unsigned int, void *userData)
+int LWayland::processSeat(int, unsigned int, void *userData)
 {
     LSeat *seat = (LSeat*)userData;
     seat->processInput();
     return 0;
 }
 
-UInt32 WWayland::nextSerial()
+UInt32 LWayland::nextSerial()
 {
     return wl_display_next_serial(display);
 }
 
-int WWayland::initWayland(LCompositor *comp)
+int LWayland::initWayland(LCompositor *comp)
 {
     eglBindWaylandDisplayWL = (PFNEGLBINDWAYLANDDISPLAYWL) eglGetProcAddress ("eglBindWaylandDisplayWL");
 
@@ -189,7 +189,7 @@ int WWayland::initWayland(LCompositor *comp)
     wl_global_create(display, &wl_data_device_manager_interface, 3, comp, &Globals::DataDeviceManager::bind);//3
 
     // Create xdg shell global
-    wl_global_create(display, &xdg_wm_base_interface, LOUVRE_XDG_SHELL_VERSION, comp, &Extensions::XdgShell::WmBase::bind); //4
+    wl_global_create(display, &xdg_wm_base_interface, LOUVRE_XDG_WM_BASE_VERSION, comp, &Extensions::XdgShell::WmBase::bind);
 
     wl_display_init_shm(display);
     //wl_data_device_manager_init(display);
@@ -197,7 +197,7 @@ int WWayland::initWayland(LCompositor *comp)
     event_loop = wl_display_get_event_loop(display);
     wayland_fd = wl_event_loop_get_fd(event_loop);
 
-    wl_event_loop_add_fd(event_loop,comp->libinputFd,WL_EVENT_READABLE,&WWayland::readFd,comp);
+    wl_event_loop_add_fd(event_loop,comp->libinputFd,WL_EVENT_READABLE,&LWayland::readFd,comp);
 
     printf("Wayland server initialized.\n");
 
@@ -211,38 +211,39 @@ int WWayland::initWayland(LCompositor *comp)
 
 }
 
-void WWayland::terminateDisplay()
+void LWayland::terminateDisplay()
 {
    // Ends
     wl_display_terminate(display);
 }
 
-void WWayland::dispatchEvents()
+void LWayland::dispatchEvents()
 {
     wl_event_loop_dispatch(event_loop,0);
 }
 
-void WWayland::flushClients()
+void LWayland::flushClients()
 {
     wl_display_flush_clients(display);
 }
 
-int WWayland::readFd(int, unsigned int, void *d)
+int LWayland::readFd(int, unsigned int, void *d)
 {
     LCompositor *comp = (LCompositor*)d;
+    comp->seat()->processInput();
     updated = false;
     eventfd_read(comp->libinputFd,&comp->libinputVal);
     return 0;
 }
 
-void WWayland::bindEGLDisplay(EGLDisplay eglDisplay)
+void LWayland::bindEGLDisplay(EGLDisplay eglDisplay)
 {
     eglBindWaylandDisplayWL(eglDisplay, display);
 }
 
-pollfd fds[3];
+pollfd fds[1];
 
-void WWayland::runLoop()
+void LWayland::runLoop()
 {
     fds[0].events = WL_EVENT_READABLE | WL_EVENT_WRITABLE;
     fds[0].fd = wayland_fd;
@@ -266,7 +267,7 @@ void WWayland::runLoop()
 
         for(LClient *client : compositor->clients)
         {
-            for(LSurface *surface : client->surfaces)
+            for(LSurface *surface : client->surfaces())
             {
                 if(surface->toplevel())
                     surface->toplevel()->dispachLastConfiguration();
@@ -285,7 +286,7 @@ void WWayland::runLoop()
     //wl_display_run(display);
 }
 
-void WWayland::clientConnectionEvent(wl_listener *listener, void *data)
+void LWayland::clientConnectionEvent(wl_listener *listener, void *data)
 {
     (void)listener;
 
@@ -295,13 +296,13 @@ void WWayland::clientConnectionEvent(wl_listener *listener, void *data)
     LClient *newClient = compositor->createClientRequest(client);
 
     // Listen for client disconnection
-    wl_client_get_destroy_listener(client,&WWayland::clientDisconnectionEvent);
+    wl_client_get_destroy_listener(client,&LWayland::clientDisconnectionEvent);
 
     // Append client to the compositor list
     compositor->clients.push_back(newClient);
 }
 
-void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
+void LWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
 {
 
     (void)listener;
@@ -330,13 +331,17 @@ void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     disconnectedClient->regions.clear();
     */
 
+
     // Destroy surfaces events
-    for(LSurface *wSurface : disconnectedClient->surfaces)
+    for(LSurface *wSurface : disconnectedClient->surfaces())
     {
         disconnectedClient->compositor()->destroySurfaceRequest(wSurface);
         wSurface->p_client = nullptr;
+        wSurface->p_toplevelRole = nullptr;
+        wSurface->p_popupRole = nullptr;
     }
-    disconnectedClient->surfaces.clear();
+    disconnectedClient->p_surfaces.clear();
+
 
     // Remove the client from the list
     compositor->clients.remove(disconnectedClient);
@@ -347,25 +352,23 @@ void WWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     delete disconnectedClient;
 }
 
-int WWayland::apply_damage_emit(void *data)
+int LWayland::apply_damage_emit(void *data)
 {
     wl_signal_emit(&sign,data);
     return 0;
 }
 
-
-
-wl_event_source *WWayland::addTimer(wl_event_loop_timer_func_t func, void *data)
+wl_event_source *LWayland::addTimer(wl_event_loop_timer_func_t func, void *data)
 {
     return wl_event_loop_add_timer(event_loop,func,data);
 }
 
-EGLContext WWayland::eglContext()
+EGLContext LWayland::eglContext()
 {
     return sharedContext;
 }
 
-EGLDisplay WWayland::eglDisplay()
+EGLDisplay LWayland::eglDisplay()
 {
     return sharedDisplay;
 }

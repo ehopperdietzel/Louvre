@@ -15,10 +15,28 @@
 */
 
 #define LOUVRE_TB_H 80
+#define LOUBRE_DEBUG 0
 
 // Globals versions
+
+#define LOUVRE_XDG_WM_BASE_VERSION 2
+
 #define LOUVRE_SEAT_VERSION 7
 #define LOUVRE_XDG_SHELL_VERSION 2
+
+#ifndef DEFINE_ENUM_FLAG_OPERATORS
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) \
+inline ENUMTYPE operator | (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a) | ((int)b)); } \
+inline ENUMTYPE &operator |= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) |= ((int)b)); } \
+inline ENUMTYPE operator & (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a) & ((int)b)); } \
+inline ENUMTYPE &operator &= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) &= ((int)b)); } \
+inline ENUMTYPE operator ~ (ENUMTYPE a) { return ENUMTYPE(~((int)a)); } \
+inline ENUMTYPE operator ^ (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a) ^ ((int)b)); } \
+inline ENUMTYPE &operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) ^= ((int)b)); }
+#else
+#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) // NOP, C allows these operators.
+#endif
+
 
 namespace Louvre
 {
@@ -33,7 +51,7 @@ namespace Louvre
     class LRegion;
     class LSurface;
     class LTexture;
-    class WWayland;
+    class LWayland;
 
     // Surface roles
     class LToplevelRole;
@@ -56,12 +74,13 @@ namespace Louvre
     typedef int64_t         Int64;
     typedef float           Float32;
     typedef double          Float64;
-    typedef xdg_positioner_anchor Anchor;
-    typedef xdg_positioner_gravity Gravity;
-    typedef xdg_positioner_constraint_adjustment ConstraintAdjustment;
+    typedef unsigned char   UChar8;
     typedef LPoint LSize;
     typedef LPointF LSizeF;
     typedef UInt32 LKey;
+
+    typedef void* EGLContext;
+    typedef void* EGLDisplay;
 
     struct Point
     {
@@ -104,6 +123,27 @@ namespace Louvre
     };
 
 
+    enum class LToplevelStateFlags : UChar8
+    {
+        Deactivated    = 0,
+        Maximized      = 1,
+        Fullscreen     = 2,
+        Resizing       = 4,
+        Activated      = 8,
+
+    #if LOUVRE_XDG_WM_BASE_VERSION >= 2
+        TiledLeft      = 16,
+        TiledRight     = 32,
+        TiledTop       = 64,
+        TiledBottom    = 128
+    #endif
+
+    };
+
+    DEFINE_ENUM_FLAG_OPERATORS(LToplevelStateFlags)
+
+
+
     // Wayland Globals
     namespace Globals
     {
@@ -139,4 +179,5 @@ namespace Louvre
     };
 
 };
+
 #endif // LNAMESPACES_H

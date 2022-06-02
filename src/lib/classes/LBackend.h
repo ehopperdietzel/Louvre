@@ -17,10 +17,8 @@ public:
     static void flipPage(LOutput *output);
     static bool hasHardwareCursorSupport();
 
-
     static void setCursor(LOutput *output, LTexture *texture, const LSizeF &size);
     static void setCursorPosition(LOutput *output, const LPoint &position);
-
 };
 
 

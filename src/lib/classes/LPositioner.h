@@ -9,19 +9,61 @@ class Louvre::LPositioner
 public:
     LPositioner(LClient *client);
 
-    LClient *client()           const { return p_client; };
-    wl_resource *resource()     const { return p_resource; };
+    enum class LAnchor : UChar8
+    {
+        LNone        = 0,
+        LTop         = 1,
+        LBottom      = 2,
+        LLeft        = 3,
+        LRight       = 4,
+        LTopLeft     = 5,
+        LBottomLeft  = 6,
+        LTopRight    = 7,
+        LBottomRight = 8
+    };
 
-    const LSize &size()         const { return p_size; };
-    const LRect &anchorRect()   const { return p_anchorRect; };
-    Anchor anchor()             const { return p_anchor; };
-    Gravity gravity()           const { return p_gravity; };
-    const LPoint &offset()      const { return p_offset; };
-    bool isReactive()           const { return p_isReactive; }
+    enum class LGravity : UChar8
+    {
+        LNone        = 0,
+        LTop         = 1,
+        LBottom      = 2,
+        LLeft        = 3,
+        LRight       = 4,
+        LTopLeft     = 5,
+        LBottomLeft  = 6,
+        LTopRight    = 7,
+        LBottomRight = 8
+    };
+
+    enum class LConstraintAdjustment : UChar8
+    {
+        LNone    = 0,
+        LSlideX  = 1,
+        LSlideY  = 2,
+        LFlipX   = 4,
+        LFlipY   = 8,
+        LResizeX = 16,
+        LResizeY = 32
+    };
+
+    LClient *client() const;
+    wl_resource *resource() const;
+
+    const LSize &size() const;
+    const LRect &anchorRect() const;
+    LAnchor anchor() const;
+    LGravity gravity() const;
+    const LPoint &offset() const;
+
+#if LOUVRE_XDG_WM_BASE_VERSION >=3
+    bool isReactive() const;
+    const LSize &parentSize() const;
+    UInt32 parentConfigureSerial() const;
+#endif
 
     LPoint calculatePopupPosition(const LRect &outputRect, const LPoint &parentPosition);
 
-    ConstraintAdjustment constraintAdjustment() const { return p_constraintAdjustment; };
+    LConstraintAdjustment constraintAdjustment() const;
 
 private:
     friend class Louvre::Extensions::XdgShell::WmBase;
@@ -32,17 +74,21 @@ private:
     LClient *p_client = nullptr;
 
     LSize p_size;
-    LSize p_parentSize;
     LRect p_anchorRect;
     LPoint p_offset;
 
-    Anchor p_anchor;
-    Gravity p_gravity;
-    ConstraintAdjustment p_constraintAdjustment;
+    LAnchor p_anchor = LAnchor::LNone;
+    LGravity p_gravity = LGravity::LNone;
+    LConstraintAdjustment p_constraintAdjustment = LConstraintAdjustment::LNone;
 
     LSurface *p_linkedSurface = nullptr;
 
+#if LOUVRE_XDG_WM_BASE_VERSION >=3
     bool p_isReactive = false;
+    LSize p_parentSize;
+    UInt32 p_parentConfigureSerial;
+#endif
+
 };
 
 #endif // LPOSITIONER_H

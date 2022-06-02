@@ -15,7 +15,7 @@
 #include <LWayland.h>
 #include <LOpenGL.h>
 #include <LCursor.h>
-#include <LToplevel.h>
+#include <LToplevelRole.h>
 
 using namespace Louvre;
 
@@ -133,7 +133,7 @@ void LOutput::initialize()
     timerPoll.events = POLLIN;
     timerPoll.fd = timerfd_create(CLOCK_MONOTONIC,0);
 
-    WWayland::bindEGLDisplay(LBackend::getEGLDisplay(this));
+    LWayland::bindEGLDisplay(LBackend::getEGLDisplay(this));
 
     setPainter(new LOpenGL());
 
@@ -183,7 +183,7 @@ void LOutput::startRenderLoop(void *data)
         output->p_compositor->renderMutex.unlock();
 
         // Tell the input loop to process events
-        WWayland::forceUpdate();
+        LWayland::forceUpdate();
 
         // Wait for the next frame
         poll(&output->timerPoll,1,-1);
@@ -194,7 +194,7 @@ void LOutput::startRenderLoop(void *data)
         timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
 
         // Show buffer on screen
-        //if(WWayland::mainOutput() != output)
+        //if(LWayland::mainOutput() != output)
         LBackend::flipPage(output);
 
     }

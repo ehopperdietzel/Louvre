@@ -3,10 +3,10 @@
 
 //#include <wayland-server.h>
 #include <LNamespaces.h>
-#include <EGL/egl.h>
+//#include <EGL/egl.h>
 
 
-class Louvre::WWayland
+class Louvre::LWayland
 {
 public:
 

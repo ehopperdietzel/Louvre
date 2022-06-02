@@ -3,123 +3,142 @@
 #include <LSurface.h>
 #include <LCompositor.h>
 #include <xdg-shell.h>
-#include <LToplevel.h>
+#include <LToplevelRole.h>
 #include <LSeat.h>
 
 using namespace Louvre;
 
 void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
 {
-    (void)resource;
-    LToplevelRole *topLevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
 
-    if(topLevel->seat()->resizingToplevel() == topLevel)
-        topLevel->seat()->stopResizingToplevel();
+    // Remove focus
+    if(lToplevel->seat()->resizingToplevel() == lToplevel)
+        lToplevel->seat()->stopResizingToplevel();
 
-    if(topLevel->seat()->movingTopLevel() == topLevel)
-        topLevel->seat()->stopMovingTopLevel();
+    if(lToplevel->seat()->movingTopLevel() == lToplevel)
+        lToplevel->seat()->stopMovingTopLevel();
 
-    topLevel->compositor()->destroyToplevelRequest(topLevel);
-    delete topLevel;
+    // Unset role
+    if(lToplevel->surface())
+    {
+        lToplevel->surface()->current.type = LSurface::Undefined;
+        lToplevel->surface()->p_toplevelRole = nullptr;
+        lToplevel->surface()->typeChangeRequest();
+    }
 
+    // Notify
+    lToplevel->compositor()->destroyToplevelRequest(lToplevel);
+
+    delete lToplevel;
 }
 
-void Extensions::XdgShell::Toplevel::destroy (wl_client *client, wl_resource *resource)
+void Extensions::XdgShell::Toplevel::destroy (wl_client *, wl_resource *resource)
 {
-    (void)client;
     wl_resource_destroy(resource);
 }
-void Extensions::XdgShell::Toplevel::set_parent (wl_client *client, wl_resource *resource, wl_resource *parent)
-{
-    (void)client;(void)resource;(void)parent;
 
-    LToplevelRole *toplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+void Extensions::XdgShell::Toplevel::set_parent (wl_client *, wl_resource *resource, wl_resource *parent)
+{
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+
     if(parent == NULL)
     {
-        if(toplevel->surface()->parent())
-            toplevel->surface()->parent()->p_children.remove(toplevel->surface());
-        toplevel->surface()->p_parent = nullptr;
+        if(lToplevel->surface()->parent())
+            lToplevel->surface()->parent()->p_children.remove(lToplevel->surface());
+        lToplevel->surface()->p_parent = nullptr;
     }
     else
     {
-        toplevel->surface()->p_parent = (LSurface*)wl_resource_get_user_data(parent);
-        toplevel->surface()->p_parent->p_children.push_back(toplevel->surface());
+        lToplevel->surface()->p_parent = (LSurface*)wl_resource_get_user_data(parent);
+        lToplevel->surface()->p_parent->p_children.push_back(lToplevel->surface());
     }
 
-    toplevel->surface()->parentChangeRequest();
+    lToplevel->surface()->parentChangeRequest();
 }
-void Extensions::XdgShell::Toplevel::set_title (wl_client *client, wl_resource *resource, const char *title)
+
+void Extensions::XdgShell::Toplevel::set_title (wl_client *, wl_resource *resource, const char *title)
 {
-    (void)client;
-    LToplevelRole *toplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    toplevel->setTitle(title);
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->setTitle(title);
 }
-void Extensions::XdgShell::Toplevel::set_app_id (wl_client *client, wl_resource *resource, const char *app_id)
+
+void Extensions::XdgShell::Toplevel::set_app_id (wl_client *, wl_resource *resource, const char *app_id)
 {
-    (void)client;
-    LToplevelRole *toplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    toplevel->setAppId(app_id);
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->setAppId(app_id);
 }
+
 void Extensions::XdgShell::Toplevel::show_window_menu (wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial, Int32 x, Int32 y)
 {
-    (void)client;(void)resource;(void)seat;(void)serial;(void)x;(void)y;
+    /* TODO */
 }
-void Extensions::XdgShell::Toplevel::move(wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial)
-{
-    (void)client;(void)seat;(void)serial;
-    LToplevelRole *toplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    toplevel->startMoveRequest();
 
-}
-void Extensions::XdgShell::Toplevel::resize(wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial, UInt32 edges)
+void Extensions::XdgShell::Toplevel::move(wl_client *, wl_resource *resource, wl_resource */*seat*/, UInt32 /*serial*/)
 {
-    (void)client;(void)seat;(void)serial;
-    LToplevelRole *toplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    toplevel->startResizeRequest((LToplevelRole::Edge)edges);
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->startMoveRequest();
 }
-void Extensions::XdgShell::Toplevel::set_max_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
+
+void Extensions::XdgShell::Toplevel::resize(wl_client *, wl_resource *resource, wl_resource */*seat*/, UInt32 /*serial*/, UInt32 edges)
 {
-    (void)client;
-    LToplevelRole *toplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    toplevel->p_maxSize.setW(width);
-    toplevel->p_maxSize.setH(height);
-    toplevel->maxSizeChanged();
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->startResizeRequest((LToplevelRole::Edge)edges);
 }
-void Extensions::XdgShell::Toplevel::set_min_size (wl_client *client, wl_resource *resource, Int32 width, Int32 height)
+
+void Extensions::XdgShell::Toplevel::set_max_size (wl_client *, wl_resource *resource, Int32 width, Int32 height)
 {
-    (void)client;
-    LToplevelRole *toplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    toplevel->p_minSize.setW(width);
-    toplevel->p_minSize.setH(height);
-    toplevel->minSizeChanged();
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->p_maxSize.setW(width);
+    lToplevel->p_maxSize.setH(height);
+    lToplevel->maxSizeChanged();
 }
-void Extensions::XdgShell::Toplevel::set_maximized (wl_client *client, wl_resource *resource)
+
+void Extensions::XdgShell::Toplevel::set_min_size (wl_client *, wl_resource *resource, Int32 width, Int32 height)
 {
-    (void)client;
-    LToplevelRole *topLevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    topLevel->maximizeRequest();
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->p_minSize.setW(width);
+    lToplevel->p_minSize.setH(height);
+    lToplevel->minSizeChanged();
 }
-void Extensions::XdgShell::Toplevel::unset_maximized (wl_client *client, wl_resource *resource)
+
+void Extensions::XdgShell::Toplevel::set_maximized (wl_client *, wl_resource *resource)
 {
-    (void)client;
-    LToplevelRole *topLevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    topLevel->unmaximizeRequest();
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->maximizeRequest();
 }
-void Extensions::XdgShell::Toplevel::set_fullscreen(wl_client *client, wl_resource *resource, wl_resource *output)
+
+void Extensions::XdgShell::Toplevel::unset_maximized (wl_client *, wl_resource *resource)
 {
-    (void)client;
-    LOutput *wOutput = (LOutput*)wl_resource_get_user_data(output);
-    LToplevelRole *topLevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    topLevel->fullscreenRequest(wOutput);
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->unmaximizeRequest();
 }
+
+void Extensions::XdgShell::Toplevel::set_fullscreen(wl_client *, wl_resource *resource, wl_resource *output)
+{
+    LOutput *lOutput = nullptr;
+
+    if(output)
+        lOutput = (LOutput*)wl_resource_get_user_data(output);
+
+    LToplevelRole *lTopLevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lTopLevel->fullscreenRequest(lOutput);
+}
+
 void Extensions::XdgShell::Toplevel::unset_fullscreen(wl_client *client, wl_resource *resource)
 {
-    (void)client;(void)resource;
-}
-void Extensions::XdgShell::Toplevel::set_minimized(wl_client *client, wl_resource *resource)
-{
-    (void)client;
-    LToplevelRole *topLevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    topLevel->minimizeRequest();
+
 }
 
+void Extensions::XdgShell::Toplevel::set_minimized(wl_client *, wl_resource *resource)
+{
+    LToplevelRole *lToplevel= (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->minimizeRequest();
+}
+
+#if LOUVRE_XDG_WM_BASE_VERSION >= 4
+    void Extensions::XdgShell::Toplevel::configure_bounds(wl_client *client, wl_resource *resource, Int32 width, Int32 height)
+    {
+        // TODO
+    }
+#endif

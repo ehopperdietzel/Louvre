@@ -21,11 +21,12 @@
 
 #include <LWayland.h>
 #include <LCursor.h>
-#include <LToplevel.h>
+#include <LToplevelRole.h>
 #include <LSurface.h>
 #include <LCompositor.h>
 #include <LTime.h>
 #include <LOutput.h>
+#include <LPopupRole.h>
 
 using namespace Louvre;
 
@@ -76,7 +77,9 @@ void LSeat::pointerMoveEvent(float, float)
         if(pointerFocusSurface() == surface)
             sendPointerMoveEvent();
         else
+        {
             setPointerFocus(surface);
+        }
     }
 
 }
@@ -94,7 +97,16 @@ void LSeat::pointerClickEvent(UInt32 button, UInt32 state)
             setKeyboardFocus(surface);
             setPointerFocus(surface);
             sendPointerButtonEvent(button,state);
+
+            if(surface->type() != LSurface::Popup)
+                dismissPopups();
         }
+        else
+        {
+            setKeyboardFocus(nullptr);
+            dismissPopups();
+        }
+
         return;
     }
 
@@ -105,12 +117,14 @@ void LSeat::pointerClickEvent(UInt32 button, UInt32 state)
 
     if(state == LIBINPUT_BUTTON_STATE_PRESSED)
     {
-        setDragginSurface(pointerFocusSurface());
+        if(pointerFocusSurface()->type() != LSurface::Popup)
+            dismissPopups();
 
+        setDragginSurface(pointerFocusSurface());
         setKeyboardFocus(pointerFocusSurface());
 
         if(pointerFocusSurface()->type() == LSurface::Toplevel)
-            pointerFocusSurface()->toplevel()->configure(pointerFocusSurface()->toplevel()->state() | LToplevelRole::Activated);
+            pointerFocusSurface()->toplevel()->configure(pointerFocusSurface()->toplevel()->state() | LToplevelStateFlags::Activated);
 
         // Raise view
         if(pointerFocusSurface()->parent())
@@ -119,6 +133,7 @@ void LSeat::pointerClickEvent(UInt32 button, UInt32 state)
             compositor()->riseSurface(pointerFocusSurface());
 
     }
+    // Release
     else
     {
 
@@ -158,7 +173,7 @@ void LSeat::keyEvent(UInt32 keyCode, UInt32 keyState)
         // Ends compositor if ESC is pressed
         if(sym == XKB_KEY_F7)
         {
-            WWayland::terminateDisplay();
+            LWayland::terminateDisplay();
             exit(0);
         }
         else if(sym == XKB_KEY_F1)
@@ -196,7 +211,7 @@ void LSeat::sendPointerLeaveEvent(LSurface *surface)
         return;
 
     // Send the unset focus event
-    wl_pointer_send_leave(surface->client()->pointerResource(),WWayland::nextSerial(),surface->resource());
+    wl_pointer_send_leave(surface->client()->pointerResource(),LWayland::nextSerial(),surface->resource());
 
     // Version 5+
     if(wl_resource_get_version(surface->client()->pointerResource()) >= 5)
@@ -215,7 +230,7 @@ void LSeat::sendPointerEnterEvent(LSurface *surface, const LPoint &point)
         return;
 
     // Send focus event
-    wl_pointer_send_enter(surface->client()->pointerResource(),WWayland::nextSerial(),surface->resource(),wl_fixed_from_double(point.x()),wl_fixed_from_double(point.y()));
+    wl_pointer_send_enter(surface->client()->pointerResource(),LWayland::nextSerial(),surface->resource(),wl_fixed_from_double(point.x()),wl_fixed_from_double(point.y()));
 
     // Version 5+
     if(wl_resource_get_version(surface->client()->pointerResource()) >= 5)
@@ -328,7 +343,7 @@ void LSeat::setPointerFocus(LSurface *surface)
         if(surface->client()->pointerResource())
         {
             // Send focus event
-            sendPointerEnterEvent(surface,cursor()->position()-surface->pos(LSurface::SubRole));
+            sendPointerEnterEvent(surface,LPoint(0,0));
             p_pointerFocusSurface = surface;
         }
         else
@@ -376,7 +391,7 @@ void LSeat::sendPointerButtonEvent(UInt32 button, UInt32 state)
         return;
 
     // Send pointer button event
-    wl_pointer_send_button(pointerFocusSurface()->client()->pointerResource(),WWayland::nextSerial(),LTime::ms(),button,state);
+    wl_pointer_send_button(pointerFocusSurface()->client()->pointerResource(),LWayland::nextSerial(),LTime::ms(),button,state);
 
     // Version 5+
     if(wl_resource_get_version(pointerFocusSurface()->client()->pointerResource()) >= 5)
@@ -395,11 +410,11 @@ void LSeat::setKeyboardFocus(LSurface *surface)
         {
             // If another surface has focus
             if(keyboardFocusSurface() && keyboardFocusSurface()->client()->keyboardResource())
-                wl_keyboard_send_leave(keyboardFocusSurface()->client()->keyboardResource(),WWayland::nextSerial(),keyboardFocusSurface()->resource());
+                wl_keyboard_send_leave(keyboardFocusSurface()->client()->keyboardResource(),LWayland::nextSerial(),keyboardFocusSurface()->resource());
 
             if(surface->client()->keyboardResource())
             {
-                wl_keyboard_send_enter(surface->client()->keyboardResource(),WWayland::nextSerial(),surface->resource(),&p_keys);
+                wl_keyboard_send_enter(surface->client()->keyboardResource(),LWayland::nextSerial(),surface->resource(),&p_keys);
                 p_keyboardFocusSurface = surface;
                 sendKeyboardModifiersEvent();
             }
@@ -412,7 +427,7 @@ void LSeat::setKeyboardFocus(LSurface *surface)
     {
         // If a surface has focus
         if(keyboardFocusSurface() && keyboardFocusSurface()->client()->keyboardResource())
-            wl_keyboard_send_leave(keyboardFocusSurface()->client()->keyboardResource(),WWayland::nextSerial(),keyboardFocusSurface()->resource());
+            wl_keyboard_send_leave(keyboardFocusSurface()->client()->keyboardResource(),LWayland::nextSerial(),keyboardFocusSurface()->resource());
 
         p_keyboardFocusSurface = nullptr;
     }
@@ -428,7 +443,7 @@ void LSeat::sendKeyboardKeyEvent(UInt32 keyCode, UInt32 keyState) const
     if(!keyboardFocusSurface()->client()->keyboardResource())
         return;
 
-    wl_keyboard_send_key(keyboardFocusSurface()->client()->keyboardResource(),WWayland::nextSerial(),LTime::ms(),keyCode,keyState);
+    wl_keyboard_send_key(keyboardFocusSurface()->client()->keyboardResource(),LWayland::nextSerial(),LTime::ms(),keyCode,keyState);
 }
 
 void LSeat::sendKeyboardModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group) const
@@ -441,7 +456,7 @@ void LSeat::sendKeyboardModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 
     if(!keyboardFocusSurface()->client()->keyboardResource())
         return;
 
-    wl_keyboard_send_modifiers(keyboardFocusSurface()->client()->keyboardResource(),WWayland::nextSerial(),depressed,latched,locked,group);
+    wl_keyboard_send_modifiers(keyboardFocusSurface()->client()->keyboardResource(),LWayland::nextSerial(),depressed,latched,locked,group);
 }
 
 void LSeat::sendKeyboardModifiersEvent() const
@@ -467,7 +482,7 @@ bool LSeat::updateResizingToplevelSize()
                                                                 p_resizingToplevelInitWindowSize,
                                                                 resizingToplevelEdge());
 
-        resizingToplevel()->configure(newSize ,LToplevelRole::Activated | LToplevelRole::Resizing);
+        resizingToplevel()->configure(newSize ,LToplevelStateFlags::Activated | LToplevelStateFlags::Resizing);
         return true;
     }
     return false;
@@ -493,7 +508,7 @@ void LSeat::updateResizingToplevelPos()
 void LSeat::stopResizingToplevel()
 {
     if(resizingToplevel())
-        resizingToplevel()->configure(LToplevelRole::Activated);
+        resizingToplevel()->configure(LToplevelStateFlags::Activated);
 
     p_resizingToplevel = nullptr;
 }
@@ -528,6 +543,15 @@ void LSeat::setDragginSurface(LSurface *surface)
 void LSeat::setCursorSurface(LSurface *surface)
 {
     p_cursorSurface = surface;
+}
+
+void LSeat::dismissPopups()
+{
+    for(LSurface *surface : compositor()->surfaces())
+    {
+        if(surface->type() == LSurface::Popup)
+            surface->popup()->sendPopupDoneEvent();
+    }
 }
 
 LSurface *LSeat::pointerFocusSurface() const

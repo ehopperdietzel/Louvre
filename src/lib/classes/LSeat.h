@@ -5,7 +5,7 @@
 
 #include <xkbcommon/xkbcommon.h>
 #include <LPoint.h>
-#include <LToplevel.h>
+#include <LToplevelRole.h>
 #include <LSurface.h>
 
 class Louvre::LSeat
@@ -51,6 +51,9 @@ public:
     // Cursor Surface Setter
     void setCursorSurface(LSurface *surface);
 
+    // Popups
+    void dismissPopups();
+
     LSurface *keyboardFocusSurface() const;
     LSurface *touchFocusSurface() const;
     LSurface *draggingSurface() const;
@@ -92,7 +95,7 @@ protected:
 
 private:
 
-    friend class WWayland;
+    friend class LWayland;
     friend class LCompositor;
     friend class LPointer;
     friend class LKeyboard;

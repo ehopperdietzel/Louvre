@@ -27,7 +27,8 @@ public:
     bool initialized();
     GLuint id();
     GLuint unit();
-    BufferType bufferType();
+    BufferType bufferType() const;
+    GLenum bufferFormat() const;
 
     //LPoint resizeDirection;
     std::list<LRect>damages;
@@ -42,6 +43,7 @@ private:
     GLuint p_id,p_unit = 0;
     bool p_initialized = false;
     BufferType p_bufferType = SHM;
+    GLenum p_bufferFormat;
 
 };
 

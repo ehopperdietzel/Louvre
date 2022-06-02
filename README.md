@@ -42,53 +42,45 @@ $ ./Minimal
 
 ## 💻 Backends
 
-* X11 <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
-* DRM/KMS <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
+* X11 :white_check_mark:
+* DRM/KMS :white_check_mark:
 
 ## 🧩 Protocols
 
-* Wayland <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
-* XDG Shell <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟠</span>
-* Decoration Manager <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟠</span>
-* Presentation Time <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
-* Viewporter <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
-* Qt Shell <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
+* Wayland :white_check_mark:
+* XDG Shell :white_check_mark:
+* Decoration Manager
+* Presentation Time
+* Viewporter
+* Qt Shell
 
 ## 💬 Buffer Sharing Mechanisms
-* Shared Memory <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
-* EGL <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
-* KMS <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
+* Shared Memory :white_check_mark:
+* EGL :white_check_mark:
+* KMS 
 
 ## 🕹️ Input Support
-* Pointer <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
-* Keyboard <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
-* Touch <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
+* Pointer :white_check_mark:
+* Keyboard :white_check_mark:
+* Touch
 
 ## 🖌️ Supported Rendering APIs
-* OpenGL ES 2 <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
-* OpenGL ES 3 <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🟠</span>
-* OpenGL 3.x <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
-* OpenGL 4.x <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
-* Vulkan <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
+* OpenGL ES 2 :white_check_mark:
+* OpenGL ES 3
+* OpenGL 3.x
+* OpenGL 4.x
+* Vulkan
 
 ## ⏲️ Performance
-* Multithreading <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
-* DRM Hardware Cursor <span style="padding-left:3px;font-size:8px;vertical-align:middle">🟢</span>
-* DRM Planes <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
-
+* Multithreading :white_check_mark:
+* DRM Hardware Cursor :white_check_mark:
+* DRM Planes
 
 ## 👴 Compatibility
-* XWayland Support <span style="padding-left:3px;font-size:8px;vertical-align:middle">
-🔴</span>
+* GTK Clients :white_check_mark:
+* Qt 5.x Clients :white_check_mark:
+* SDL :white_check_mark:
+* EFL :white_check_mark:
+* XWayland Support
 
 

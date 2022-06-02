@@ -21,6 +21,8 @@ void LTexture::setData(Int32 width, Int32 height, void *data, GLenum buffFormat,
     //GLenum depth = GL_
     glActiveTexture(GL_TEXTURE0 + unit());
 
+    p_bufferFormat = buffFormat;
+
     // Prevent gen a new texture if the buffer size is the same
     if(width != p_size.w() || height != p_size.h() || buffType == BufferType::EGL)
     {
@@ -157,8 +159,13 @@ GLuint LTexture::unit()
     return p_unit;
 }
 
-LTexture::BufferType LTexture::bufferType()
+LTexture::BufferType LTexture::bufferType() const
 {
     return p_bufferType;
+}
+
+GLenum LTexture::bufferFormat() const
+{
+    return p_bufferFormat;
 }
 

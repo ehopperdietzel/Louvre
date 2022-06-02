@@ -29,6 +29,11 @@ UInt32 LClient::id() const
     return p_id;
 }
 
+const list<LSurface *> &LClient::surfaces() const
+{
+    return p_surfaces;
+}
+
 wl_resource *LClient::seatResource() const
 {
     return p_seatResource;
@@ -47,5 +52,10 @@ wl_resource *LClient::keyboardResource() const
 wl_resource *LClient::touchResource() const
 {
     return p_touchResource;
+}
+
+wl_resource *LClient::xdgWmBaseResource() const
+{
+    return p_xdgWmBaseResource;
 }
 

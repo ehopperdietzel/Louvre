@@ -63,7 +63,7 @@ public:
     mutex renderMutex;
 
 private:
-    friend class WWayland;
+    friend class LWayland;
     friend class LBackend;
     friend class WInput;
     friend class LSurface;

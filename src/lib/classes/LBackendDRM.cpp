@@ -14,7 +14,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <gbm.h>
-#include <drm/drm.h>
+#include <drm.h>
 
 #define GL_GLEXT_PROTOTYPES 1
 #include <GLES2/gl2.h>
@@ -93,9 +93,9 @@ struct FB_DATA
 static int init_gbm(DRM *data)
 {
 
-    if(WWayland::isGlContextInitialized())
+    if(LWayland::isGlContextInitialized())
     {
-        LOutput *mainOutput = WWayland::mainOutput();
+        LOutput *mainOutput = LWayland::mainOutput();
         DRM *mainOutputData = (DRM*)mainOutput->getData();
         data->gbm.dev = mainOutputData->gbm.dev;
     }
@@ -144,8 +144,8 @@ static int init_gl(DRM *data, LOutput *output)
     get_platform_display =(void *(*)(unsigned int,void*,const int*)) eglGetProcAddress("eglGetPlatformDisplayEXT");
     assert(get_platform_display != NULL);
 
-    if(WWayland::isGlContextInitialized())
-        data->gl.display = WWayland::eglDisplay();
+    if(LWayland::isGlContextInitialized())
+        data->gl.display = LWayland::eglDisplay();
     else
         data->gl.display = get_platform_display(EGL_PLATFORM_GBM_KHR, data->gbm.dev, NULL);
 
@@ -174,8 +174,8 @@ static int init_gl(DRM *data, LOutput *output)
 
     EGLContext ctx = EGL_NO_CONTEXT;
 
-    if(WWayland::isGlContextInitialized())
-        ctx = WWayland::eglContext();
+    if(LWayland::isGlContextInitialized())
+        ctx = LWayland::eglContext();
 
     data->gl.context = eglCreateContext(data->gl.display, data->gl.config, ctx, context_attribs);
 
@@ -195,8 +195,8 @@ static int init_gl(DRM *data, LOutput *output)
     // connect the context to the surface
     eglMakeCurrent(data->gl.display, data->gl.surface, data->gl.surface, data->gl.context);
 
-    if(!WWayland::isGlContextInitialized())
-        WWayland::setContext(output, data->gl.display,data->gl.context);
+    if(!LWayland::isGlContextInitialized())
+        LWayland::setContext(output, data->gl.display,data->gl.context);
 
     //printf("GL Extensions: \"%s\"\n", glGetString(GL_EXTENSIONS));
 
