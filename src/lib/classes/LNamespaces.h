@@ -24,20 +24,6 @@
 #define LOUVRE_SEAT_VERSION 7
 #define LOUVRE_XDG_SHELL_VERSION 2
 
-#ifndef DEFINE_ENUM_FLAG_OPERATORS
-#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) \
-inline ENUMTYPE operator | (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a) | ((int)b)); } \
-inline ENUMTYPE &operator |= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) |= ((int)b)); } \
-inline ENUMTYPE operator & (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a) & ((int)b)); } \
-inline ENUMTYPE &operator &= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) &= ((int)b)); } \
-inline ENUMTYPE operator ~ (ENUMTYPE a) { return ENUMTYPE(~((int)a)); } \
-inline ENUMTYPE operator ^ (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a) ^ ((int)b)); } \
-inline ENUMTYPE &operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) ^= ((int)b)); }
-#else
-#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) // NOP, C allows these operators.
-#endif
-
-
 namespace Louvre
 {
     // API Classes
@@ -121,28 +107,6 @@ namespace Louvre
     {
         LEFT_BUTTON = 272
     };
-
-
-    enum class LToplevelStateFlags : UChar8
-    {
-        Deactivated    = 0,
-        Maximized      = 1,
-        Fullscreen     = 2,
-        Resizing       = 4,
-        Activated      = 8,
-
-    #if LOUVRE_XDG_WM_BASE_VERSION >= 2
-        TiledLeft      = 16,
-        TiledRight     = 32,
-        TiledTop       = 64,
-        TiledBottom    = 128
-    #endif
-
-    };
-
-    DEFINE_ENUM_FLAG_OPERATORS(LToplevelStateFlags)
-
-
 
     // Wayland Globals
     namespace Globals

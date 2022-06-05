@@ -10,6 +10,7 @@ using namespace Louvre;
 
 void Extensions::XdgShell::Popup::destroy_resource(wl_resource *resource)
 {
+    printf("XDG_POPUP DESTROYED.\n");
     LPopupRole *lPopup = (LPopupRole*)wl_resource_get_user_data(resource);
 
     // Unset role

@@ -72,7 +72,7 @@ void LCompositor::destroySurfaceRequest(LSurface *surface)
 {
     if(seat()->cursorSurface() == surface)
     {
-        cursor()->setCursor("arrow");
+        cursor()->setCursor(LCursor::Arrow);
         seat()->setCursorSurface(nullptr);
     }
 }
@@ -143,7 +143,7 @@ void LCompositor::addOutput(LOutput *output)
     {
         // Wait for the added output to create his OpenGL context in his own thread
         while(output->initializeResult() == LOutput::Pending)
-            usleep(100);
+            usleep(1);
 
         /* The next method creates a shared OpenGL context in the main thread.
          * This context is used only to allow the library to copy the surfaces buffers

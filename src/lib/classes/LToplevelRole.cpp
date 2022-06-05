@@ -17,14 +17,33 @@ using namespace Louvre;
 
 LToplevelRole::LToplevelRole(wl_resource *toplevel, LSurface *surface)
 {
+    p_appId = new char(1);
+    p_title = new char(1);
+    p_appId[0] = '\0';
+    p_title[0] = '\0';
     p_resource = toplevel;
     p_surface = surface;
     p_compositor = surface->compositor();
+
+    p_stateFlags = Deactivated;
+    p_currentConf = TopLevelConfiguration();
+    p_currentConf.flags = Deactivated;
+    p_currentConf.serial = 0;
+    p_currentConf.set = false;
+    p_currentConf.size = LSize();
+
+    p_sentConf = p_currentConf;
+    p_pendingConf = p_currentConf;
+
+    p_minSize = LSize();
+    p_maxSize = LSize();
+    p_windowGeometry = LRect();
 }
 
 LToplevelRole::~LToplevelRole()
 {
-
+    delete []p_appId;
+    delete []p_title;
 }
 
 void LToplevelRole::pong(UInt32)
@@ -46,7 +65,7 @@ void LToplevelRole::startMoveRequest()
         LSize destSize = (output->rect(false).bottomRight() - LSize(0,topbarHeight)) / 2 / output->getOutputScale();
 
         // Tell the toplevel to maximize
-        configure(destSize, state()&~LToplevelStateFlags::Maximized);
+        configure(destSize, state() &~ Maximized);
 
         if(compositor()->cursor()->position().x() >= destSize.x())
             surface()->setPos(destSize.w(), topbarHeight);
@@ -64,7 +83,7 @@ void LToplevelRole::startResizeRequest(Edge edge)
 
 void LToplevelRole::configureRequest()
 {
-    configure(LToplevelStateFlags::Activated);
+    configure(Activated);
 }
 
 void LToplevelRole::titleChanged()
@@ -96,7 +115,7 @@ void LToplevelRole::maximizeRequest()
     Int32 topbarHeight = (LOUVRE_TB_H+2)/output->getOutputScale();
 
     // Tell the toplevel to maximize
-    configure(output->rect(false).bottomRight() / output->getOutputScale() - LSize(0,topbarHeight), State::Activated | State::Maximized);
+    configure(output->rect(false).bottomRight() / output->getOutputScale() - LSize(0,topbarHeight), Activated | Maximized);
 
     // We now wait for the maximizeChanged() event to move it to the top left corner
 }
@@ -113,7 +132,7 @@ void LToplevelRole::unmaximizeRequest()
     LSize destSize = (output->rect(false).bottomRight() - LSize(0,topbarHeight)) / 2 / output->getOutputScale();
 
     // Tell the toplevel to maximize
-    configure(destSize, state()&~State::Maximized);
+    configure(destSize, state() &~ Maximized);
 
     // Now we wait for the maximizeChanged()
 
@@ -153,6 +172,10 @@ void LToplevelRole::fullscreenChanged()
     {
         surface()->setPos(0,0);
     }
+    else
+    {
+        surface()->setPos(0,200);
+    }
 }
 
 void LToplevelRole::activatedChanged()
@@ -186,7 +209,7 @@ void LToplevelRole::fullscreenRequest(LOutput *destOutput)
     else
         output = destOutput;
 
-    configure(output->rect().bottomRight(), State::Activated | State::Fullscreen);
+    configure(output->rect().bottomRight(), Activated | Fullscreen);
 }
 
 void LToplevelRole::showWindowMenuRequest(Int32 /*x*/, Int32 /*y*/)
@@ -199,17 +222,17 @@ void LToplevelRole::showWindowMenuRequest(Int32 /*x*/, Int32 /*y*/)
 
 bool LToplevelRole::maximized() const
 {
-    return bool(p_stateFlags & State::Maximized);
+    return p_stateFlags & Maximized;
 }
 
 bool LToplevelRole::fullscreen() const
 {
-    return bool(p_stateFlags & State::Fullscreen);
+    return p_stateFlags & Fullscreen;
 }
 
 bool LToplevelRole::activated() const
 {
-    return bool(p_stateFlags & State::Activated);
+    return p_stateFlags & Activated;
 }
 
 
@@ -218,9 +241,9 @@ LSurface *LToplevelRole::surface() const
     return p_surface;
 }
 
-LToplevelStateFlags LToplevelRole::state() const
+LToplevelRole::States LToplevelRole::state() const
 {
-    return p_stateFlags;
+    return (LToplevelRole::States)p_stateFlags;
 }
 
 wl_resource *LToplevelRole::resource() const
@@ -248,22 +271,21 @@ const LSize &LToplevelRole::maxSize() const
     return p_maxSize;
 }
 
-void LToplevelRole::configure(Int32 width, Int32 height, LToplevelStateFlags states)
+void LToplevelRole::configure(Int32 width, Int32 height, UChar8 stateFlags)
 {
     p_currentConf.set = true;
-    p_currentConf.size.setW(width);
-    p_currentConf.size.setH(height);
-    p_currentConf.flags = states;
+    p_currentConf.size = LSize(width,height);
+    p_currentConf.flags = stateFlags;
 }
 
-void LToplevelRole::configure(const LSize &size, LToplevelStateFlags states)
+void LToplevelRole::configure(const LSize &size, UChar8 stateFlags)
 {
-    configure(size.w(),size.h(),states);
+    configure(size.w(),size.h(),stateFlags);
 }
 
-void LToplevelRole::configure(LToplevelStateFlags states)
+void LToplevelRole::configure(UChar8 stateFlags)
 {
-    configure(windowGeometry().bottomRight(),states);
+    configure(windowGeometry().bottomRight(),stateFlags);
 }
 
 const LRect &LToplevelRole::windowGeometry() const
@@ -329,45 +351,38 @@ LSeat *LToplevelRole::seat() const
 
 void LToplevelRole::dispachLastConfiguration()
 {
+
     if(!p_currentConf.set)
         return;
 
     p_currentConf.serial = LWayland::nextSerial();
 
-    surface()->ack_configure = false;
-
     wl_array dummy;
     wl_array_init(&dummy);
     UInt32 index = 0;
 
-    if(bool(p_currentConf.flags & LToplevelStateFlags::Activated))
+    if(bool(p_currentConf.flags & LToplevelRole::Activated))
     {
         wl_array_add(&dummy, sizeof(xdg_toplevel_state));
         xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
         s[index] = XDG_TOPLEVEL_STATE_ACTIVATED;
         index++;
-
-        if(seat()->activeTopLevel() && seat()->activeTopLevel() != this)
-            seat()->activeTopLevel()->configure(seat()->activeTopLevel()->p_currentConf.flags & ~LToplevelStateFlags::Activated);
-
-        seat()->p_activeTopLevel = this;
-
     }
-    if(bool(p_currentConf.flags & LToplevelStateFlags::Fullscreen))
+    if(bool(p_currentConf.flags & LToplevelRole::Fullscreen))
     {
         wl_array_add(&dummy, sizeof(xdg_toplevel_state));
         xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
         s[index] = XDG_TOPLEVEL_STATE_FULLSCREEN;
         index++;
     }
-    if(bool(p_currentConf.flags & LToplevelStateFlags::Maximized))
+    if(bool(p_currentConf.flags & LToplevelRole::Maximized))
     {
         wl_array_add(&dummy, sizeof(xdg_toplevel_state));
         xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
         s[index] = XDG_TOPLEVEL_STATE_MAXIMIZED;
         index++;
     }
-    if(bool(p_currentConf.flags & LToplevelStateFlags::Resizing))
+    if(bool(p_currentConf.flags & LToplevelRole::Resizing))
     {
         wl_array_add(&dummy, sizeof(xdg_toplevel_state));
         xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
@@ -378,28 +393,28 @@ void LToplevelRole::dispachLastConfiguration()
 #if LOUVRE_XDG_WM_BASE_VERSION >= 2
     if(wl_resource_get_version(resource()) >= 2)
     {
-        if(bool(p_currentConf.flags & LToplevelStateFlags::TiledBottom))
+        if(bool(p_currentConf.flags & LToplevelRole::TiledBottom))
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_TILED_BOTTOM;
             index++;
         }
-        if(bool(p_currentConf.flags & LToplevelStateFlags::TiledLeft))
+        if(bool(p_currentConf.flags & LToplevelRole::TiledLeft))
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_TILED_LEFT;
             index++;
         }
-        if(bool(p_currentConf.flags & LToplevelStateFlags::TiledRight))
+        if(bool(p_currentConf.flags & LToplevelRole::TiledRight))
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;
             s[index] = XDG_TOPLEVEL_STATE_TILED_RIGHT;
             index++;
         }
-        if(bool(p_currentConf.flags & LToplevelStateFlags::TiledTop))
+        if(bool(p_currentConf.flags & LToplevelRole::TiledTop))
         {
             wl_array_add(&dummy, sizeof(xdg_toplevel_state));
             xdg_toplevel_state *s = (xdg_toplevel_state*)dummy.data;

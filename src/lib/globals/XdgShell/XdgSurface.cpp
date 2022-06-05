@@ -45,6 +45,7 @@ static struct xdg_popup_interface xdg_popup_implementation =
 // xdg surface
 void Extensions::XdgShell::Surface::resource_destroy(wl_resource *resource)
 {
+    printf("XDG_SURFACE DESTROYED.\n");
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
     lSurface->p_xdgSurfaceResource = nullptr;
 }
@@ -179,6 +180,5 @@ void Extensions::XdgShell::Surface::ack_configure(wl_client *, wl_resource *reso
                     "wl_surface does not have a role yet.");
     }
 
-    surface->ack_configure = true;
 }
 

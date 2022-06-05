@@ -70,7 +70,7 @@ void LSeat::pointerMoveEvent(float, float)
     if(!surface)
     {
         setPointerFocus(nullptr);
-        cursor()->setCursor("arrow");
+        cursor()->setCursor(LCursor::Arrow);
     }
     else
     {
@@ -124,7 +124,7 @@ void LSeat::pointerClickEvent(UInt32 button, UInt32 state)
         setKeyboardFocus(pointerFocusSurface());
 
         if(pointerFocusSurface()->type() == LSurface::Toplevel)
-            pointerFocusSurface()->toplevel()->configure(pointerFocusSurface()->toplevel()->state() | LToplevelStateFlags::Activated);
+            pointerFocusSurface()->toplevel()->configure(pointerFocusSurface()->toplevel()->state() | LToplevelRole::Activated);
 
         // Raise view
         if(pointerFocusSurface()->parent())
@@ -150,7 +150,7 @@ void LSeat::pointerClickEvent(UInt32 button, UInt32 state)
         if(!pointerFocusSurface()->inputRegionContainsPoint(pointerFocusSurface()->pos(),cursor()->position()))
         {
             setPointerFocus(nullptr);
-            cursor()->setCursor("arrow");
+            cursor()->setCursor(LCursor::Arrow);
         }
 
     }
@@ -180,9 +180,22 @@ void LSeat::keyEvent(UInt32 keyCode, UInt32 keyState)
         {
             if (fork()==0)
             {
+                //system("gnome-terminal");
                 setsid();
                 char *const envp[] = {"XDG_RUNTIME_DIR=/run/user/1000",0};
                 const char *argv[64] = {"/usr/bin/weston-terminal" , NULL, NULL , NULL};
+                execve(argv[0], (char **)argv, envp);
+                exit(0);
+            }
+        }
+        else if(sym == XKB_KEY_F2)
+        {
+            if (fork()==0)
+            {
+                //system("/home/eduardo/Escritorio/build-notepad-Desktop_Qt_5_15_2_GCC_64bit-Release/notepad --platform wayland");
+                setsid();
+                char *const envp[] = {"XDG_RUNTIME_DIR=/run/user/1000",0};
+                const char *argv[64] = {"/home/eduardo/Escritorio/build-notepad-Desktop_Qt_5_15_2_GCC_64bit-Release/notepad" , "--platform", "wayland" , NULL};
                 execve(argv[0], (char **)argv, envp);
                 exit(0);
             }
@@ -192,12 +205,14 @@ void LSeat::keyEvent(UInt32 keyCode, UInt32 keyState)
 
 void LSeat::setCursorRequest(LSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY)
 {
+
     if(cursorSurface)
         cursor()->setTexture(cursorSurface->texture(),LPointF(hotspotX,hotspotY));
     else
-        cursor()->setCursor("arrow");
+        cursor()->setCursor(LCursor::Arrow);
 
     setCursorSurface(cursorSurface);
+
 }
 
 void LSeat::sendPointerLeaveEvent(LSurface *surface)
@@ -482,7 +497,7 @@ bool LSeat::updateResizingToplevelSize()
                                                                 p_resizingToplevelInitWindowSize,
                                                                 resizingToplevelEdge());
 
-        resizingToplevel()->configure(newSize ,LToplevelStateFlags::Activated | LToplevelStateFlags::Resizing);
+        resizingToplevel()->configure(newSize ,LToplevelRole::Activated | LToplevelRole::Resizing);
         return true;
     }
     return false;
@@ -508,7 +523,7 @@ void LSeat::updateResizingToplevelPos()
 void LSeat::stopResizingToplevel()
 {
     if(resizingToplevel())
-        resizingToplevel()->configure(LToplevelStateFlags::Activated);
+        resizingToplevel()->configure(LToplevelRole::Activated);
 
     p_resizingToplevel = nullptr;
 }

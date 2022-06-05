@@ -15,7 +15,8 @@ LCursor::LCursor(LOutput *output)
     setOutput(output);
     p_x11Texture = new LTexture();
     setSize(LPoint(24,24));
-    setCursor("arrow");
+    loadDefaultCursors();
+    setCursor(LCursor::Arrow);
 }
 
 void LCursor::setCursorTheme(const char *themeName)
@@ -31,14 +32,39 @@ void LCursor::setCursorTheme(const char *themeName)
 
 void LCursor::setCursor(const char *cursorName)
 {
+    if(lastCursor.name && lastCursor.type == LLastCursorType::String && strcmp(cursorName,lastCursor.name) == 0)
+        return;
+
+    if(lastCursor.name != nullptr)
+        delete []lastCursor.name;
+
+    Int32 len = strlen(cursorName);
+
+    lastCursor.name = new char(len+1);
+    memcpy(lastCursor.name,cursorName,len);
+    lastCursor.name[len] = '\0';
+
     XcursorImage *cursor =  XcursorLibraryLoadImage(cursorName,p_cursorTheme,64);
     p_x11Texture->setData(cursor->width,cursor->height,cursor->pixels,GL_RGBA,GL_UNSIGNED_BYTE);
     setTexture(p_x11Texture,LPointF(cursor->xhot,cursor->yhot));
     XcursorImageDestroy(cursor);
+    lastCursor.type = LLastCursorType::String;
+}
+
+void LCursor::setCursor(CursorNames cursor)
+{
+    if(lastCursor.type == LLastCursorType::Default && lastCursor.defaultName == int(cursor))
+        return;
+
+    setTexture(p_cursors[int(cursor)].texture,p_cursors[int(cursor)].hotspot);
+    lastCursor.defaultName = int(cursor);
+    lastCursor.type = LLastCursorType::Default;
+    printf("Cursor changed.\n");
 }
 
 void LCursor::setTexture(LTexture *texture, const LPointF &hotspot)
 {
+    lastCursor.type = LLastCursorType::Texture;
     LBackend::setCursor(p_output,texture,p_size*p_output->getOutputScale());
     p_texture = texture;
     p_hotspot = hotspot;
@@ -103,6 +129,16 @@ void LCursor::setSize(const LSizeF &size)
     }
 
     update();
+}
+
+void LCursor::loadDefaultCursors()
+{
+    XcursorImage *cursor =  XcursorLibraryLoadImage("arrow",p_cursorTheme,64);
+    p_cursors[0].texture = new LTexture(1);
+    p_cursors[0].texture->setData(cursor->width,cursor->height,cursor->pixels,GL_RGBA,GL_UNSIGNED_BYTE);
+    p_cursors[0].hotspot.setX(cursor->xhot);
+    p_cursors[0].hotspot.setY(cursor->yhot);
+    XcursorImageDestroy(cursor);
 }
 
 void LCursor::update()

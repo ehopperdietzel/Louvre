@@ -62,6 +62,25 @@ void LOutput::paintGL()
         // Draw the surface
         GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(LSurface::SubRole),surface->size()));
 
+        /*
+        for(LRect &r : surface->texture()->damages)
+        {
+            printf("%i %i\n",surface->size(true).h(),surface->size(true).w());
+            printf("%i %i %i %i\n",r.x(),r.y(),r.w(),r.h());
+            LRect rect = r/surface->bufferScale();
+
+
+            GL->drawTexture(
+                        surface->texture(),
+                        r,
+                        LRect(surface->pos(LSurface::SubRole)+rect.topLeft(),rect.bottomRight()));
+
+            //GL->drawColor(LRect(surface->pos(LSurface::SubRole)+rect.topLeft(),rect.bottomRight()),1,0,0,0.3);
+
+
+        }
+        */
+
         // Tell the surface to render the next frame
         surface->requestNextFrame();
     }
@@ -103,7 +122,7 @@ LCompositor *LOutput::compositor()
 void LOutput::setCompositor(LCompositor *compositor)
 {
     p_compositor = compositor;
-    _renderThread = new std::thread(&LOutput::startRenderLoop,this);
+    p_renderThread = new std::thread(&LOutput::startRenderLoop,this);
     //LOutput::startRenderLoop(this);
 }
 

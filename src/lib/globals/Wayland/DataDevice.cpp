@@ -13,7 +13,7 @@ void Louvre::Globals::DataDevice::set_selection(wl_client *client, wl_resource *
 
 void Louvre::Globals::DataDevice::release(wl_client *client, wl_resource *resource)
 {
-
+    wl_resource_destroy(resource);
 }
 
 void Louvre::Globals::DataDevice::bind(wl_client *client, void *data, UInt32 version, UInt32 id)

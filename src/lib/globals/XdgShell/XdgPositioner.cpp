@@ -6,6 +6,7 @@
 
 void Louvre::Extensions::XdgShell::Positioner::destroy_resource(wl_resource *)
 {
+    printf("XDG_POSITIONER DESTROYED.\n");
     /* We don't destroy it here.
      * It is destroyed when the popup is destroyed or repositioned */
 }

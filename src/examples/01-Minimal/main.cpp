@@ -7,7 +7,7 @@ void intHandler(int) {}
 int main(int, char *[])
 {
     // Prevent kill with ctrl+c
-    signal(SIGINT,intHandler);
+    //signal(SIGINT,intHandler);
 
     // Create the compositor
     Compositor compositor;

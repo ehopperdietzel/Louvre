@@ -99,6 +99,7 @@ private:
     friend class LCompositor;
     friend class LPointer;
     friend class LKeyboard;
+    friend class Extensions::XdgShell::Toplevel;
 
     // Events
     void sendPointerLeaveEvent(LSurface *surface);

@@ -81,9 +81,9 @@ public:
     LCompositor *compositor() const;
 
     // Hierarchy
-    LSurface *parent() const { return p_parent; };
+    LSurface *parent() const;
     LSurface *topParent() const;
-    list<LSurface*>&children() {return p_children;}
+    const list<LSurface*>&children() const;
     const LPoint &hotspot() const {return p_hotspot;}
 
     struct State
@@ -95,7 +95,6 @@ public:
     };
 
     State current,pending;
-    bool ack_configure = true;
  private:
     friend class LWayland;
     friend class LCompositor;
@@ -133,7 +132,7 @@ public:
 
     bool p_isDamaged = false;
 
-    LPoint p_pos = LPoint(200,200);
+    LPoint p_pos = LPoint(0,200);
     bool p_minimized = false;
     mutable LPoint p_xdgPos;
 

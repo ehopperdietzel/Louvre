@@ -39,8 +39,8 @@ LOpenGL::LOpenGL()
           if(mode == 0)\
           {\
             float x = (srcRect.x)/texSize.x + v_texcoord.x*srcRect.z/texSize.x;\
-            float y = (srcRect.y)/texSize.y + v_texcoord.y*srcRect.w/texSize.y;\
-            gl_FragColor = texture2D(tex,vec2(x,-y));\
+            float y = (srcRect.y + srcRect.w - (v_texcoord.y*srcRect.w))/texSize.y;\
+            gl_FragColor = texture2D(tex,vec2(x,y));\
           }\
           else\
             gl_FragColor = colorRGBA;\

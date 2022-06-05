@@ -10,6 +10,8 @@ using namespace Louvre;
 
 void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
 {
+    printf("XDG_TOPLEVEL DESTROYED.\n");
+
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
 
     // Remove focus
@@ -19,16 +21,27 @@ void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
     if(lToplevel->seat()->movingTopLevel() == lToplevel)
         lToplevel->seat()->stopMovingTopLevel();
 
+    if(lToplevel->seat()->activeTopLevel() == lToplevel)
+        lToplevel->seat()->p_activeTopLevel = nullptr;
+
+    // Notify
+    lToplevel->compositor()->destroyToplevelRequest(lToplevel);
+
     // Unset role
     if(lToplevel->surface())
     {
+        // Parent
+        if(lToplevel->surface()->parent())
+        {
+            lToplevel->surface()->parent()->p_children.remove(lToplevel->surface());
+            lToplevel->surface()->p_parent = nullptr;
+            lToplevel->surface()->parentChangeRequest();
+        }
+
         lToplevel->surface()->current.type = LSurface::Undefined;
         lToplevel->surface()->p_toplevelRole = nullptr;
         lToplevel->surface()->typeChangeRequest();
     }
-
-    // Notify
-    lToplevel->compositor()->destroyToplevelRequest(lToplevel);
 
     delete lToplevel;
 }
@@ -50,8 +63,8 @@ void Extensions::XdgShell::Toplevel::set_parent (wl_client *, wl_resource *resou
     }
     else
     {
-        lToplevel->surface()->p_parent = (LSurface*)wl_resource_get_user_data(parent);
-        lToplevel->surface()->p_parent->p_children.push_back(lToplevel->surface());
+        lToplevel->surface()->p_parent = ((LToplevelRole*)wl_resource_get_user_data(parent))->surface();
+        lToplevel->surface()->parent()->p_children.push_front(lToplevel->surface());
     }
 
     lToplevel->surface()->parentChangeRequest();

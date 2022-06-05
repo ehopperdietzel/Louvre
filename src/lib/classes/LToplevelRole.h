@@ -23,7 +23,21 @@ public:
         BottomRight = 10
     };
 
-    typedef LToplevelStateFlags State;
+    enum States : UChar8
+    {
+        Deactivated    = 0,
+        Maximized      = 1,
+        Fullscreen     = 2,
+        Resizing       = 4,
+        Activated      = 8,
+
+    #if LOUVRE_XDG_WM_BASE_VERSION >= 2
+        TiledLeft      = 16,
+        TiledRight     = 32,
+        TiledTop       = 64,
+        TiledBottom    = 128
+    #endif
+    };
 
     // Requests
     virtual void pong(UInt32 serial);
@@ -48,13 +62,11 @@ public:
     // xdg_shell
     virtual void geometryChangeRequest();
 
-
     // Events
     void ping(UInt32 serial);
-    void configure(LToplevelStateFlags states);
-    void configure(const LSize &size, LToplevelStateFlags states);
-    void configure(Int32 width, Int32 height, LToplevelStateFlags states);
-
+    void configure(UChar8 stateFlags);
+    void configure(const LSize &size, UChar8 stateFlags);
+    void configure(Int32 width, Int32 height, UChar8 stateFlags);
 
     const LRect &windowGeometry() const;
     LSize calculateResizeRect(const LPoint &cursorPosDelta, const LSize &initialSize, Edge edge);
@@ -62,7 +74,6 @@ public:
     LCompositor *compositor() const;
     LSeat *seat() const;
     LSurface *surface() const;
-
 
     wl_resource *resource() const;
     const char *appId() const;
@@ -72,7 +83,7 @@ public:
     bool maximized() const;
     bool fullscreen() const;
     bool activated() const;
-    LToplevelStateFlags state() const;
+    States state() const;
 private:
     friend class LWayland;
     friend class Globals::Surface;
@@ -82,12 +93,12 @@ private:
     struct TopLevelConfiguration
     {
         bool set = false;
-        LSize size;
-        LToplevelStateFlags flags;
-        UInt32 serial;
+        LSize size = LSize();
+        UChar8 flags = Deactivated;
+        UInt32 serial = 0;
     };
 
-    LToplevelStateFlags p_stateFlags;
+    UChar8 p_stateFlags = Deactivated;
     TopLevelConfiguration p_currentConf;
     TopLevelConfiguration p_sentConf;
     TopLevelConfiguration p_pendingConf;
@@ -97,13 +108,14 @@ private:
     LCompositor *p_compositor = nullptr;
     LSurface *p_surface = nullptr;
 
-    LSize p_minSize, p_maxSize;
+    LSize p_minSize;
+    LSize p_maxSize;
     LRect p_windowGeometry;
 
     void setAppId(const char *appId);
     void setTitle(const char *title);
-    char *p_appId = new char[1];
-    char *p_title = new char[1];
+    char *p_appId = nullptr;
+    char *p_title = nullptr;
 };
 
 #endif // LTOPLEVELROLE_H

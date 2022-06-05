@@ -48,6 +48,7 @@ static struct xdg_wm_base_interface xdg_wm_base_implementation =
 
 void Extensions::XdgShell::WmBase::resource_destroy(wl_resource *resource)
 {
+    printf("XDG_WM_BASE DESTROYED.\n");
     LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
     lClient->p_xdgWmBaseResource = nullptr;
 }

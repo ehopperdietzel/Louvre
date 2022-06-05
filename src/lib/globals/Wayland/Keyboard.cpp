@@ -4,13 +4,12 @@
 
 void Louvre::Globals::Keyboard::resource_destroy(wl_resource *resource)
 {
-    printf("KEYBOARD RELEASED\n");
+    printf("KEYBOARD DESTROYED.\n");
     LClient *client = (LClient*)wl_resource_get_user_data(resource);
     client->p_keyboardResource = nullptr;
 }
 
-void Louvre::Globals::Keyboard::release(wl_client *client, wl_resource *resource)
+void Louvre::Globals::Keyboard::release(wl_client *, wl_resource *resource)
 {
-    (void)client;
-    Keyboard::resource_destroy(resource);
+    wl_resource_destroy(resource);
 }

@@ -11,7 +11,7 @@ LClient::LClient(wl_client *client, LCompositor *compositor)
 
 LClient::~LClient()
 {
-    printf("Client removed.\n");
+    printf("CLIENT DESTROYED.\n");
 }
 
 LCompositor *LClient::compositor() const

@@ -17,11 +17,14 @@
 #include <sys/eventfd.h>
 
 #include <LToplevelRole.h>
+#include <LCursor.h>
 
 using namespace Louvre;
 
 void Globals::Surface::resource_destroy(wl_resource *resource)
 {
+    printf("SURFACE DESTROYED.\n");
+
     // Get surface
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
 
@@ -49,6 +52,9 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     if(surface->compositor()->seat()->p_resizingToplevel == surface->toplevel())
         surface->compositor()->seat()->p_resizingToplevel = nullptr;
 
+    if(surface->type() == LSurface::Cursor)
+        surface->compositor()->cursor()->setCursor(LCursor::Arrow);
+
     // Parent
     if(surface->parent() != nullptr)
         surface->parent()->p_children.remove(surface);
@@ -58,21 +64,18 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     else if(surface->popup())
         surface->popup()->p_surface = nullptr;
 
-    LClient *client = surface->client();
+    surface->p_toplevelRole = nullptr;
+    surface->p_popupRole = nullptr;
 
-    if(client != nullptr)
-    {
-        // Remove surface from its client list
-        surface->client()->p_surfaces.remove(surface);
+    // Remove surface from its client list
+    surface->client()->p_surfaces.remove(surface);
 
-        // Remove the surface from the compositor list
-        surface->compositor()->p_surfaces.remove(surface);
+    // Remove the surface from the compositor list
+    surface->compositor()->p_surfaces.remove(surface);
 
-        // Notify from client
-        surface->compositor()->destroySurfaceRequest(surface);
-    }
+    // Notify from client
+    surface->compositor()->destroySurfaceRequest(surface);
 
-    surface->texture()->deleteTexture();
     delete surface;
 }
 
@@ -97,9 +100,8 @@ void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 ca
     surface->p_frameCallback = wl_resource_create(client, &wl_callback_interface, version, callback);
 }
 
-void Globals::Surface::destroy(wl_client *client, wl_resource *resource)
+void Globals::Surface::destroy(wl_client *, wl_resource *resource)
 {
-    (void)client;
     wl_resource_destroy(resource);
 }
 
@@ -117,7 +119,7 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     surface->current.buffer = surface->pending.buffer;
 
     // If the buffer is empty
-    if(surface->current.buffer == nullptr)
+    if(!surface->current.buffer)
     {
         if(surface->pending.type == LSurface::SurfaceType::Toplevel)
         {
@@ -135,6 +137,7 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
         }
         return;
     }
+
 
     // Copy pending damages to current damages
     surface->texture()->damages.clear();
@@ -156,6 +159,9 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     if(surface->current.size != surface->pending.size)
     {
         surface->current.size = surface->pending.size;
+
+        surface->texture()->damages.clear();
+        surface->texture()->damages.push_back(LRect(LPoint(),surface->texture()->size()));
         surface->bufferSizeChangeRequest();
     }
 
@@ -173,22 +179,29 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     // Toplevel configure
     if(surface->type() == LSurface::Toplevel)
     {
-        LToplevelRole *topLevel = surface->toplevel();
+        LToplevelRole *lToplevel = surface->toplevel();
 
-        if(topLevel->p_pendingConf.set)
+        if(lToplevel->p_pendingConf.set)
         {
-            LToplevelStateFlags prevState = topLevel->p_stateFlags;
-            topLevel->p_stateFlags = topLevel->p_sentConf.flags;
+            UChar8 prevState = lToplevel->p_stateFlags;
+            lToplevel->p_stateFlags = lToplevel->p_sentConf.flags;
 
-            if((prevState & LToplevelStateFlags::Maximized) != (topLevel->p_sentConf.flags & LToplevelStateFlags::Maximized))
-                topLevel->maximizeChanged();
-            if((prevState & LToplevelStateFlags::Fullscreen) != (topLevel->p_sentConf.flags & LToplevelStateFlags::Fullscreen))
-                topLevel->fullscreenChanged();
+            if((prevState & LToplevelRole::Maximized) != (lToplevel->p_sentConf.flags & LToplevelRole::Maximized))
+                lToplevel->maximizeChanged();
+            if((prevState & LToplevelRole::Fullscreen) != (lToplevel->p_sentConf.flags & LToplevelRole::Fullscreen))
+                lToplevel->fullscreenChanged();
 
-            topLevel->p_pendingConf.set = false;
+            if(lToplevel->p_sentConf.flags & LToplevelRole::Activated)
+            {
+                if(lToplevel->seat()->activeTopLevel() && lToplevel->seat()->activeTopLevel() != lToplevel)
+                    lToplevel->seat()->activeTopLevel()->configure(lToplevel->seat()->activeTopLevel()->p_currentConf.flags & ~LToplevelRole::Activated);
+
+                lToplevel->seat()->p_activeTopLevel = lToplevel;
+            }
+
+            lToplevel->p_pendingConf.set = false;
         }
     }
-            
 
 
     // Notify that the cursor changed content
@@ -206,6 +219,7 @@ void Globals::Surface::damage(wl_client *client, wl_resource *resource, Int32 x,
     (void)client;
 
     /* The client tells the server that has updated a region of the current buffer */
+    //printf("DAMAGE (%i,%i,%i,%i)\n",x,y,width,height);
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
     surface->texture()->pendingDamages.push_back(LRect(x, y, width, height)*surface->bufferScale());
 }
@@ -240,6 +254,7 @@ void Globals::Surface::set_buffer_transform(wl_client *client, wl_resource *reso
 void Globals::Surface::damage_buffer(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {
     (void)client;
+    //printf("BUFFER DAMAGE (%i,%i,%i,%i)\n",x,y,width,height);
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
     surface->texture()->pendingDamages.push_back(LRect(x, y, width, height));
 }

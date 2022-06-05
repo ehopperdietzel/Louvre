@@ -26,6 +26,20 @@ using namespace Louvre;
 
 PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL = NULL;
 
+LSurface::LSurface(wl_resource *surface, LClient *client, GLuint textureUnit)
+{
+    eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
+    p_texture = new LTexture(textureUnit);
+    srand(time(NULL));
+    p_resource = surface;
+    p_client = client;
+}
+
+LSurface::~LSurface()
+{
+    delete p_texture;
+}
+
 void LSurface::bufferSizeChangeRequest()
 {
     if(type() == Toplevel && toplevel() == seat()->resizingToplevel())
@@ -40,15 +54,6 @@ LToplevelRole *LSurface::toplevel() const
 LPopupRole *LSurface::popup() const
 {
     return p_popupRole;
-}
-
-LSurface::LSurface(wl_resource *surface, LClient *client, GLuint textureUnit)
-{
-    eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
-    p_texture = new LTexture(textureUnit);
-    srand(time(NULL));
-    p_resource = surface;
-    p_client = client;
 }
 
 const LPoint &LSurface::pos(PosMode mode) const
@@ -115,12 +120,6 @@ bool LSurface::minimized() const
     return p_minimized;
 }
 
-LSurface::~LSurface()
-{
-
-}
-
-
 LSeat *LSurface::seat() const
 {
     return compositor()->seat();
@@ -186,10 +185,11 @@ void LSurface::applyDamages()
 
         p_texture->setData(width, height, data, bufferFormat, GL_UNSIGNED_BYTE);
         wl_shm_buffer_end_access(shm_buffer);
+
     }
 
-
     wl_buffer_send_release(current.buffer);
+    current.buffer = nullptr;
     p_isDamaged = false;
 }
 
@@ -221,6 +221,11 @@ LCompositor *LSurface::compositor() const
         return nullptr;
 }
 
+Louvre::LSurface *LSurface::parent() const
+{
+    return p_parent;
+}
+
 LSurface *findTopmostParent(LSurface *surface)
 {
     if(surface->parent() == nullptr)
@@ -234,6 +239,11 @@ Louvre::LSurface *LSurface::topParent() const
         return nullptr;
 
     return findTopmostParent(parent());
+}
+
+const list<Louvre::LSurface *> &LSurface::children() const
+{
+    return p_children;
 }
 
 

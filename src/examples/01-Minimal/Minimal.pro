@@ -5,12 +5,13 @@ CONFIG -= qt
 CONFIG += ordered
 TARGET = MyCompositor
 
-#QMAKE_CXXFLAGS_RELEASE -= -O
-#QMAKE_CXXFLAGS_RELEASE -= -O1
-#QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_DEBUG *= -O
+QMAKE_CXXFLAGS_RELEASE -= -O
+QMAKE_CXXFLAGS_RELEASE -= -O1
+QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE *= -O3
 
-LIBS += -lGLESv2
+LIBS += -lGLESv2 -L/usr/local/lib/x86_64-linux-gnu -lwayland-server
 LIBS += -L$$PWD/../../lib/build -lLouvre
 INCLUDEPATH += /usr/include/drm
 INCLUDEPATH += ../../lib/

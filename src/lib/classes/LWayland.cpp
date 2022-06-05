@@ -34,7 +34,7 @@ static struct wl_display *display;
 struct wl_event_loop *event_loop;
 int wayland_fd;
 wl_event_source *renderTimer;
-wl_listener clientConnectedListener,clientDisconnectedListener;
+wl_listener clientConnectedListener;
 wl_event_source *clientDisconnectedEventSource;
 wl_signal sign;
 wl_listener signListen;
@@ -73,7 +73,6 @@ void LWayland::initGLContext()
         EGL_NONE
     };
 
-
     eglDpy = sharedDisplay;
 
     EGLConfig config;
@@ -87,7 +86,6 @@ void LWayland::initGLContext()
         printf("Failed to bind api EGL_OPENGL_ES_API\n");
         exit(-1);
     }
-
 
     // 3. Create a context and make it current
     eglCtx = eglCreateContext(eglDpy, config, sharedContext,context_attribs);
@@ -177,7 +175,7 @@ int LWayland::initWayland(LCompositor *comp)
     // GLOBALS
 
     // Create compositor global
-    wl_global_create(display, &wl_compositor_interface, 4, comp, &Globals::Compositor::bind); // Last 5
+    wl_global_create(display, &wl_compositor_interface, 3, comp, &Globals::Compositor::bind); // Last 5
 
     // Create subcompositor global
     //wl_global_create(display, &wl_subcompositor_interface, 1, comp, &Globals::Subcompositor::bind); // 1
@@ -202,7 +200,6 @@ int LWayland::initWayland(LCompositor *comp)
     printf("Wayland server initialized.\n");
 
     comp->waylandFd = wl_event_loop_get_fd(event_loop);
-
 
     // Listen for client connections
     clientConnectedListener.notify = &clientConnectionEvent;
@@ -265,22 +262,15 @@ void LWayland::runLoop()
 
         dispatchEvents();
 
-        for(LClient *client : compositor->clients)
+        for(LSurface *surface : compositor->surfaces())
         {
-            for(LSurface *surface : client->surfaces())
-            {
-                if(surface->toplevel())
-                    surface->toplevel()->dispachLastConfiguration();
-            }
+            if(surface != nullptr && surface->toplevel() != nullptr)
+                surface->toplevel()->dispachLastConfiguration();
         }
 
         flushClients();
 
-
-
         compositor->renderMutex.unlock();
-
-
 
     }
     //wl_display_run(display);
@@ -296,18 +286,28 @@ void LWayland::clientConnectionEvent(wl_listener *listener, void *data)
     LClient *newClient = compositor->createClientRequest(client);
 
     // Listen for client disconnection
+    //wl_listener *clientDisconnectedListener = new wl_listener;
+    //clientDisconnectedListener->notify = &clientDisconnectionEvent;
+    //wl_client_add_destroy_listener(client,clientDisconnectedListener);
     wl_client_get_destroy_listener(client,&LWayland::clientDisconnectionEvent);
 
     // Append client to the compositor list
     compositor->clients.push_back(newClient);
 }
 
+wl_iterator_result iter(wl_resource *r,void*)
+{
+    wl_resource_destroy(r);
+    return WL_ITERATOR_CONTINUE;
+}
+
 void LWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
 {
-
-    (void)listener;
+    //delete listener;
 
     wl_client *client = (wl_client*)data;
+
+    wl_client_for_each_resource(client,iter,NULL);
 
     LClient *disconnectedClient = nullptr;
 
@@ -324,33 +324,12 @@ void LWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     if(disconnectedClient == nullptr)
         return;
 
-    /*
-    // Destroy regions
-    for(LRegion *wRegion : disconnectedClient->regions)
-        wl_resource_destroy(wRegion->resource());
-    disconnectedClient->regions.clear();
-    */
-
-
-    // Destroy surfaces events
-    for(LSurface *wSurface : disconnectedClient->surfaces())
-    {
-        disconnectedClient->compositor()->destroySurfaceRequest(wSurface);
-        wSurface->p_client = nullptr;
-        wSurface->p_toplevelRole = nullptr;
-        wSurface->p_popupRole = nullptr;
-    }
-    disconnectedClient->p_surfaces.clear();
-
-
-    // Remove the client from the list
-    compositor->clients.remove(disconnectedClient);
-
-    // Notify the client desconection
     compositor->destroyClientRequest(disconnectedClient);
+    compositor->clients.remove(disconnectedClient);
 
     delete disconnectedClient;
 }
+
 
 int LWayland::apply_damage_emit(void *data)
 {

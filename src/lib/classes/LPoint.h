@@ -199,7 +199,8 @@ public:
 private:
     friend class LRect;
     friend class LPointF;
-    Int32 p_x,p_y;
+    Int32 p_x = 0;
+    Int32 p_y = 0;
 };
 
 #endif // LPOINT_H

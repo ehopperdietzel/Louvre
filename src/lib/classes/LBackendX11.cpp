@@ -82,11 +82,12 @@ static void create_window(LOutput *output)
     // Get the screen size
     int snum = DefaultScreen(data->x_display);
 
-    data->window.width = DisplayWidth(data->x_display, snum);
 
 #if LOUBRE_DEBUG == 0
+    data->window.width = DisplayWidth(data->x_display, snum);
     data->window.height = DisplayHeight(data->x_display, snum);
 #else
+    data->window.width = DisplayWidth(data->x_display, snum)/2;
     data->window.height = DisplayHeight(data->x_display, snum)/2;
 #endif
 
@@ -201,7 +202,7 @@ EGLDisplay LBackend::getEGLDisplay(LOutput *output)
 
 void LBackend::createGLContext(LOutput *output)
 {
-    XInitThreads();
+    //XInitThreads();
     create_window(output);
     X11 *data = (X11*)output->data;
     output->p_rect.setW(data->window.width);
@@ -227,16 +228,12 @@ void LBackend::setCursor(LOutput *, LTexture *, const LSizeF&)
 {
 
 }
-void LBackend::setCursorPosition(LOutput *output, const LPoint &pos)
+void LBackend::setCursorPosition(LOutput *output, const LPoint &)
 {
-    /*
-    X11 *data = (X11*)output->data;
 
-    LRect windowRect = LRect(LPoint(),output->size);
-    
-    if(windowRect.containsPoint(pos))
-        XWarpPointer(data->x_display, None, data->window.window, 0, 0, output->size.w(), output->size.h(), pos.x(), pos.y());
-        */
+    //X11 *data = (X11*)output->data;
+    //XWarpPointer(data->x_display, None, data->window.window, 0, 0, 0, 0, output->rect(false).w()/2, output->rect(false).h()/2);
+
 }
 
 #endif

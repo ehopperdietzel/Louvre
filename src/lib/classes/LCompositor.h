@@ -86,6 +86,9 @@ private:
     // Surfaces
     list<LSurface*>p_surfaces;
 
+    // Destroyed clients
+    list<LClient*>p_destroyedClients;
+
     int libinputFd, waylandFd;
     eventfd_t libinputVal, waylandVal = 1;
 

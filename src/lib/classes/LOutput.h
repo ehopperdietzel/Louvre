@@ -103,7 +103,7 @@ private:
     // Render thread
     int _renderFd;
     eventfd_t _renderValue = 0;
-    std::thread *_renderThread;
+    std::thread *p_renderThread;
     pollfd _renderPoll;
 
     bool scheduledRepaint = false;

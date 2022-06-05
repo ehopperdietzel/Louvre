@@ -6,15 +6,13 @@ using namespace std;
 
 static struct wl_output_interface output_implementation = {&Louvre::Globals::Output::release};
 
-void Louvre::Globals::Output::release(wl_client *client,wl_resource *resource)
+void Louvre::Globals::Output::release(wl_client *,wl_resource *resource)
 {
-    (void)client;(void)resource;
-    Output::resource_destroy(resource);
+    wl_resource_destroy(resource);
 }
 
-void Louvre::Globals::Output::resource_destroy(wl_resource *resource)
+void Louvre::Globals::Output::resource_destroy(wl_resource *)
 {
-    (void)resource;
     printf("OUTPUT DESTROYED.\n");
 }
 

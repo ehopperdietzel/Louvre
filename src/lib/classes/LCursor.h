@@ -5,14 +5,21 @@
 #include <LPointF.h>
 #include <LBackend.h>
 #include <LPoint.h>
+#include <LTexture.h>
 
 class Louvre::LCursor
 {
 public:
     LCursor(LOutput *output);
 
+    enum CursorNames : UChar8
+    {
+        Arrow = 0
+    };
+
     void setCursorTheme(const char *themeName);
     void setCursor(const char *cursorName);
+    void setCursor(CursorNames cursor);
     void setTexture(LTexture *texture, const LPointF &hotspot);
     void setOutput(LOutput *output);
     void move(float x, float y);
@@ -27,8 +34,35 @@ public:
     LTexture *texture()       const {return p_texture;}
 
 private:
-    void update();
 
+    struct LCursorData
+    {
+        LTexture *texture = nullptr;
+        LPointF hotspot = LPointF();
+    };
+
+    void loadDefaultCursors();
+
+    LCursorData p_cursors[1];
+
+    enum LLastCursorType
+    {
+        Texture,
+        String,
+        Default
+    };
+
+    struct LLastCursorData
+    {
+        LSizeF size;
+        LPointF offset;
+        char *name = nullptr;
+        UInt32 textureId;
+        LLastCursorType type = LLastCursorType::String;
+        int defaultName = -1;
+    }lastCursor;
+
+    void update();
     char *p_cursorTheme = NULL;
     LTexture *p_x11Texture;
     LTexture *p_texture = nullptr;

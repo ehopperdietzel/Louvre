@@ -27,23 +27,21 @@ struct wl_surface_interface surface_implementation =
 
 struct wl_region_interface region_implementation =
 {
-    &Globals::Region::destroy,
-    &Globals::Region::add,
-    &Globals::Region::subtract
+    .destroy = &Globals::Region::destroy,
+    .add = &Globals::Region::add,
+    .subtract = &Globals::Region::subtract
 };
 
 struct wl_compositor_interface compositor_implementation =
 {
-    &Globals::Compositor::create_surface,
-    &Globals::Compositor::create_region
+    .create_surface = &Globals::Compositor::create_surface,
+    .create_region = &Globals::Compositor::create_region
 };
 
 // COMPOSITOR
 void Globals::Compositor::create_surface(wl_client *client, wl_resource *resource, UInt32 id)
 {
     Int32 version = wl_resource_get_version(resource);
-
-    //printf("Surface version: %i\n",version);
 
     // New surface resource
     wl_resource *surface = wl_resource_create(client, &wl_surface_interface, version, id); // 4
@@ -89,7 +87,7 @@ void Globals::Compositor::resource_destroy(wl_resource *resource)
     printf("COMPOSITOR DESTROYED.\n");
 
     // Find client
-    LClient *client = (LClient*)wl_resource_get_user_data(resource);
+    //LClient *client = (LClient*)wl_resource_get_user_data(resource);
 
     /*
 

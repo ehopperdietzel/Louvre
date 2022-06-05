@@ -7,7 +7,7 @@
 
 void Louvre::Globals::Pointer::resource_destroy(wl_resource *resource)
 {
-    printf("POINTER RELEASED\n");
+    printf("POINTER DESTROYED.\n");
     LClient *client = (LClient*)wl_resource_get_user_data(resource);
     client->p_pointerResource = nullptr;
 }
@@ -28,8 +28,7 @@ void Louvre::Globals::Pointer::set_cursor(wl_client *client, wl_resource *resour
     wClient->compositor()->seat()->setCursorRequest((LSurface*)wl_resource_get_user_data(surface),hotspot_x*cursorSurface->bufferScale(),hotspot_y*cursorSurface->bufferScale());
 }
 
-void Louvre::Globals::Pointer::release(wl_client *client, wl_resource *resource)
+void Louvre::Globals::Pointer::release(wl_client *, wl_resource *resource)
 {
-    (void)client;
-    Pointer::resource_destroy(resource);
+    wl_resource_destroy(resource);
 }
