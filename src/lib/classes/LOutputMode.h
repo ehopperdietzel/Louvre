@@ -1,8 +1,9 @@
 #ifndef LOUTPUTMODE_H
 #define LOUTPUTMODE_H
 
+#include <LNamespaces.h>
 
-class LOutputMode
+class Louvre::LOutputMode
 {
 public:
     LOutputMode();

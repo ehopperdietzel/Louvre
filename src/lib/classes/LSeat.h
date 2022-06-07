@@ -10,7 +10,13 @@
 
 class Louvre::LSeat
 {
+
 public:
+
+    enum POINTER_BUTTON : UInt32
+    {
+        LEFT_BUTTON = 272
+    };
 
     /* Configuration */
     LSeat(LCompositor *compositor);

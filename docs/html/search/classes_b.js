@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['zxdg_5fpopup_5fv6_5finterface_0',['zxdg_popup_v6_interface',['../structzxdg__popup__v6__interface.html',1,'']]],
-  ['zxdg_5fpositioner_5fv6_5finterface_1',['zxdg_positioner_v6_interface',['../structzxdg__positioner__v6__interface.html',1,'']]],
-  ['zxdg_5fshell_5fv6_5finterface_2',['zxdg_shell_v6_interface',['../structzxdg__shell__v6__interface.html',1,'']]],
-  ['zxdg_5fsurface_5fv6_5finterface_3',['zxdg_surface_v6_interface',['../structzxdg__surface__v6__interface.html',1,'']]],
-  ['zxdg_5ftoplevel_5fv6_5finterface_4',['zxdg_toplevel_v6_interface',['../structzxdg__toplevel__v6__interface.html',1,'']]]
+  ['xdg_5fpopup_5finterface_0',['xdg_popup_interface',['../group__iface__xdg__popup.html#structxdg__popup__interface',1,'']]],
+  ['xdg_5fpositioner_5finterface_1',['xdg_positioner_interface',['../group__iface__xdg__positioner.html#structxdg__positioner__interface',1,'']]],
+  ['xdg_5fsurface_5finterface_2',['xdg_surface_interface',['../group__iface__xdg__surface.html#structxdg__surface__interface',1,'']]],
+  ['xdg_5ftoplevel_5finterface_3',['xdg_toplevel_interface',['../group__iface__xdg__toplevel.html#structxdg__toplevel__interface',1,'']]],
+  ['xdg_5fwm_5fbase_5finterface_4',['xdg_wm_base_interface',['../group__iface__xdg__wm__base.html#structxdg__wm__base__interface',1,'']]]
 ];

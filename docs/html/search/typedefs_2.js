@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['gravity_0',['Gravity',['../namespace_wayland_plus.html#adbbbe33f6f6909b6c93e306343e81a6a',1,'WaylandPlus']]]
+  ['int32_0',['Int32',['../namespace_louvre.html#a20b0c262d9ef5d263888e463dfa99638',1,'Louvre']]],
+  ['int64_1',['Int64',['../namespace_louvre.html#a2de3f49eadcae5078cd57134586ee25d',1,'Louvre']]]
 ];

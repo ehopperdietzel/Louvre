@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['datadevice_5fimplementation_0',['dataDevice_implementation',['../_data_device_manager_8cpp.html#a9f70aacadc03e83166f07ccd08d26d2f',1,'DataDeviceManager.cpp']]],
-  ['datadevicemanager_5fimplementation_1',['dataDeviceManager_implementation',['../_data_device_manager_8cpp.html#aa4b6e179ae48574c753b1787e8190f81',1,'DataDeviceManager.cpp']]],
-  ['depressed_2',['depressed',['../structmodifier__state.html#af4bd904a2dcf5dbbdc608f2209fb55de',1,'modifier_state']]],
-  ['destroy_3',['destroy',['../structzxdg__shell__v6__interface.html#ae90dda24213bf4d41cc3502b811f039e',1,'zxdg_shell_v6_interface::destroy()'],['../structzxdg__positioner__v6__interface.html#a873f21211a7cb41689f0c036e35e9a49',1,'zxdg_positioner_v6_interface::destroy()'],['../structzxdg__surface__v6__interface.html#abe041a37905e367389b8496ad4983231',1,'zxdg_surface_v6_interface::destroy()'],['../structzxdg__toplevel__v6__interface.html#ae5e48d2e3138b4f082892f399bbd0001',1,'zxdg_toplevel_v6_interface::destroy()'],['../structzxdg__popup__v6__interface.html#a5c9788f1f28d99e28c8096c7da0eb51c',1,'zxdg_popup_v6_interface::destroy()'],['../structxdg__wm__base__interface.html#a80015da6391751802b526ec85651c8a4',1,'xdg_wm_base_interface::destroy()'],['../structxdg__positioner__interface.html#aade5dc57273f00dae32cabfc84c6e9e2',1,'xdg_positioner_interface::destroy()'],['../structxdg__surface__interface.html#a6f8e7166689422677c87ecbb98adaaf9',1,'xdg_surface_interface::destroy()'],['../structxdg__toplevel__interface.html#a4ff751c7fe2faff4e854b23c2e5a4b48',1,'xdg_toplevel_interface::destroy()'],['../structxdg__popup__interface.html#ae73187eb8c3eab53f269763d126a165b',1,'xdg_popup_interface::destroy()']]]
+  ['pendingdamages_0',['pendingDamages',['../class_louvre_1_1_l_texture.html#a1185d5de4f58577c8a39c1a80b93086e',1,'Louvre::LTexture']]],
+  ['positioners_1',['positioners',['../class_louvre_1_1_l_client.html#a1312c5a079227e6ca4f9ff1dcd638eab',1,'Louvre::LClient']]]
 ];

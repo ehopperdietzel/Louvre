@@ -1,12 +1,10 @@
 var searchData=
 [
-  ['initbackend_0',['initBackend',['../class_wayland_plus_1_1_w_backend.html#aa414f61b8d3c2564fce1ae63a40b3ea1',1,'WaylandPlus::WBackend']]],
-  ['initializegl_1',['initializeGL',['../class_wayland_plus_1_1_w_compositor.html#a478d4641d275a0ecbf3411ffb3487a42',1,'WaylandPlus::WCompositor']]],
-  ['initinput_2',['initInput',['../class_wayland_plus_1_1_w_input.html#a14936149a0dbf5ec459a3f673184d9f9',1,'WaylandPlus::WInput']]],
-  ['initwayland_3',['initWayland',['../class_wayland_plus_1_1_w_wayland.html#a7ecac18ef5de1c7a93e4a8eafc340762',1,'WaylandPlus::WWayland']]],
-  ['initxkb_4',['initXKB',['../_w_input_8cpp.html#aee7c29bbf7ad43ffa61033a2c7b2045f',1,'WInput.cpp']]],
-  ['int32_5',['Int32',['../namespace_wayland_plus.html#a4ebb27f36ba237aa5f4f3e2e19550e28',1,'WaylandPlus']]],
-  ['int64_6',['Int64',['../namespace_wayland_plus.html#ac9fd270b55144b490c16b3b78c71d4da',1,'WaylandPlus']]],
-  ['isdamaged_7',['isDamaged',['../class_wayland_plus_1_1_w_surface.html#a8ef9dd06973c38b3d9e6ec79d2065fb9',1,'WaylandPlus::WSurface']]],
-  ['isinitialized_8',['isInitialized',['../class_wayland_plus_1_1_w_texture.html#a79ed67e8bd83ca998cf053a400734670',1,'WaylandPlus::WTexture']]]
+  ['keyboardfocussurface_0',['keyboardFocusSurface',['../class_louvre_1_1_l_seat.html#a202fb6118776c34128169d0120466933',1,'Louvre::LSeat']]],
+  ['keyboardresource_1',['keyboardResource',['../class_louvre_1_1_l_client.html#a30f97e199e0f554e7037729d5e9b2119',1,'Louvre::LClient']]],
+  ['keyevent_2',['keyEvent',['../class_louvre_1_1_l_seat.html#a1fa8faaa58256f4e8122d1b1f89cec54',1,'Louvre::LSeat']]],
+  ['keymapfd_3',['keymapFd',['../class_louvre_1_1_l_seat.html#a127e9522f7ec09624411dd84a0b048b3',1,'Louvre::LSeat']]],
+  ['keymapsize_4',['keymapSize',['../class_louvre_1_1_l_seat.html#a0401fa07033577de164fd8b4bb96ef4d',1,'Louvre::LSeat']]],
+  ['keymodifiersevent_5',['keyModifiersEvent',['../class_louvre_1_1_l_seat.html#a3e342fc6116b0d4fcaa89ee897a48a5b',1,'Louvre::LSeat']]],
+  ['keysymbol_6',['keySymbol',['../class_louvre_1_1_l_seat.html#a9d1ccaea916aac15799414bdcaf81b47',1,'Louvre::LSeat']]]
 ];

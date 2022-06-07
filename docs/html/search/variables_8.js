@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['keymapfd_0',['keymapFD',['../_w_input_8cpp.html#aa958867cec00f2d69ab02809fe415924',1,'WInput.cpp']]],
-  ['keymapfdprivate_1',['keymapFDPrivate',['../_w_input_8cpp.html#af038da858186066bcf51b50271fe8200',1,'WInput.cpp']]],
-  ['keymapsize_2',['keymapSize',['../_w_input_8cpp.html#a9dfeab0b5a628f488b4841ff9091deda',1,'WInput.cpp']]]
+  ['unset_5ffullscreen_0',['unset_fullscreen',['../group__iface__xdg__toplevel.html#aa0476e23cf7892d27fb39850f0271226',1,'xdg_toplevel_interface']]],
+  ['unset_5fmaximized_1',['unset_maximized',['../group__iface__xdg__toplevel.html#a268f8022aee64a0f48e7b013daa3f5af',1,'xdg_toplevel_interface']]]
 ];

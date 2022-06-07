@@ -64,8 +64,7 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     else if(surface->popup())
         surface->popup()->p_surface = nullptr;
 
-    surface->p_toplevelRole = nullptr;
-    surface->p_popupRole = nullptr;
+    surface->p_role = nullptr;
 
     // Remove surface from its client list
     surface->client()->p_surfaces.remove(surface);

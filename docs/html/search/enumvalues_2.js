@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['egl_0',['EGL',['../class_wayland_plus_1_1_w_texture.html#a1ccce8b962c31400d6cacec2d848edc5af9492fa7b95883012d99689dc27476fa',1,'WaylandPlus::WTexture']]]
+  ['cursor_0',['Cursor',['../class_louvre_1_1_l_surface.html#a97cd490de6f1e6efc07983190ff02d59a4b3019bb143755d5bf6b73f1e4e3a29b',1,'Louvre::LSurface']]]
 ];

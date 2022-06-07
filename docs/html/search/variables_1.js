@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['bo_0',['bo',['../struct_wayland_plus_1_1_w_output_1_1drm__fb.html#aaa92a7a79c297f82cff891dd7b1f9b43',1,'WaylandPlus::WOutput::drm_fb']]]
+  ['clients_0',['clients',['../class_louvre_1_1_l_compositor.html#a5836b5ed7707f516ad69234622158430',1,'Louvre::LCompositor']]]
 ];

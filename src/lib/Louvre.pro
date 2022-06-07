@@ -42,6 +42,7 @@ HEADERS += \
     classes/LSeat.h \
     classes/LSize.h \
     classes/LSizeF.h \
+    classes/LSubsurfaceRole.h \
     classes/LSurface.h \
     classes/LTexture.h \
     classes/LTime.h \
@@ -52,6 +53,7 @@ HEADERS += \
     globals/Wayland/Compositor.h \
     globals/Wayland/DataDevice.h \
     globals/Wayland/DataDeviceManager.h \
+    globals/Wayland/DataSource.h \
     globals/Wayland/Keyboard.h \
     globals/Wayland/Output.h \
     globals/Wayland/Pointer.h \
@@ -83,6 +85,7 @@ SOURCES += \
     classes/LPositioner.cpp \
     classes/LRegion.cpp \
     classes/LSeat.cpp \
+    classes/LSubsurfaceRole.cpp \
     classes/LSurface.cpp \
     classes/LTexture.cpp \
     classes/LTime.cpp \
@@ -93,6 +96,7 @@ SOURCES += \
     globals/Wayland/Compositor.cpp \
     globals/Wayland/DataDevice.cpp \
     globals/Wayland/DataDeviceManager.cpp \
+    globals/Wayland/DataSource.cpp \
     globals/Wayland/Keyboard.cpp \
     globals/Wayland/Output.cpp \
     globals/Wayland/Pointer.cpp \

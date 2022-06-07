@@ -1,5 +1,21 @@
 var searchData=
 [
-  ['newclientrequest_0',['newClientRequest',['../class_wayland_plus_1_1_w_compositor.html#a20c0cdf0915a0666e248f49e45c2875c',1,'WaylandPlus::WCompositor']]],
-  ['newsurfacerequest_1',['newSurfaceRequest',['../class_wayland_plus_1_1_w_client.html#ae390bdd5aef1862396771a4fac5947c1',1,'WaylandPlus::WClient']]]
+  ['mainoutput_0',['mainOutput',['../class_louvre_1_1_l_wayland.html#a6d730d0f721938740f96de810cdd8ded',1,'Louvre::LWayland']]],
+  ['mainthreadid_1',['mainThreadId',['../class_louvre_1_1_l_compositor.html#aedab108e031043b2fe1deaec8c5e28dc',1,'Louvre::LCompositor']]],
+  ['maptolocal_2',['mapToLocal',['../class_louvre_1_1_l_surface.html#a16e00438817daafef0a984a143d0dadd',1,'Louvre::LSurface']]],
+  ['maximizechanged_3',['maximizeChanged',['../class_louvre_1_1_l_toplevel_role.html#ab6ba2f4b787ce867d80b2674d4c1c059',1,'Louvre::LToplevelRole']]],
+  ['maximized_4',['maximized',['../class_louvre_1_1_l_toplevel_role.html#ae7732ed73eb4d25a2229a35405b2be1d',1,'Louvre::LToplevelRole']]],
+  ['maximizerequest_5',['maximizeRequest',['../class_louvre_1_1_l_toplevel_role.html#a7fb3f2f8c0a26af468bcc4363b45efda',1,'Louvre::LToplevelRole']]],
+  ['maxsize_6',['maxSize',['../class_louvre_1_1_l_toplevel_role.html#ac826ac4cd80f4553bbe0e6cb3ec74c60',1,'Louvre::LToplevelRole']]],
+  ['maxsizechanged_7',['maxSizeChanged',['../class_louvre_1_1_l_toplevel_role.html#a7e5c50196db74f0ee3dac5ed0a157f4d',1,'Louvre::LToplevelRole']]],
+  ['minimized_8',['minimized',['../class_louvre_1_1_l_surface.html#ab753abd0286bfb76a1c1bd6b75397ff1',1,'Louvre::LSurface']]],
+  ['minimizerequest_9',['minimizeRequest',['../class_louvre_1_1_l_toplevel_role.html#ada372b4bed9b2c3dea43522670fccb1d',1,'Louvre::LToplevelRole']]],
+  ['minsize_10',['minSize',['../class_louvre_1_1_l_toplevel_role.html#a68d680807635a75677ad2667bf5a7d95',1,'Louvre::LToplevelRole']]],
+  ['minsizechanged_11',['minSizeChanged',['../class_louvre_1_1_l_toplevel_role.html#afad63c43ebe53df55eba93701110ef28',1,'Louvre::LToplevelRole']]],
+  ['move_12',['move',['../class_louvre_1_1_l_cursor.html#a206c19ef82ed8ac5ea84810ff997de2c',1,'Louvre::LCursor']]],
+  ['movingtoplevel_13',['movingTopLevel',['../class_louvre_1_1_l_seat.html#a29decdc21946ab2d325d6e5d51118595',1,'Louvre::LSeat']]],
+  ['movingtoplevelinitcursorpos_14',['movingTopLevelInitCursorPos',['../class_louvre_1_1_l_seat.html#ad7a4b3e0bac1ad49c4b765dee56b9e93',1,'Louvre::LSeat']]],
+  ['movingtoplevelinitpos_15',['movingTopLevelInitPos',['../class_louvre_1_1_l_seat.html#a3925486909e596b390beddac9ec7e3d6',1,'Louvre::LSeat']]],
+  ['ms_16',['ms',['../class_louvre_1_1_l_time.html#a1bbd00ca2d73ead4b3a1e7d3ecae6e3c',1,'Louvre::LTime']]],
+  ['multiply_17',['multiply',['../class_louvre_1_1_l_region.html#a9ebb507ecbcd39abfee482fc775f246d',1,'Louvre::LRegion']]]
 ];

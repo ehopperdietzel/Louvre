@@ -10,6 +10,14 @@
 
 using namespace std;
 
+/// Representation of a client surface (usually refered as window).
+///
+/// A surface is the representation of a client window that can be drawn on screen.
+/// It has a position, size, texture, and a role.\n
+/// Initially all surfaces have no role (Undefined), you must wait for them to get a role (notified with typeChangedRequest())
+/// in order to be able to draw them on screen.
+/// A list of all created surfaces can be accessed from the LCompositor class, check the LCompositor::surfaces() method.
+/// A list of all surfaces created by a client can be accessed from the LClient class, check the LClient::surfaces() method.
 class Louvre::LSurface
 {
 public:
@@ -17,6 +25,7 @@ public:
     /* Roles */
     LToplevelRole *toplevel() const;
     LPopupRole *popup() const;
+    void *role() const;
 
     enum SurfaceType : UInt32
     {
@@ -86,15 +95,6 @@ public:
     const list<LSurface*>&children() const;
     const LPoint &hotspot() const {return p_hotspot;}
 
-    struct State
-    {
-        SurfaceType type = SurfaceType::Undefined;
-        wl_resource *buffer = nullptr;
-        LRegion inputRegion;
-        LSize size;
-    };
-
-    State current,pending;
  private:
     friend class LWayland;
     friend class LCompositor;
@@ -109,9 +109,18 @@ public:
     friend class Extensions::XdgShell::Toplevel;
     friend class Extensions::XdgShell::Popup;
 
+    struct State
+    {
+        SurfaceType type = SurfaceType::Undefined;
+        wl_resource *buffer = nullptr;
+        LRegion inputRegion;
+        LSize size;
+    };
+
+    State current,pending;
+
     // Roles
-    LToplevelRole *p_toplevelRole = nullptr;
-    LPopupRole *p_popupRole = nullptr;
+    void *p_role = nullptr;
 
     LTexture *p_texture = nullptr;
     list<LSurface*>p_children;

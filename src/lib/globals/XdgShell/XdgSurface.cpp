@@ -73,9 +73,9 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client, wl_resource 
 
     wl_resource *toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
 
-    lSurface->p_toplevelRole = lSurface->compositor()->createToplevelRequest(toplevel, lSurface);
+    lSurface->p_role = lSurface->compositor()->createToplevelRequest(toplevel, lSurface);
     lSurface->pending.type = LSurface::SurfaceType::Toplevel;
-    wl_resource_set_implementation(toplevel, &xdg_toplevel_implementation, lSurface->p_toplevelRole, &Extensions::XdgShell::Toplevel::destroy_resource);
+    wl_resource_set_implementation(toplevel, &xdg_toplevel_implementation, lSurface->p_role, &Extensions::XdgShell::Toplevel::destroy_resource);
 
 }
 void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *parent, wl_resource *positioner)
@@ -126,7 +126,7 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
     wl_resource_set_implementation(popup, &xdg_popup_implementation, lPopup, &Extensions::XdgShell::Popup::destroy_resource);
 
     lSurface->pending.type = LSurface::Popup;
-    lSurface->p_popupRole = lPopup;
+    lSurface->p_role = lPopup;
     lSurface->p_parent = lParent;
     lParent->p_children.push_back(lSurface);
     lSurface->parentChangeRequest();

@@ -26,6 +26,21 @@ using namespace Louvre;
 
 PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL = NULL;
 
+LToplevelRole *LSurface::toplevel() const
+{
+    return (LToplevelRole*)p_role;
+}
+
+LPopupRole *LSurface::popup() const
+{
+    return (LPopupRole*)p_role;
+}
+
+void *LSurface::role() const
+{
+    return p_role;
+}
+
 LSurface::LSurface(wl_resource *surface, LClient *client, GLuint textureUnit)
 {
     eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
@@ -44,16 +59,6 @@ void LSurface::bufferSizeChangeRequest()
 {
     if(type() == Toplevel && toplevel() == seat()->resizingToplevel())
         seat()->updateResizingToplevelPos();
-}
-
-LToplevelRole *LSurface::toplevel() const
-{
-    return p_toplevelRole;
-}
-
-LPopupRole *LSurface::popup() const
-{
-    return p_popupRole;
 }
 
 const LPoint &LSurface::pos(PosMode mode) const

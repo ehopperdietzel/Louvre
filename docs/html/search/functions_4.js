@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['flushclients_0',['flushClients',['../class_wayland_plus_1_1_w_wayland.html#aa736cda636b3b936434c5a17db963958',1,'WaylandPlus::WWayland']]],
-  ['frame_1',['frame',['../class_wayland_plus_1_1_globals_1_1_surface.html#a5bf6f12bfb39778867e099d71026e50d',1,'WaylandPlus::Globals::Surface']]]
+  ['eglcontext_0',['eglContext',['../class_louvre_1_1_l_wayland.html#a2327f2cad852c72f23ab062723b8f42f',1,'Louvre::LWayland']]],
+  ['egldisplay_1',['eglDisplay',['../class_louvre_1_1_l_wayland.html#a739d3ace580da748e3978233ef8ec784',1,'Louvre::LWayland']]]
 ];

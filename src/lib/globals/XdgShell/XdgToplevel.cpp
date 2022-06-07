@@ -39,7 +39,7 @@ void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
         }
 
         lToplevel->surface()->current.type = LSurface::Undefined;
-        lToplevel->surface()->p_toplevelRole = nullptr;
+        lToplevel->surface()->p_role = nullptr;
         lToplevel->surface()->typeChangeRequest();
     }
 

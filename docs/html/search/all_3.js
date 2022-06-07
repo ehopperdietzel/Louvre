@@ -1,20 +1,16 @@
 var searchData=
 [
-  ['checkglerror_0',['checkGLError',['../class_wayland_plus_1_1_w_open_g_l.html#a25f2e4efac73924eba5dff6e81ec1316',1,'WaylandPlus::WOpenGL']]],
-  ['client_5fdisconect_1',['client_disconect',['../class_wayland_plus_1_1_globals_1_1_compositor.html#a7b506beba4b7e16ecdc9404f2f9b234f',1,'WaylandPlus::Globals::Compositor']]],
-  ['clientdisconnectrequest_2',['clientDisconnectRequest',['../class_wayland_plus_1_1_w_compositor.html#a760061497f401e3a9d641f28953f438b',1,'WaylandPlus::WCompositor']]],
-  ['clients_3',['clients',['../class_wayland_plus_1_1_w_compositor.html#a235ac4451fb34c7db1f99fc67aace0c0',1,'WaylandPlus::WCompositor']]],
-  ['commit_4',['commit',['../class_wayland_plus_1_1_globals_1_1_surface.html#ae85114b98d9d42e8a212266385729aea',1,'WaylandPlus::Globals::Surface']]],
-  ['comp_5',['comp',['../_w_input_8cpp.html#a5311bf750c243f2a3a64077cc4a93170',1,'WInput.cpp']]],
-  ['compositor_6',['compositor',['../_w_wayland_8cpp.html#ad2679768dc4c4fd7c0ecf6ec997f57e9',1,'WWayland.cpp']]],
-  ['compositor_7',['Compositor',['../class_wayland_plus_1_1_globals_1_1_compositor.html',1,'WaylandPlus::Globals']]],
-  ['compositor_2ecpp_8',['Compositor.cpp',['../_compositor_8cpp.html',1,'']]],
-  ['compositor_2eh_9',['Compositor.h',['../_compositor_8h.html',1,'']]],
-  ['compositor_5fimplementation_10',['compositor_implementation',['../_compositor_8cpp.html#a6a1a07934f76685f99cedc9afbeb97ea',1,'Compositor.cpp']]],
-  ['constraintadjustment_11',['ConstraintAdjustment',['../namespace_wayland_plus.html#ae3a38393345a9ed5efec54b8247c10f5',1,'WaylandPlus']]],
-  ['create_5fdata_5fsource_12',['create_data_source',['../class_wayland_plus_1_1_globals_1_1_data_device_manager.html#aae69ee1248ee73426bd3e9bedff11d21',1,'WaylandPlus::Globals::DataDeviceManager']]],
-  ['create_5fpositioner_13',['create_positioner',['../structxdg__wm__base__interface.html#a1d7206e1bb2c8b55756a486d8dd91818',1,'xdg_wm_base_interface::create_positioner()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_wm_base.html#a828258286adec0c72b4632935e99c9ff',1,'WaylandPlus::Extensions::XdgShell::WmBase::create_positioner()'],['../structzxdg__shell__v6__interface.html#a51e388015bda994d6291159db21b6b72',1,'zxdg_shell_v6_interface::create_positioner()']]],
-  ['create_5fregion_14',['create_region',['../class_wayland_plus_1_1_globals_1_1_compositor.html#a836c06605b351cc79e95b81b85ebcdc8',1,'WaylandPlus::Globals::Compositor']]],
-  ['create_5fsurface_15',['create_surface',['../class_wayland_plus_1_1_globals_1_1_compositor.html#adcc682e34cb867cd35053c00358a609c',1,'WaylandPlus::Globals::Compositor']]],
-  ['createnullkeys_16',['createNullKeys',['../_w_surface_8cpp.html#ac3de43c72769c169a4c3dca94c53922c',1,'createNullKeys():&#160;WSurface.cpp'],['../_w_surface_8h.html#ac3de43c72769c169a4c3dca94c53922c',1,'createNullKeys():&#160;WSurface.cpp']]]
+  ['damages_0',['damages',['../class_louvre_1_1_l_texture.html#a0cefbe1581f4fbfb32504fe366b6464f',1,'Louvre::LTexture']]],
+  ['deactivated_1',['Deactivated',['../class_louvre_1_1_l_toplevel_role.html#a71dd90bab84c2a780229ac4d7acffc0fa8fe6e74c3959277fe0369a57fc6715c4',1,'Louvre::LToplevelRole']]],
+  ['deletetexture_2',['deleteTexture',['../class_louvre_1_1_l_texture.html#a7aad92141456da489674bcdc367b2049',1,'Louvre::LTexture']]],
+  ['destroyclientrequest_3',['destroyClientRequest',['../class_louvre_1_1_l_compositor.html#a8c7f86dd6094e43c4d73c9a38ac8d47c',1,'Louvre::LCompositor']]],
+  ['destroyoutputrequest_4',['destroyOutputRequest',['../class_louvre_1_1_l_compositor.html#a1d1de1a6b32c7b89fe0aa2755db0ce34',1,'Louvre::LCompositor']]],
+  ['destroypopuprequest_5',['destroyPopupRequest',['../class_louvre_1_1_l_compositor.html#ab0c86f62ee66144066bbd97a2bca4d25',1,'Louvre::LCompositor']]],
+  ['destroysurfacerequest_6',['destroySurfaceRequest',['../class_louvre_1_1_l_compositor.html#aa1cd22b2f551a17120fbc081717c8ee2',1,'Louvre::LCompositor']]],
+  ['destroytoplevelrequest_7',['destroyToplevelRequest',['../class_louvre_1_1_l_compositor.html#a7fa5e3cbc35a80c649766dabd19d1d06',1,'Louvre::LCompositor']]],
+  ['dismisspopups_8',['dismissPopups',['../class_louvre_1_1_l_seat.html#a3c2631d83e8716a1e4fd9f67257a8179',1,'Louvre::LSeat']]],
+  ['dispatchevents_9',['dispatchEvents',['../class_louvre_1_1_l_wayland.html#aeda6294ee1b4642d1321c98f7afd03a4',1,'Louvre::LWayland']]],
+  ['draggingsurface_10',['draggingSurface',['../class_louvre_1_1_l_seat.html#a7869b70055454ab08605c9e30f9eef15',1,'Louvre::LSeat']]],
+  ['drawcolor_11',['drawColor',['../class_louvre_1_1_l_open_g_l.html#a2fbb16b71b640655aefc32a5e64fbc85',1,'Louvre::LOpenGL']]],
+  ['drawtexture_12',['drawTexture',['../class_louvre_1_1_l_open_g_l.html#a4ff29a5615fcc30afd6914ecfb4b87d6',1,'Louvre::LOpenGL']]]
 ];

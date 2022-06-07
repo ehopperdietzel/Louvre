@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['resizeedge_0',['ResizeEdge',['../namespace_wayland_plus.html#a7d2ea423288402a5d924c7419ba64544',1,'WaylandPlus']]]
+  ['buffertype_0',['BufferType',['../class_louvre_1_1_l_texture.html#adf8e136713c0691010d2bec6ba63e9cf',1,'Louvre::LTexture']]]
 ];

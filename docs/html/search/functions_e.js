@@ -1,14 +1,20 @@
 var searchData=
 [
-  ['readfd_0',['readFd',['../class_wayland_plus_1_1_w_wayland.html#aa61249226548096d875154017aa37fe4',1,'WaylandPlus::WWayland']]],
-  ['release_1',['release',['../class_wayland_plus_1_1_globals_1_1_data_device.html#a4c82f524cbdc5c17623d65e47f2670e2',1,'WaylandPlus::Globals::DataDevice::release()'],['../class_wayland_plus_1_1_globals_1_1_keyboard.html#a5eb169ad981684a4876adf328d5bc491',1,'WaylandPlus::Globals::Keyboard::release()'],['../class_wayland_plus_1_1_globals_1_1_output.html#a746f21b4354589d523f1dd96729016fc',1,'WaylandPlus::Globals::Output::release()'],['../class_wayland_plus_1_1_globals_1_1_pointer.html#a7b7e94da0f6774df68d615bf4c2fbb86',1,'WaylandPlus::Globals::Pointer::release()'],['../class_wayland_plus_1_1_globals_1_1_seat.html#ae874f44a3c59df0a69b4ad81a986877c',1,'WaylandPlus::Globals::Seat::release()']]],
-  ['remove_2',['remove',['../class_wayland_plus_1_1_globals_1_1_region.html#ace8d8dd5d55b536f0ce599c09ae9dd63',1,'WaylandPlus::Globals::Region']]],
-  ['removeoutput_3',['removeOutput',['../class_wayland_plus_1_1_w_compositor.html#af8de2d90c1d3d814f7ef289f74d9dc97',1,'WaylandPlus::WCompositor']]],
-  ['repaint_4',['repaint',['../class_wayland_plus_1_1_w_output.html#a19dd765ee67d1c903a6bb5fb551faf8a',1,'WaylandPlus::WOutput']]],
-  ['repaintalloutputs_5',['repaintAllOutputs',['../class_wayland_plus_1_1_w_compositor.html#a8d9eae8401e67bcb9f104fe6a55fc5ff',1,'WaylandPlus::WCompositor']]],
-  ['reposition_6',['reposition',['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_popup.html#a4141ba22502f6c3a5cc765d51631731e',1,'WaylandPlus::Extensions::XdgShell::Popup']]],
-  ['resize_7',['resize',['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_toplevel.html#a3c356e2fef4aac4b225b458c12eeb0c0',1,'WaylandPlus::Extensions::XdgShell::Toplevel']]],
-  ['resizestartrequest_8',['resizeStartRequest',['../class_wayland_plus_1_1_w_surface.html#aacd59ad37c86c3fd8309a73afaa2e508',1,'WaylandPlus::WSurface']]],
-  ['resource_5fdestroy_9',['resource_destroy',['../class_wayland_plus_1_1_globals_1_1_compositor.html#ada202a7744d5be770a01dc3ba8579b65',1,'WaylandPlus::Globals::Compositor::resource_destroy()'],['../class_wayland_plus_1_1_globals_1_1_data_device_manager.html#a2283c76d9a254a9a82694d2fb7ec6b9e',1,'WaylandPlus::Globals::DataDeviceManager::resource_destroy()'],['../class_wayland_plus_1_1_globals_1_1_output.html#a5c311096718134f9fba41b7658bc83b2',1,'WaylandPlus::Globals::Output::resource_destroy()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_wm_base.html#a2ef8c1e9094e7acd5c3202eb812ee903',1,'WaylandPlus::Extensions::XdgShell::WmBase::resource_destroy()']]],
-  ['runloop_10',['runLoop',['../class_wayland_plus_1_1_w_wayland.html#a23b37c35eac4931258a4432ef995d45e',1,'WaylandPlus::WWayland']]]
+  ['paint_0',['paint',['../class_louvre_1_1_l_cursor.html#a40932c8612a3d3328258dbfc602da943',1,'Louvre::LCursor']]],
+  ['painter_1',['painter',['../class_louvre_1_1_l_output.html#a466cc08bb09f3b9435bbc384c7296b80',1,'Louvre::LOutput']]],
+  ['paintgl_2',['paintGL',['../class_louvre_1_1_l_output.html#ac5cbfafb28ef4c0474ae96437294f547',1,'Louvre::LOutput']]],
+  ['parent_3',['parent',['../class_louvre_1_1_l_surface.html#a545de69e550900da8c31e38b71910fd2',1,'Louvre::LSurface']]],
+  ['parentchangerequest_4',['parentChangeRequest',['../class_louvre_1_1_l_surface.html#a5265fa1471d2d32bb4bb91caffd2dd4f',1,'Louvre::LSurface']]],
+  ['ping_5',['ping',['../class_louvre_1_1_l_popup_role.html#a3d1ee0c043e3936aaacfa6ebf25133c9',1,'Louvre::LPopupRole::ping()'],['../class_louvre_1_1_l_toplevel_role.html#a3d1ee0c043e3936aaacfa6ebf25133c9',1,'Louvre::LToplevelRole::ping()']]],
+  ['plugged_6',['plugged',['../class_louvre_1_1_l_output.html#a8c212dfae159dc9cde54c379d28fcd89',1,'Louvre::LOutput']]],
+  ['pointerclickevent_7',['pointerClickEvent',['../class_louvre_1_1_l_seat.html#a1fbd969e6760648653eaf69dcf90571b',1,'Louvre::LSeat']]],
+  ['pointerfocussurface_8',['pointerFocusSurface',['../class_louvre_1_1_l_seat.html#a82145c8586b3c3cc02305e9d722aeb58',1,'Louvre::LSeat']]],
+  ['pointermoveevent_9',['pointerMoveEvent',['../class_louvre_1_1_l_seat.html#a1f6e7fe02644d0535398a33c965c50ff',1,'Louvre::LSeat']]],
+  ['pointerresource_10',['pointerResource',['../class_louvre_1_1_l_client.html#a8011da14c7365d8c3aead343c7ccb9f8',1,'Louvre::LClient']]],
+  ['pong_11',['pong',['../class_louvre_1_1_l_popup_role.html#ab9d423e4a7b11f19ef6a099fff4fea61',1,'Louvre::LPopupRole::pong()'],['../class_louvre_1_1_l_toplevel_role.html#ab9d423e4a7b11f19ef6a099fff4fea61',1,'Louvre::LToplevelRole::pong()']]],
+  ['popup_12',['popup',['../class_louvre_1_1_l_surface.html#aa1445914af45766be5acf4e5fe1a1493',1,'Louvre::LSurface']]],
+  ['pos_13',['pos',['../class_louvre_1_1_l_surface.html#ad1bf75328fbb52015906b27a4c673789',1,'Louvre::LSurface']]],
+  ['position_14',['position',['../class_louvre_1_1_l_cursor.html#a0e8fd00917c66212b8cebed263467d20',1,'Louvre::LCursor']]],
+  ['positioner_15',['positioner',['../class_louvre_1_1_l_popup_role.html#a74cf85129450ff696fd08eea2df14b8e',1,'Louvre::LPopupRole']]],
+  ['processseat_16',['processSeat',['../class_louvre_1_1_l_wayland.html#a7bbdfe72e30869c95322e314f7d44148',1,'Louvre::LWayland']]]
 ];

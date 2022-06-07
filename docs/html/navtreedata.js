@@ -24,52 +24,32 @@
 */
 var NAVTREE =
 [
-  [ "WaylandPlus", "index.html", [
-    [ "The xdg_shell_unstable_v6 protocol", "page_xdg_shell_unstable_v6.html", "page_xdg_shell_unstable_v6" ],
-    [ "The xdg_shell protocol", "page_xdg_shell.html", "page_xdg_shell" ],
-    [ "Modules", "modules.html", "modules" ],
-    [ "Namespaces", "namespaces.html", [
-      [ "Namespace List", "namespaces.html", "namespaces_dup" ],
-      [ "Namespace Members", "namespacemembers.html", [
-        [ "All", "namespacemembers.html", null ],
-        [ "Typedefs", "namespacemembers_type.html", null ],
-        [ "Enumerations", "namespacemembers_enum.html", null ],
-        [ "Enumerator", "namespacemembers_eval.html", null ]
-      ] ]
+  [ "Louvre", "index.html", [
+    [ "Tutorial", "usergroup0.html", [
+      [ "📚 Dependencies", "index.html#autotoc_md0", null ],
+      [ "✍️ Example", "index.html#autotoc_md1", null ],
+      [ "💻 Backends", "index.html#autotoc_md2", null ],
+      [ "🧩 Protocols", "index.html#autotoc_md3", null ],
+      [ "💬 Buffer Sharing Mechanisms", "index.html#autotoc_md4", null ],
+      [ "🕹️ Input Support", "index.html#autotoc_md5", null ],
+      [ "🖌️ Supported Rendering APIs", "index.html#autotoc_md6", null ],
+      [ "⏲️ Performance", "index.html#autotoc_md7", null ],
+      [ "👴 Compatibility", "index.html#autotoc_md8", null ],
+      [ "01 - Basics", "^http://www.google.com", null ],
+      [ "02 - More Basics", "@ref mypage", null ]
     ] ],
     [ "Classes", "annotated.html", [
-      [ "Class List", "annotated.html", "annotated_dup" ],
-      [ "Class Index", "classes.html", null ],
-      [ "Class Members", "functions.html", [
-        [ "All", "functions.html", "functions_dup" ],
-        [ "Functions", "functions_func.html", "functions_func" ],
-        [ "Variables", "functions_vars.html", null ],
-        [ "Enumerations", "functions_enum.html", null ],
-        [ "Enumerator", "functions_eval.html", null ],
-        [ "Related Functions", "functions_rela.html", null ]
-      ] ]
-    ] ],
-    [ "Files", "files.html", [
-      [ "File List", "files.html", "files_dup" ],
-      [ "File Members", "globals.html", [
-        [ "All", "globals.html", "globals_dup" ],
-        [ "Functions", "globals_func.html", null ],
-        [ "Variables", "globals_vars.html", null ],
-        [ "Enumerations", "globals_enum.html", null ],
-        [ "Enumerator", "globals_eval.html", null ],
-        [ "Macros", "globals_defs.html", null ]
-      ] ]
+      [ "List", "annotated.html", "annotated_dup" ],
+      [ "Index", "classes.html", null ]
     ] ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"_compositor_8cpp.html",
-"class_wayland_plus_1_1_w_compositor.html#a365298da1d6982efd2f7b6c41ba2ca6a",
-"dir_1d4bf68ee3b8f22f83b8d45101687939.html",
-"namespace_wayland_plus.html#a7723b8ebc82d2f02880f3d35f4718b08",
-"xdg-shell-unstable-v6_8h.html#a6a26518b29a290d6e792e2ddf85badcd"
+"@ref mypage",
+"class_louvre_1_1_l_positioner.html#a3772a47fd56c57b20b35a274e6334631",
+"class_louvre_1_1_l_toplevel_role.html#a20fae298e0393de3835b6f5fed77f772"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

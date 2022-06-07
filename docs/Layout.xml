@@ -1,0 +1,76 @@
+<doxygenlayout version="1.0">
+
+	<navindex>
+	
+  	<tab type="usergroup" title="Tutorial">
+      <tab type="user" url="http://www.google.com" title="01 - Basics"/>
+      <tab type="user" url="@ref mypage" title="02 - More Basics"/>
+    </tab>
+    
+    <tab type="namespaces" visible="no" title="">
+    	<tab type="namespacelist" visible="no" title="" intro=""/>
+    	<tab type="namespacemembers" visible="no" title="" intro=""/>
+  	</tab>
+    
+    <tab type="classes" visible="yes" title="Classes">
+    	<tab type="classindex" visible="$ALPHABETICAL_INDEX" title="Index"/> 
+      <tab type="classes" visible="yes" title="List"/>
+    </tab>
+    
+  </navindex>
+  
+    <!-- Layout definition for a class page -->
+  <class>
+  	<includes visible="$SHOW_INCLUDE_FILES"/>
+    <briefdescription visible="yes"/>
+    <detaileddescription title=""/>
+    <inheritancegraph visible="$CLASS_GRAPH"/>
+    <collaborationgraph visible="$COLLABORATION_GRAPH"/>
+    <allmemberslink visible="yes"/>
+    <memberdecl>
+      <nestedclasses visible="yes" title=""/>
+      <publictypes title=""/>
+      <publicslots title=""/>
+      <signals title=""/>
+      <publicmethods title=""/>
+      <publicstaticmethods title=""/>
+      <publicattributes title=""/>
+      <publicstaticattributes title=""/>
+      <protectedtypes title=""/>
+      <protectedslots title=""/>
+      <protectedmethods title=""/>
+      <protectedstaticmethods title=""/>
+      <protectedattributes title=""/>
+      <protectedstaticattributes title=""/>
+      <packagetypes title=""/>
+      <packagemethods title=""/>
+      <packagestaticmethods title=""/>
+      <packageattributes title=""/>
+      <packagestaticattributes title=""/>
+      <properties title=""/>
+      <events title=""/>
+      <privatetypes title=""/>
+      <privateslots title=""/>
+      <privatemethods title=""/>
+      <privatestaticmethods title=""/>
+      <privateattributes title=""/>
+      <privatestaticattributes title=""/>
+      <friends title=""/>
+      <related title="" subtitle=""/>
+      <membergroups visible="yes"/>
+    </memberdecl>
+    <memberdef>
+      <typedefs title=""/>
+      <enums title=""/>
+      <constructors title=""/>
+      <functions title=""/>
+      <related title=""/>
+      <variables title=""/>
+      <properties title=""/>
+      <events title=""/>
+    </memberdef>
+    <usedfiles visible="$SHOW_USED_FILES"/>
+    <authorsection visible="yes"/>
+  </class>
+
+</doxygenlayout>

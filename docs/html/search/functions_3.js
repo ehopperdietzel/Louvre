@@ -1,10 +1,14 @@
 var searchData=
 [
-  ['damage_0',['damage',['../class_wayland_plus_1_1_globals_1_1_surface.html#a156443789bc854d9b94efc5785e514a6',1,'WaylandPlus::Globals::Surface']]],
-  ['damage_5fbuffer_1',['damage_buffer',['../class_wayland_plus_1_1_globals_1_1_surface.html#a08d9b24fed14d96c15bbd9456ba0c661',1,'WaylandPlus::Globals::Surface']]],
-  ['delete_5fsurface_2',['delete_surface',['../class_wayland_plus_1_1_globals_1_1_surface.html#aff9ac4fbecd31c1f353e9ce85739c02a',1,'WaylandPlus::Globals::Surface']]],
-  ['deletetexture_3',['deleteTexture',['../class_wayland_plus_1_1_w_texture.html#a218390480989e3bd34df80e4a48a2e95',1,'WaylandPlus::WTexture']]],
-  ['destroy_4',['destroy',['../class_wayland_plus_1_1_globals_1_1_region.html#ac789b89b7e9c4c47269737802be046e8',1,'WaylandPlus::Globals::Region::destroy()'],['../class_wayland_plus_1_1_globals_1_1_subcompositor.html#ae6d4142c5bf33219c1b390fdd3977120',1,'WaylandPlus::Globals::Subcompositor::destroy()'],['../class_wayland_plus_1_1_globals_1_1_subsurface.html#ae45faca1b73f14d0a849104505c2f8e4',1,'WaylandPlus::Globals::Subsurface::destroy()'],['../class_wayland_plus_1_1_globals_1_1_surface.html#aa3579cc5b3deb7ddf56b407ad471b8ff',1,'WaylandPlus::Globals::Surface::destroy()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_popup.html#af48e01d9d9566093ec5affa1ab70154d',1,'WaylandPlus::Extensions::XdgShell::Popup::destroy()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_positioner.html#a9638ea4b1f56116dd417376639bd0b09',1,'WaylandPlus::Extensions::XdgShell::Positioner::destroy()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_surface.html#ac72ab884304a67b100a8f8decee983d8',1,'WaylandPlus::Extensions::XdgShell::Surface::destroy()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_toplevel.html#a2240f40ae68b6d963d85cd8259ac14ab',1,'WaylandPlus::Extensions::XdgShell::Toplevel::destroy()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_wm_base.html#aca1c893ef7bcd1adab974fa1a8cbed02',1,'WaylandPlus::Extensions::XdgShell::WmBase::destroy()']]],
-  ['destroy_5fresource_5',['destroy_resource',['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_popup.html#aa370ca2b646e657437fd9600ddd55e3d',1,'WaylandPlus::Extensions::XdgShell::Popup::destroy_resource()'],['../class_wayland_plus_1_1_extensions_1_1_xdg_shell_1_1_positioner.html#aeee0a72b010ea56bb7e794d6cb89d6b0',1,'WaylandPlus::Extensions::XdgShell::Positioner::destroy_resource()']]],
-  ['dispatchevents_6',['dispatchEvents',['../class_wayland_plus_1_1_w_wayland.html#a90dec93e6f677256641e0c33df5ac995',1,'WaylandPlus::WWayland']]]
+  ['deletetexture_0',['deleteTexture',['../class_louvre_1_1_l_texture.html#a7aad92141456da489674bcdc367b2049',1,'Louvre::LTexture']]],
+  ['destroyclientrequest_1',['destroyClientRequest',['../class_louvre_1_1_l_compositor.html#a8c7f86dd6094e43c4d73c9a38ac8d47c',1,'Louvre::LCompositor']]],
+  ['destroyoutputrequest_2',['destroyOutputRequest',['../class_louvre_1_1_l_compositor.html#a1d1de1a6b32c7b89fe0aa2755db0ce34',1,'Louvre::LCompositor']]],
+  ['destroypopuprequest_3',['destroyPopupRequest',['../class_louvre_1_1_l_compositor.html#ab0c86f62ee66144066bbd97a2bca4d25',1,'Louvre::LCompositor']]],
+  ['destroysurfacerequest_4',['destroySurfaceRequest',['../class_louvre_1_1_l_compositor.html#aa1cd22b2f551a17120fbc081717c8ee2',1,'Louvre::LCompositor']]],
+  ['destroytoplevelrequest_5',['destroyToplevelRequest',['../class_louvre_1_1_l_compositor.html#a7fa5e3cbc35a80c649766dabd19d1d06',1,'Louvre::LCompositor']]],
+  ['dismisspopups_6',['dismissPopups',['../class_louvre_1_1_l_seat.html#a3c2631d83e8716a1e4fd9f67257a8179',1,'Louvre::LSeat']]],
+  ['dispatchevents_7',['dispatchEvents',['../class_louvre_1_1_l_wayland.html#aeda6294ee1b4642d1321c98f7afd03a4',1,'Louvre::LWayland']]],
+  ['draggingsurface_8',['draggingSurface',['../class_louvre_1_1_l_seat.html#a7869b70055454ab08605c9e30f9eef15',1,'Louvre::LSeat']]],
+  ['drawcolor_9',['drawColor',['../class_louvre_1_1_l_open_g_l.html#a2fbb16b71b640655aefc32a5e64fbc85',1,'Louvre::LOpenGL']]],
+  ['drawtexture_10',['drawTexture',['../class_louvre_1_1_l_open_g_l.html#a4ff29a5615fcc30afd6914ecfb4b87d6',1,'Louvre::LOpenGL']]]
 ];

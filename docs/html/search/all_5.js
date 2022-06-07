@@ -1,12 +1,13 @@
 var searchData=
 [
-  ['egl_0',['EGL',['../class_wayland_plus_1_1_w_texture.html#a1ccce8b962c31400d6cacec2d848edc5af9492fa7b95883012d99689dc27476fa',1,'WaylandPlus::WTexture']]],
-  ['eglbindwaylanddisplaywl_1',['eglBindWaylandDisplayWL',['../_w_wayland_8cpp.html#af9d7d8316ae27057f85c0cf2d1c6102f',1,'WWayland.cpp']]],
-  ['eglquerywaylandbufferwl_2',['eglQueryWaylandBufferWL',['../_w_surface_8cpp.html#abe464863588dc8edc9ec3b5fa0c4934c',1,'WSurface.cpp']]],
-  ['ev_3',['ev',['../_w_input_8cpp.html#a1ff36b3501b0beb93cebe9589c2eb14e',1,'WInput.cpp']]],
-  ['event_5floop_4',['event_loop',['../_w_wayland_8cpp.html#a97081d22aa0566d4fccec843c69f0ab2',1,'WWayland.cpp']]],
-  ['popup_5',['Popup',['../class_wayland_plus_1_1_w_surface.html#aca7432e19c2841dc7c6add111cfffba8',1,'WaylandPlus::WSurface']]],
-  ['surface_6',['Surface',['../class_wayland_plus_1_1_w_surface.html#a193745718bd1fc47c36e07986512319b',1,'WaylandPlus::WSurface']]],
-  ['toplevel_7',['Toplevel',['../class_wayland_plus_1_1_w_surface.html#a618c20e4ab7eb326f3659e42cbe7a0b6',1,'WaylandPlus::WSurface']]],
-  ['wmbase_8',['WmBase',['../class_wayland_plus_1_1_w_surface.html#aacbac7c44112f29f32794db6b94abebb',1,'WaylandPlus::WSurface']]]
+  ['failed_0',['Failed',['../class_louvre_1_1_l_output.html#a7543445ef79d8511dcc6a274dc9b4149a1f506c828f4945d6b5a7bf71445f7d54',1,'Louvre::LOutput']]],
+  ['flippage_1',['flipPage',['../class_louvre_1_1_l_backend.html#a852e27d116cd14e330c76b9750d620df',1,'Louvre::LBackend']]],
+  ['float32_2',['Float32',['../namespace_louvre.html#a87d38f886e617ced2698fc55afa07637',1,'Louvre']]],
+  ['float64_3',['Float64',['../namespace_louvre.html#a3f1431cb9f76da10f59246d1d743dc2c',1,'Louvre']]],
+  ['flushclients_4',['flushClients',['../class_louvre_1_1_l_wayland.html#a8bb40d499cceb174f41f8deab349d7bd',1,'Louvre::LWayland']]],
+  ['forceupdate_5',['forceUpdate',['../class_louvre_1_1_l_wayland.html#a9b17fb9e1ca3c4f937cddc62c84770c2',1,'Louvre::LWayland']]],
+  ['fullscreen_6',['fullscreen',['../class_louvre_1_1_l_toplevel_role.html#a08fe0fb1a1fb7856adf1606a4cd1a6b0',1,'Louvre::LToplevelRole']]],
+  ['fullscreen_7',['Fullscreen',['../class_louvre_1_1_l_toplevel_role.html#a71dd90bab84c2a780229ac4d7acffc0fa442ecc88f57a81fcf5161137646b031f',1,'Louvre::LToplevelRole']]],
+  ['fullscreenchanged_8',['fullscreenChanged',['../class_louvre_1_1_l_toplevel_role.html#a6eb1c05ad01d481aff57f137cf8b2dfa',1,'Louvre::LToplevelRole']]],
+  ['fullscreenrequest_9',['fullscreenRequest',['../class_louvre_1_1_l_toplevel_role.html#aed2a95f7cd1bfb90aa436a0952ab2ce7',1,'Louvre::LToplevelRole']]]
 ];

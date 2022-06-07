@@ -24,6 +24,7 @@
 #define LOUVRE_SEAT_VERSION 7
 #define LOUVRE_XDG_SHELL_VERSION 2
 
+
 namespace Louvre
 {
     // API Classes
@@ -32,6 +33,7 @@ namespace Louvre
     class LCompositor;
     class LOutput;
     class LOutputManager;
+    class LOutputMode;
     class LOpenGL;
     class LPositioner;
     class LRegion;
@@ -42,6 +44,7 @@ namespace Louvre
     // Surface roles
     class LToplevelRole;
     class LPopupRole;
+    class LSubsurfaceRole;
 
     // Input related
     class LSeat;
@@ -68,46 +71,6 @@ namespace Louvre
     typedef void* EGLContext;
     typedef void* EGLDisplay;
 
-    struct Point
-    {
-        Int32 x = 0;
-        Int32 y = 0;
-    };
-
-    struct PointD
-    {
-        double x = 0;
-        double y = 0;
-    };
-
-    struct Size
-    {
-        Int32 width = 0;
-        Int32 height = 0;
-    };
-
-    struct Rect
-    {
-        Int32 x = 0;
-        Int32 y = 0;
-        Int32 width = 0;
-        Int32 height = 0;
-    };
-
-    struct RectD
-    {
-        double x = 0;
-        double y = 0;
-        double width = 0;
-        double height = 0;
-    };
-
-
-    enum POINTER_BUTTON : UInt32
-    {
-        LEFT_BUTTON = 272
-    };
-
     // Wayland Globals
     namespace Globals
     {
@@ -115,6 +78,7 @@ namespace Louvre
         class Subcompositor;
         class DataDeviceManager;
         class DataDevice;
+        class DataSource;
         class Keyboard;
         class Output;
         class Pointer;
