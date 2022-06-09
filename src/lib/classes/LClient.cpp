@@ -19,6 +19,11 @@ LCompositor *LClient::compositor() const
     return p_compositor;
 }
 
+LSeat *LClient::seat() const
+{
+    return p_compositor->seat();
+}
+
 wl_client *LClient::client() const
 {
     return p_client;
@@ -52,6 +57,11 @@ wl_resource *LClient::keyboardResource() const
 wl_resource *LClient::touchResource() const
 {
     return p_touchResource;
+}
+
+UInt32 LClient::lastPointerEnterEventSerial() const
+{
+    return p_lastPointerEnterEventSerial;
 }
 
 wl_resource *LClient::xdgWmBaseResource() const

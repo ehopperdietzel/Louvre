@@ -8,7 +8,9 @@ var searchData=
   ['initwayland_5',['initWayland',['../class_louvre_1_1_l_wayland.html#ac9454e3117d304db6dfc23a25153757a',1,'Louvre::LWayland']]],
   ['inputregion_6',['inputRegion',['../class_louvre_1_1_l_surface.html#a8d606d6765c328e4f6b7cb370cea6f50',1,'Louvre::LSurface']]],
   ['inputregioncontainspoint_7',['inputRegionContainsPoint',['../class_louvre_1_1_l_surface.html#a91806ca61457a4981a93cc9e3997315d',1,'Louvre::LSurface']]],
-  ['isdamaged_8',['isDamaged',['../class_louvre_1_1_l_surface.html#a37e4b0b3cc62e698b7d843328fa95fcc',1,'Louvre::LSurface']]],
-  ['isglcontextinitialized_9',['isGlContextInitialized',['../class_louvre_1_1_l_wayland.html#a5a27975f06731f0d7b037b9c5343c8ac',1,'Louvre::LWayland']]],
-  ['issynced_10',['isSynced',['../class_louvre_1_1_l_subsurface_role.html#a057ea045975b806eb9ff4efdc0c7eee1',1,'Louvre::LSubsurfaceRole']]]
+  ['insertsurfaceafter_8',['insertSurfaceAfter',['../class_louvre_1_1_l_compositor.html#a6a578afbf308807f76eb3f21806dba14',1,'Louvre::LCompositor']]],
+  ['insertsurfacebefore_9',['insertSurfaceBefore',['../class_louvre_1_1_l_compositor.html#a44455cec3f9dfd32f6a48274c8e08ba2',1,'Louvre::LCompositor']]],
+  ['isdamaged_10',['isDamaged',['../class_louvre_1_1_l_surface.html#a37e4b0b3cc62e698b7d843328fa95fcc',1,'Louvre::LSurface']]],
+  ['isglcontextinitialized_11',['isGlContextInitialized',['../class_louvre_1_1_l_wayland.html#a5a27975f06731f0d7b037b9c5343c8ac',1,'Louvre::LWayland']]],
+  ['issynced_12',['isSynced',['../class_louvre_1_1_l_subsurface_role.html#a057ea045975b806eb9ff4efdc0c7eee1',1,'Louvre::LSubsurfaceRole']]]
 ];

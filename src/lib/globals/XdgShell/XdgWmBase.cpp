@@ -95,7 +95,7 @@ void Extensions::XdgShell::WmBase::get_xdg_surface(wl_client *client, wl_resourc
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(surface);
 
     // The surface should't have a previous role
-    if(lSurface->type() != LSurface::Undefined)
+    if(lSurface->roleType() != LSurface::Undefined)
     {
         wl_resource_post_error(resource,XDG_WM_BASE_ERROR_ROLE,"Given wl_surface has another role.");
         return;
@@ -117,9 +117,9 @@ void Extensions::XdgShell::WmBase::pong(wl_client *, wl_resource *resource, UInt
 
     for(LSurface *lSurface : lClient->surfaces())
     {
-        if(lSurface->type() == LSurface::Toplevel)
+        if(lSurface->roleType() == LSurface::Toplevel)
             lSurface->toplevel()->pong(serial);
-        else if(lSurface->type() == LSurface::Popup)
+        else if(lSurface->roleType() == LSurface::Popup)
             lSurface->popup()->pong(serial);
     }
 }
@@ -127,13 +127,12 @@ void Extensions::XdgShell::WmBase::pong(wl_client *, wl_resource *resource, UInt
 void Extensions::XdgShell::WmBase::bind (wl_client *client, void *data, UInt32 version, UInt32 id)
 {
 
-    // Gets the LCompositor from user data
     LCompositor *lCompositor = (LCompositor*)data;
 
-    // Search the LClient
     LClient *lClient = nullptr;
 
-    for(LClient *c : lCompositor->clients)
+    // Search for the client object
+    for(LClient *c : lCompositor->clients())
     {
         if(c->client() == client)
         {
@@ -142,8 +141,8 @@ void Extensions::XdgShell::WmBase::bind (wl_client *client, void *data, UInt32 v
         }
     }
 
-    // If the LClient wasn't found
-    if(!lClient) return;
+    if(!lClient)
+        return;
 
     // Creates the XDG_WM_BASE resource
     lClient->p_xdgWmBaseResource = wl_resource_create (client, &xdg_wm_base_interface, version, id);

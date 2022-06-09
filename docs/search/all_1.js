@@ -6,9 +6,9 @@ var searchData=
   ['bottomright_3',['BottomRight',['../class_louvre_1_1_l_toplevel_role.html#a26bab8b550828c40dd0b8664c57321b4a1640f649d644701a2f4633e6bd88b20c',1,'Louvre::LToplevelRole']]],
   ['bottomright_4',['bottomRight',['../class_louvre_1_1_l_rect.html#a865b50fea559e5953584d2a90763b8e9',1,'Louvre::LRect']]],
   ['bufferformat_5',['bufferFormat',['../class_louvre_1_1_l_texture.html#a1791545684796498ebec8782039b3cab',1,'Louvre::LTexture']]],
-  ['bufferscale_6',['bufferScale',['../class_louvre_1_1_l_surface.html#a4be2593f4006bc73a90727cfe5e31b27',1,'Louvre::LSurface']]],
-  ['bufferscalechangerequest_7',['bufferScaleChangeRequest',['../class_louvre_1_1_l_surface.html#aa508980f4b3b98d25ba4a01e4f59eafb',1,'Louvre::LSurface']]],
-  ['buffersizechangerequest_8',['bufferSizeChangeRequest',['../class_louvre_1_1_l_surface.html#ab7fe81ca3d37a113245aa8066ad8cdd7',1,'Louvre::LSurface']]],
-  ['buffertype_9',['BufferType',['../class_louvre_1_1_l_texture.html#adf8e136713c0691010d2bec6ba63e9cf',1,'Louvre::LTexture']]],
-  ['buffertype_10',['bufferType',['../class_louvre_1_1_l_texture.html#a7bdb881fc4cabfd342189318976f4874',1,'Louvre::LTexture']]]
+  ['bufferroletype_6',['bufferroleType',['../class_louvre_1_1_l_texture.html#a230f38b37981c710c927b6bc53e15e98',1,'Louvre::LTexture']]],
+  ['bufferscale_7',['bufferScale',['../class_louvre_1_1_l_surface.html#a4be2593f4006bc73a90727cfe5e31b27',1,'Louvre::LSurface']]],
+  ['bufferscalechangerequest_8',['bufferScaleChangeRequest',['../class_louvre_1_1_l_surface.html#aa508980f4b3b98d25ba4a01e4f59eafb',1,'Louvre::LSurface']]],
+  ['buffersizechangerequest_9',['bufferSizeChangeRequest',['../class_louvre_1_1_l_surface.html#ab7fe81ca3d37a113245aa8066ad8cdd7',1,'Louvre::LSurface']]],
+  ['buffertype_10',['BufferType',['../class_louvre_1_1_l_texture.html#adf8e136713c0691010d2bec6ba63e9cf',1,'Louvre::LTexture']]]
 ];

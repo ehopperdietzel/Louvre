@@ -20,6 +20,8 @@
 #include <LCursor.h>
 #include <LSubsurfaceRole.h>
 #include <LTime.h>
+#include <LCursorRole.h>
+#include <LPointer.h>
 
 using namespace Louvre;
 
@@ -31,31 +33,35 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
 
     // Clear keyboard focus
-    if(surface->compositor()->seat()->p_keyboardFocusSurface == surface)
-        surface->compositor()->seat()->p_keyboardFocusSurface = nullptr;
+    if(surface->seat()->p_keyboardFocusSurface == surface)
+        surface->seat()->p_keyboardFocusSurface = nullptr;
 
     // Clear pointer focus
-    if(surface->compositor()->seat()->p_pointerFocusSurface == surface)
-        surface->compositor()->seat()->p_pointerFocusSurface = nullptr;
+    if(surface->seat()->pointer()->p_pointerFocusSurface == surface)
+        surface->seat()->pointer()->p_pointerFocusSurface = nullptr;
 
     // Clear dragging surface
-    if(surface->compositor()->seat()->p_draggingSurface == surface)
-        surface->compositor()->seat()->p_draggingSurface = nullptr;
+    if(surface->seat()->pointer()->p_draggingSurface == surface)
+        surface->seat()->pointer()->p_draggingSurface = nullptr;
 
     // Clear active toplevel focus
-    if(surface->compositor()->seat()->p_activeTopLevel == surface->toplevel())
-        surface->compositor()->seat()->p_activeTopLevel = nullptr;
+    if(surface->seat()->p_activeTopLevel == surface->toplevel())
+        surface->seat()->p_activeTopLevel = nullptr;
 
     // Clear moving toplevel
-    if(surface->compositor()->seat()->p_movingTopLevel == surface->toplevel())
-        surface->compositor()->seat()->p_movingTopLevel = nullptr;
+    if(surface->seat()->pointer()->p_movingTopLevel == surface->toplevel())
+        surface->seat()->pointer()->p_movingTopLevel = nullptr;
 
     // Clear resizing toplevel
-    if(surface->compositor()->seat()->p_resizingToplevel == surface->toplevel())
-        surface->compositor()->seat()->p_resizingToplevel = nullptr;
+    if(surface->seat()->pointer()->p_resizingToplevel == surface->toplevel())
+        surface->seat()->pointer()->p_resizingToplevel = nullptr;
 
-    if(surface->type() == LSurface::Cursor)
-        surface->compositor()->cursor()->setCursor(LCursor::Arrow);
+    if(surface->roleType() == LSurface::Cursor)
+    {
+        LCursorRole *lCursor = surface->cursor();
+        surface->compositor()->destroyCursorRequest(lCursor);
+        delete lCursor;
+    }
 
     // Parent
     if(surface->parent())
@@ -65,6 +71,7 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
         surface->toplevel()->p_surface = nullptr;
     else if(surface->popup())
         surface->popup()->p_surface = nullptr;
+
 
     surface->p_role = nullptr;
 
@@ -81,16 +88,14 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
 }
 
 // SURFACE
-void Globals::Surface::attach(wl_client *, wl_resource *resource, wl_resource *buffer, Int32 /*x*/, Int32 /*y*/)
+void Globals::Surface::attach(wl_client *, wl_resource *resource, wl_resource *buffer, Int32 x, Int32 y)
 {
-    LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
+    LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
+    lSurface->pending.buffer = buffer;
 
-    if(surface->pending.buffer)
-    {
-        printf("ALREADY HAD A BUFFER.\n");
-        //wl_buffer_send_release(surface->pending.buffer);
-    }
-    surface->pending.buffer = buffer;
+    if(lSurface->cursor())
+        lSurface->cursor()->p_pendingHotspotOffset = LPoint(x,y);
+
 }
 
 void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 callback)
@@ -102,7 +107,6 @@ void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 ca
 
     if(surface->p_frameCallback)
     {
-        printf("ALREADY HAD A FRAMECALLBACK.\n");
         wl_callback_send_done(surface->p_frameCallback,LTime::ms());
         wl_resource_destroy(surface->p_frameCallback);
     }
@@ -128,7 +132,7 @@ void Globals::Surface::commit(wl_client *, wl_resource *resource)
 void Globals::Surface::apply_commit(LSurface *surface)
 {
     // Wait for parent commit if is subsurface in sync mode
-    if(surface->type() == LSurface::Subsurface && surface->subsurface()->isSynced())
+    if(surface->roleType() == LSurface::Subsurface && surface->subsurface()->isSynced())
     {
         if(!surface->subsurface()->p_parentIsCommiting)
             return;
@@ -137,7 +141,7 @@ void Globals::Surface::apply_commit(LSurface *surface)
     }
 
     /*
-     *     if(surface->type() == LSurface::Subsurface)
+     *     if(surface->roleType() == LSurface::Subsurface)
     {
         if(surface->subsurface()->isSynced())
         {
@@ -161,21 +165,21 @@ void Globals::Surface::apply_commit(LSurface *surface)
     // If the buffer is empty
     if(!surface->current.buffer)
     {
-        if(surface->pending.type == LSurface::SurfaceType::Toplevel)
+        if(surface->pending.type == LSurface::Toplevel)
         {
-            surface->current.type = surface->pending.type;
-            surface->pending.type = LSurface::SurfaceType::Undefined;
+            surface->p_role->p_roleId = surface->pending.type;
+            surface->pending.type = LSurface::Undefined;
             surface->toplevel()->configureRequest();
             surface->typeChangeRequest();
         }
-        else if(surface->pending.type == LSurface::SurfaceType::Popup)
+        else if(surface->pending.type == LSurface::Popup)
         {
-            surface->current.type = surface->pending.type;
-            surface->pending.type = LSurface::SurfaceType::Undefined;
+            surface->p_role->p_roleId = surface->pending.type;
+            surface->pending.type = LSurface::Undefined;
             surface->popup()->configureRequest();
             surface->typeChangeRequest();
         }
-        else if(surface->pending.type == LSurface::SurfaceType::Subsurface)
+        else if(surface->pending.type == LSurface::Subsurface)
         {
 
         }
@@ -197,6 +201,13 @@ void Globals::Surface::apply_commit(LSurface *surface)
 
     // Convert the buffer to OpenGL texture
     surface->applyDamages();
+
+    // Notify that the cursor changed content
+    if(surface->cursor())
+    {
+        surface->cursor()->p_hotspot -= surface->cursor()->p_pendingHotspotOffset/surface->bufferScale();
+        surface->seat()->pointer()->setCursorRequest(surface,surface->cursor()->hotspot().x(),surface->cursor()->hotspot().y());
+    }
 
     /************************************
      *********** SURFACE SIZE ***********
@@ -223,7 +234,7 @@ void Globals::Surface::apply_commit(LSurface *surface)
 
 
     // Toplevel configure
-    if(surface->type() == LSurface::Toplevel)
+    if(surface->roleType() == LSurface::Toplevel)
     {
         LToplevelRole *lToplevel = surface->toplevel();
 
@@ -250,21 +261,19 @@ void Globals::Surface::apply_commit(LSurface *surface)
     }
 
 
-    // Notify that the cursor changed content
-    if(surface->type() == LSurface::Cursor)
-        surface->compositor()->seat()->setCursorRequest(surface,surface->hotspot().x(),surface->hotspot().y());
+
 
     // Apply cached commit to subsurfaces
     for(LSurface *s : surface->p_children)
     {
-        if(s->type() == LSurface::Subsurface && s->subsurface()->isSynced())
+        if(s->roleType() == LSurface::Subsurface && s->subsurface()->isSynced())
         {
             s->subsurface()->p_parentIsCommiting = true;
             apply_commit(s);
         }
 
         /*
-         *         if(s->type() == LSurface::Subsurface)
+         *         if(s->roleType() == LSurface::Subsurface)
         {
             if(s->subsurface()->isSynced())
             {
@@ -342,10 +351,13 @@ void Globals::Surface::set_buffer_scale(wl_client *client, wl_resource *resource
 
 
 
-/*
-void Globals::Surface::offset(wl_client *client, wl_resource *resource, Int32 x, Int32 y)
+
+void Globals::Surface::offset(wl_client *, wl_resource *resource, Int32 x, Int32 y)
 {
-    (void)client;(void)resource;(void)x;(void)y;
+    LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
+
+    if(lSurface->cursor())
+        lSurface->cursor()->p_pendingHotspotOffset = LPoint(x,y);
 }
-*/
+
 

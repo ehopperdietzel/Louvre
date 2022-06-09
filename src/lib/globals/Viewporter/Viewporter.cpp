@@ -32,20 +32,23 @@ void Extensions::Viewporter::Viewporter::get_viewport(wl_client *client, wl_reso
 
 void Extensions::Viewporter::Viewporter::bind(wl_client *client, void *data, UInt32 version, UInt32 id)
 {
-    printf("Viewporter version: %i\n",version);
+    LCompositor *lCompositor = (LCompositor*)data;
 
-    LCompositor *compositor = (LCompositor*)data;
+    LClient *lClient = nullptr;
 
-    LClient *wClient = nullptr;
-
-    // Check if client already exists
-    for(list<LClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
-        if((*c)->client() == client)
+    // Search for the client object
+    for(LClient *c : lCompositor->clients())
+    {
+        if(c->client() == client)
         {
-            wClient = (*c);
+            lClient = c;
             break;
         }
+    }
+
+    if(!lClient)
+        return;
 
     wl_resource *resource = wl_resource_create(client, &wp_viewporter_interface, version, id);
-    wl_resource_set_implementation(resource, &wp_viewporter_implementation, wClient, &Viewporter::resource_destroy);
+    wl_resource_set_implementation(resource, &wp_viewporter_implementation, lClient, &Viewporter::resource_destroy);
 }

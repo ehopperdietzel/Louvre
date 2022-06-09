@@ -17,7 +17,7 @@ public:
     static void set_buffer_transform(wl_client *client, wl_resource *resource, Int32 transform);
     static void damage_buffer(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 w, Int32 h);
     static void set_buffer_scale(wl_client *client, wl_resource *resource, Int32 scale);
-    //static void offset(wl_client *client, wl_resource *resource, Int32 x, Int32 y);
+    static void offset(wl_client *client, wl_resource *resource, Int32 x, Int32 y);
 
     static void apply_commit(LSurface *surface);
 };

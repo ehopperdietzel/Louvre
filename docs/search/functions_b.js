@@ -13,9 +13,9 @@ var searchData=
   ['minsize_10',['minSize',['../class_louvre_1_1_l_toplevel_role.html#a68d680807635a75677ad2667bf5a7d95',1,'Louvre::LToplevelRole']]],
   ['minsizechanged_11',['minSizeChanged',['../class_louvre_1_1_l_toplevel_role.html#afad63c43ebe53df55eba93701110ef28',1,'Louvre::LToplevelRole']]],
   ['move_12',['move',['../class_louvre_1_1_l_cursor.html#a206c19ef82ed8ac5ea84810ff997de2c',1,'Louvre::LCursor']]],
-  ['movingtoplevel_13',['movingTopLevel',['../class_louvre_1_1_l_seat.html#a29decdc21946ab2d325d6e5d51118595',1,'Louvre::LSeat']]],
-  ['movingtoplevelinitcursorpos_14',['movingTopLevelInitCursorPos',['../class_louvre_1_1_l_seat.html#ad7a4b3e0bac1ad49c4b765dee56b9e93',1,'Louvre::LSeat']]],
-  ['movingtoplevelinitpos_15',['movingTopLevelInitPos',['../class_louvre_1_1_l_seat.html#a3925486909e596b390beddac9ec7e3d6',1,'Louvre::LSeat']]],
+  ['movingtoplevel_13',['movingTopLevel',['../class_louvre_1_1_l_pointer.html#a29decdc21946ab2d325d6e5d51118595',1,'Louvre::LPointer']]],
+  ['movingtoplevelinitcursorpos_14',['movingTopLevelInitCursorPos',['../class_louvre_1_1_l_pointer.html#ad7a4b3e0bac1ad49c4b765dee56b9e93',1,'Louvre::LPointer']]],
+  ['movingtoplevelinitpos_15',['movingTopLevelInitPos',['../class_louvre_1_1_l_pointer.html#a3925486909e596b390beddac9ec7e3d6',1,'Louvre::LPointer']]],
   ['ms_16',['ms',['../class_louvre_1_1_l_time.html#a1bbd00ca2d73ead4b3a1e7d3ecae6e3c',1,'Louvre::LTime']]],
   ['multiply_17',['multiply',['../class_louvre_1_1_l_region.html#a9ebb507ecbcd39abfee482fc775f246d',1,'Louvre::LRegion']]]
 ];

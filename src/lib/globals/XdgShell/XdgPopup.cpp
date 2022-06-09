@@ -5,6 +5,7 @@
 #include <LClient.h>
 #include <LPositioner.h>
 #include <LPopupRole.h>
+#include <xdg-shell.h>
 
 using namespace Louvre;
 
@@ -50,7 +51,7 @@ void Extensions::XdgShell::Popup::grab(wl_client *, wl_resource *resource, wl_re
     LPopupRole *lPopup = (LPopupRole*)wl_resource_get_user_data(resource);
 
     /* Parent popup must have focus (Not really necesary)
-    if(lPopup->surface()->parent()->type() == LSurface::Popup && )
+    if(lPopup->surface()->parent()->roleType() == LSurface::Popup && )
     {
 
     }

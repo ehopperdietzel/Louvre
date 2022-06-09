@@ -19,6 +19,7 @@
 #include <LToplevelRole.h>
 #include <LPopupRole.h>
 #include <LSubsurfaceRole.h>
+#include <LPointer.h>
 
 
 #include <LTime.h>
@@ -27,9 +28,17 @@ using namespace Louvre;
 
 PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL = NULL;
 
+LCursorRole *LSurface::cursor() const
+{
+    if(roleType() == Cursor)
+        return (LCursorRole*)p_role;
+    else
+        return nullptr;
+}
+
 LToplevelRole *LSurface::toplevel() const
 {
-    if(type() == Toplevel)
+    if(roleType() == Toplevel)
         return (LToplevelRole*)p_role;
     else
         return nullptr;
@@ -37,7 +46,7 @@ LToplevelRole *LSurface::toplevel() const
 
 LPopupRole *LSurface::popup() const
 {
-    if(type() == Popup)
+    if(roleType() == Popup)
         return (LPopupRole*)p_role;
     else
         return nullptr;
@@ -45,13 +54,13 @@ LPopupRole *LSurface::popup() const
 
 LSubsurfaceRole *LSurface::subsurface() const
 {
-    if(type() == Subsurface)
+    if(roleType() == Subsurface)
         return (LSubsurfaceRole*)p_role;
     else
         return nullptr;
 }
 
-void *LSurface::role() const
+LBaseSurfaceRole *LSurface::role() const
 {
     return p_role;
 }
@@ -72,33 +81,16 @@ LSurface::~LSurface()
 
 void LSurface::bufferSizeChangeRequest()
 {
-    if(type() == Toplevel && toplevel() == seat()->resizingToplevel())
-        seat()->updateResizingToplevelPos();
+    if(roleType() == Toplevel && toplevel() == seat()->pointer()->resizingToplevel())
+        seat()->pointer()->updateResizingToplevelPos();
 }
 
-const LPoint &LSurface::pos(PosMode mode) const
+const LPoint &LSurface::pos(bool useRolePos) const
 {
-    if(mode != 0)
-    {
-        if(type() == Toplevel)
-        {
-            p_xdgPos = p_pos + toplevel()->windowGeometry().topLeft() * mode;
-            return p_xdgPos;
-        }
-        if(type() == Popup)
-        {
-            p_xdgPos = p_pos + popup()->windowGeometry().topLeft() * mode;
-            return p_xdgPos;
-        }
-        if(type() == Subsurface)
-        {
-            p_xdgPos = subsurface()->localPos() + subsurface()->surface()->parent()->pos(mode);
-            return p_xdgPos;
-        }
-    }
+    if(useRolePos && roleType() != Undefined)
+        return role()->rolePos();
 
     return p_pos;
-    
 }
 
 void LSurface::setPos(const LPoint &newPos)
@@ -123,7 +115,7 @@ void LSurface::setY(Int32 y, bool useRolePos)
         p_pos.setY(y);
     else
     {
-        if(type() == Toplevel)
+        if(roleType() == Toplevel)
             p_pos.setY(p_pos.y() + toplevel()->windowGeometry().y());
     }
 }
@@ -148,6 +140,14 @@ bool LSurface::minimized() const
 LSeat *LSurface::seat() const
 {
     return compositor()->seat();
+}
+
+UInt32 LSurface::roleType() const
+{
+    if(role())
+        return role()->roleId();
+    else
+        return Undefined;
 }
 
 
@@ -175,7 +175,6 @@ void LSurface::applyDamages()
     // EGL
     if(eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
-        printf("EGL BUFFER.\n");
         eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_WIDTH, &width);
         eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_HEIGHT, &height);
         EGLAttrib attribs = EGL_NONE;
@@ -186,7 +185,6 @@ void LSurface::applyDamages()
     // SHM
     else
     {
-        printf("SHM BUFFER.\n");
         wl_shm_buffer *shm_buffer = wl_shm_buffer_get(current.buffer);
         wl_shm_buffer_begin_access(shm_buffer);
         width = wl_shm_buffer_get_width(shm_buffer);
@@ -207,7 +205,9 @@ void LSurface::applyDamages()
         else
         {
             printf("Texture format not supported.\n");
-            exit(1);
+            wl_shm_buffer_end_access(shm_buffer);
+            wl_client_destroy(client()->client());
+            return;
         }
 
         p_texture->setData(width, height, data, bufferFormat, GL_UNSIGNED_BYTE);

@@ -1,7 +1,6 @@
 #ifndef LREGION_H
 #define LREGION_H
 
-//#include <wayland-server.h>
 #include <list>
 #include <LNamespaces.h>
 #include <LRect.h>

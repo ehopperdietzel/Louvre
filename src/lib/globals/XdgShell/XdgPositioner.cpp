@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <LPositioner.h>
 #include <LSurface.h>
-
+#include <xdg-shell.h>
 
 void Louvre::Extensions::XdgShell::Positioner::destroy_resource(wl_resource *)
 {

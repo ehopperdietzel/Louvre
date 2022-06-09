@@ -59,15 +59,14 @@ void LCursor::setCursor(CursorNames cursor)
     setTexture(p_cursors[int(cursor)].texture,p_cursors[int(cursor)].hotspot);
     lastCursor.defaultName = int(cursor);
     lastCursor.type = LLastCursorType::Default;
-    printf("Cursor changed.\n");
 }
 
 void LCursor::setTexture(LTexture *texture, const LPointF &hotspot)
 {
     lastCursor.type = LLastCursorType::Texture;
-    LBackend::setCursor(p_output,texture,p_size*p_output->getOutputScale());
     p_texture = texture;
     p_hotspot = hotspot;
+    LBackend::setCursor(p_output,p_texture,p_size*p_output->getOutputScale());
     update();
 }
 

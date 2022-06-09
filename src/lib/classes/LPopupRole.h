@@ -1,14 +1,16 @@
 #ifndef LPOPUPROLE_H
 #define LPOPUPROLE_H
 
-#include <LNamespaces.h>
+#include <LBaseSurfaceRole.h>
 #include <LRect.h>
 
-class Louvre::LPopupRole
+class Louvre::LPopupRole : public LBaseSurfaceRole
 {
 public:
     LPopupRole(wl_resource *popup, LSurface *surface, LPositioner *positioner);
     virtual ~LPopupRole();
+
+    const LPoint &rolePos() const override;
 
     // Requests
     virtual void pong(UInt32 serial);
@@ -29,11 +31,8 @@ public:
 
     // Variables
     const LRect &windowGeometry() const;
-    LCompositor *compositor() const;
     LPositioner *positioner() const;
-    LSurface *surface() const;
-    LSeat *seat() const;
-    wl_resource *resource() const;
+
 private:
     friend class Globals::Surface;
     friend class Extensions::XdgShell::Surface;
@@ -45,10 +44,8 @@ private:
     UInt32 p_repositionSerial = 0;
 #endif
 
-    LCompositor *p_compositor = nullptr;
     LPositioner *p_positioner = nullptr;
-    LSurface *p_surface = nullptr;
-    wl_resource *p_resource = nullptr;
+
 
 };
 

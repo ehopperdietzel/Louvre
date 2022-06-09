@@ -49,7 +49,7 @@ void LOutput::paintGL()
     for(LSurface *surface : compositor()->surfaces())
     {
         // Skip some types surfaces
-        if( surface->type() == LSurface::Undefined || surface->type() == LSurface::Cursor)
+        if( surface->roleType() == LSurface::Undefined || surface->roleType() == LSurface::Cursor)
             continue;
 
         // Skip if minimized
@@ -60,7 +60,7 @@ void LOutput::paintGL()
         }
 
         // Draw the surface
-        GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(LSurface::SubRole),surface->size()));
+        GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
 
         /*
         for(LRect &r : surface->texture()->damages)

@@ -21,8 +21,8 @@ struct wl_surface_interface surface_implementation =
     .commit                 = &Globals::Surface::commit,
     .set_buffer_transform   = &Globals::Surface::set_buffer_transform,
     .set_buffer_scale       = &Globals::Surface::set_buffer_scale,
-    .damage_buffer          = &Globals::Surface::damage_buffer
-    //.offset                 = &Globals::Surface::offset
+    .damage_buffer          = &Globals::Surface::damage_buffer,
+    .offset                 = &Globals::Surface::offset
 };
 
 struct wl_region_interface region_implementation =
@@ -119,25 +119,23 @@ void Globals::Compositor::resource_destroy(wl_resource *resource)
 
 void Globals::Compositor::bind(wl_client *client, void *data, UInt32 version, UInt32 id)
 {
-    printf("Compositor version: %i\n",version);
+    LCompositor *lCompositor = (LCompositor*)data;
 
-    LCompositor *compositor = (LCompositor*)data;
-
-    LClient *wClient = nullptr;
+    LClient *lClient = nullptr;
 
     // Search for the client object
-    for(list<LClient*>::iterator c = compositor->clients.begin(); c != compositor->clients.end(); ++c)
+    for(LClient *c : lCompositor->clients())
     {
-        if((*c)->client() == client)
+        if(c->client() == client)
         {
-            wClient = (*c);
+            lClient = c;
             break;
         }
     }
 
-    if(wClient == nullptr)
+    if(!lClient)
         return;
 
     wl_resource *resource = wl_resource_create(client, &wl_compositor_interface, version, id);
-    wl_resource_set_implementation(resource, &compositor_implementation, wClient, &Compositor::resource_destroy);
+    wl_resource_set_implementation(resource, &compositor_implementation, lClient, &Compositor::resource_destroy);
 }

@@ -7,7 +7,7 @@ var class_louvre_1_1_l_texture =
     [ "LTexture", "class_louvre_1_1_l_texture.html#a2d447f8bcd34072029ef70c97e47572c", null ],
     [ "~LTexture", "class_louvre_1_1_l_texture.html#a2c1af4d512f6bc70f6c7725c00e52e2f", null ],
     [ "bufferFormat", "class_louvre_1_1_l_texture.html#a1791545684796498ebec8782039b3cab", null ],
-    [ "bufferType", "class_louvre_1_1_l_texture.html#a7bdb881fc4cabfd342189318976f4874", null ],
+    [ "bufferroleType", "class_louvre_1_1_l_texture.html#a230f38b37981c710c927b6bc53e15e98", null ],
     [ "deleteTexture", "class_louvre_1_1_l_texture.html#a7aad92141456da489674bcdc367b2049", null ],
     [ "id", "class_louvre_1_1_l_texture.html#a079b73fe60e2641840265d4029a7626c", null ],
     [ "initialized", "class_louvre_1_1_l_texture.html#a0e887830311eba8605002670b70699ed", null ],

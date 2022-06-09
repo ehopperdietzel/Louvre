@@ -9,6 +9,5 @@ var searchData=
   ['topparent_6',['topParent',['../class_louvre_1_1_l_surface.html#adc33e46583fa6b2557a7a4e8965de920',1,'Louvre::LSurface']]],
   ['touchfocussurface_7',['touchFocusSurface',['../class_louvre_1_1_l_seat.html#acc54431c3fdee50df73b378455602ca1',1,'Louvre::LSeat']]],
   ['touchresource_8',['touchResource',['../class_louvre_1_1_l_client.html#a45f4376853ab9b467588d0a202bb7ecb',1,'Louvre::LClient']]],
-  ['type_9',['type',['../class_louvre_1_1_l_surface.html#ae6cf7239387060533b0928cf6c8a1839',1,'Louvre::LSurface']]],
-  ['typechangerequest_10',['typeChangeRequest',['../class_louvre_1_1_l_surface.html#ae2a57211ed45a9f2f0d9bc84cf46dabb',1,'Louvre::LSurface']]]
+  ['typechangerequest_9',['typeChangeRequest',['../class_louvre_1_1_l_surface.html#ae2a57211ed45a9f2f0d9bc84cf46dabb',1,'Louvre::LSurface']]]
 ];

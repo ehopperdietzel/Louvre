@@ -30,7 +30,9 @@ public:
     virtual LOutput *createOutputRequest();
     virtual LClient *createClientRequest(wl_client *client);
     virtual LSurface *createSurfaceRequest(wl_resource *surface, LClient *client);
+
     virtual LSeat *createSeatRequest();
+    virtual LPointer *createPointerRequest(LSeat *seat);
     virtual LToplevelRole *createToplevelRequest(wl_resource *toplevel, LSurface *surface);
     virtual LPopupRole *createPopupRequest(wl_resource *popup, LSurface *surface, LPositioner *positioner);
     virtual LSubsurfaceRole *createSubsurfaceRequest(wl_resource *subsurface, LSurface *surface);
@@ -41,6 +43,7 @@ public:
     virtual void destroySurfaceRequest(LSurface *surface);
     virtual void destroyToplevelRequest(LToplevelRole *toplevel);
     virtual void destroyPopupRequest(LPopupRole *popup);
+    virtual void destroyCursorRequest(LCursorRole *cursor);
 
 
     void start();
@@ -72,9 +75,8 @@ public:
     void removeOutput(LOutput *output);
     const list<LSurface*>&surfaces() const;
     const list<LOutput*>&outputs() const;
+    const list<LClient*>&clients() const;
 
-
-    list<LClient*>clients;
 
     std::thread::id mainThreadId() const {return p_threadId;}
 
@@ -88,15 +90,17 @@ private:
     friend class LOutput;
     friend class Globals::Compositor;
     friend class Globals::Surface;
-    friend class Louvre::Globals::Pointer;
+    friend class Globals::Pointer;
+    friend class Globals::Seat;
 
 
     LCursor *p_cursor = nullptr;
     LSeat *p_seat = nullptr;
 
-
-
     std::thread::id p_threadId;
+
+    // Clients
+    list<LClient*>p_clients;
 
     // Outputs
     list<LOutput*>p_outputs;

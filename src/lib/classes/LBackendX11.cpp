@@ -172,7 +172,7 @@ std::list<LOutput *> &LBackend::getAvaliableOutputs(LCompositor *compositor)
 
     LOutput *output = compositor->createOutputRequest();
     output->data = malloc(sizeof(X11));
-    output->refreshRate = 59;
+    output->refreshRate = 55;
     X11 *data = (X11*)output->data;
     data->x_display = XOpenDisplay(NULL);
     data->egl_display = eglGetDisplay(data->x_display);

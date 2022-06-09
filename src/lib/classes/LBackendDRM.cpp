@@ -556,19 +556,18 @@ void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
     unsigned int rbo;
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, 66, 66);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, 64, 64);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
 
-    GL->scaleCursor(texture,LRect(0,0,texture->size().w(),-texture->size().h()),LRect(1,64+1-size.h(),size.w(),size.h()));
+    GL->scaleCursor(texture,LRect(0,0,texture->size().w(),-texture->size().h()),LRect(0,0,size.w(),size.h()));
 
-    glReadPixels(1,1,64,64,GL_RGBA,GL_UNSIGNED_BYTE,&data->cursor_pixels);
+    glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,&data->cursor_pixels);
 
     gbm_bo_write(data->cursor_bo,data->cursor_pixels, 4*64*64);
 
     uint32_t handle = gbm_bo_get_handle(data->cursor_bo).u32;
     drmModeSetCursor(data->deviceFd, data->crtc_id, handle, 64, 64);
     glDeleteFramebuffers(1,&fbo);
-    //glDeleteBuffers(1,&rbo);
     glDeleteRenderbuffers(1,&rbo);
 
     // Goes back to main framebuffer

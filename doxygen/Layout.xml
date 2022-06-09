@@ -12,7 +12,9 @@
     	<tab type="namespacemembers" visible="no" title="" intro=""/>
   	</tab>
     
-    <tab type="classes" visible="yes" title="Classes"></tab>
+    <tab type="classes" visible="yes" title="API">
+    	<tab type="classes" visible="yes" title="Classes"/>
+    </tab>
     
   </navindex>
   

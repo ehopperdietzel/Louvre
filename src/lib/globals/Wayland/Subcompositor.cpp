@@ -37,7 +37,7 @@ void Globals::Subcompositor::get_subsurface(wl_client *client, wl_resource *reso
 {
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(surface);
 
-    if(lSurface->type() != LSurface::Undefined)
+    if(lSurface->roleType() != LSurface::Undefined)
     {
         wl_resource_post_error(resource,WL_SUBCOMPOSITOR_ERROR_BAD_SURFACE,"Given wl_surface already has another role.");
         return;
@@ -59,7 +59,7 @@ void Globals::Subcompositor::get_subsurface(wl_client *client, wl_resource *reso
     wl_resource_set_implementation(subsurface, &subsurface_implementation, lSubsurface, &Subsurface::resource_destroy);
 
     lSurface->current.type = LSurface::Subsurface;
-    lSurface->pending.type = LSurface::SurfaceType::Undefined;
+    lSurface->pending.type = LSurface::Undefined;
     lSurface->typeChangeRequest();
     lSurface->parentChangeRequest();
 

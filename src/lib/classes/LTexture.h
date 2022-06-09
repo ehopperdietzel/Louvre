@@ -28,7 +28,7 @@ public:
     bool initialized();
     GLuint id();
     GLuint unit();
-    BufferType bufferType() const;
+    BufferType bufferroleType() const;
     GLenum bufferFormat() const;
 
     //LPoint resizeDirection;

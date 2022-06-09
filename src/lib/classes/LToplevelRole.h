@@ -1,15 +1,17 @@
 #ifndef LTOPLEVELROLE_H
 #define LTOPLEVELROLE_H
 
-#include <LNamespaces.h>
+#include <LBaseSurfaceRole.h>
 #include <LSize.h>
 #include <LRect.h>
 
-class Louvre::LToplevelRole
+class Louvre::LToplevelRole : public LBaseSurfaceRole
 {
 public:
     LToplevelRole(wl_resource *toplevel, LSurface *surface);
     virtual ~LToplevelRole();
+
+    const LPoint &rolePos() const override;
 
     enum Edge : UInt32
     {
@@ -71,11 +73,6 @@ public:
     const LRect &windowGeometry() const;
     LSize calculateResizeRect(const LPoint &cursorPosDelta, const LSize &initialSize, Edge edge);
 
-    LCompositor *compositor() const;
-    LSeat *seat() const;
-    LSurface *surface() const;
-
-    wl_resource *resource() const;
     const char *appId() const;
     const char *title() const;
     const LSize &minSize() const;
@@ -104,9 +101,6 @@ private:
     TopLevelConfiguration p_pendingConf;
 
     void dispachLastConfiguration();
-    wl_resource *p_resource = nullptr;
-    LCompositor *p_compositor = nullptr;
-    LSurface *p_surface = nullptr;
 
     LSize p_minSize;
     LSize p_maxSize;

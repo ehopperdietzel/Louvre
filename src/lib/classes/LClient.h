@@ -14,17 +14,20 @@ public:
     virtual ~LClient();
 
     LCompositor *compositor() const;
+    LSeat *seat() const;
     wl_client *client() const;
     UInt32 id() const;
 
     const list<LSurface*>&surfaces() const;
 
+    // Global resources
     wl_resource *seatResource() const;
+    wl_resource *xdgWmBaseResource() const;
+
+    // Interface resources
     wl_resource *pointerResource() const;
     wl_resource *keyboardResource() const;
     wl_resource *touchResource() const;
-
-    wl_resource *xdgWmBaseResource() const;
 
     // Requests
     //virtual void newRegionRequest(LRegion *region) = 0;
@@ -34,12 +37,13 @@ public:
     list<LRegion*>regions;
     list<LPositioner*>positioners;
 
-
+    UInt32 lastPointerEnterEventSerial() const;
 
 private:
     friend class LWayland;
     friend class LSurface;
     friend class LPointer;
+    friend class LSeat;
     friend class Globals::Surface;
     friend class Globals::Seat;
     friend class Globals::Compositor;
@@ -61,6 +65,8 @@ private:
     LSurface            *p_pointerFocusedSurface    = nullptr;
     LSurface            *p_keyboardFocusedSurface   = nullptr;
     LSurface            *p_touchFocusedSurface      = nullptr;
+
+    UInt32               p_lastPointerEnterEventSerial   = 0;
     UInt32 p_id;
 
 };

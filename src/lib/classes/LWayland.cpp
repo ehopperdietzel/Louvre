@@ -175,7 +175,7 @@ int LWayland::initWayland(LCompositor *comp)
     // GLOBALS
 
     // Create compositor global
-    wl_global_create(display, &wl_compositor_interface, 3, comp, &Globals::Compositor::bind); // Last 5
+    wl_global_create(display, &wl_compositor_interface, LOUVRE_COMPOSITOR_VERSION, comp, &Globals::Compositor::bind);
 
     // Create subcompositor global
     wl_global_create(display, &wl_subcompositor_interface, LOUVRE_SUBCOMPOSITOR_VERSION, comp, &Globals::Subcompositor::bind);
@@ -264,7 +264,7 @@ void LWayland::runLoop()
 
         for(LSurface *surface : compositor->surfaces())
         {
-            if(surface != nullptr && surface->type() == LSurface::Toplevel)
+            if(surface != nullptr && surface->roleType() == LSurface::Toplevel)
                 surface->toplevel()->dispachLastConfiguration();
         }
 
@@ -292,7 +292,7 @@ void LWayland::clientConnectionEvent(wl_listener *listener, void *data)
     wl_client_get_destroy_listener(client,&LWayland::clientDisconnectionEvent);
 
     // Append client to the compositor list
-    compositor->clients.push_back(newClient);
+    compositor->p_clients.push_back(newClient);
 }
 
 wl_iterator_result iter(wl_resource *r,void*)
@@ -312,7 +312,7 @@ void LWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
     LClient *disconnectedClient = nullptr;
 
     // Remove client from the compositor list
-    for(LClient *wClient: compositor->clients)
+    for(LClient *wClient: compositor->clients())
     {
         if(wClient->client() == client)
         {
@@ -325,7 +325,7 @@ void LWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
         return;
 
     compositor->destroyClientRequest(disconnectedClient);
-    compositor->clients.remove(disconnectedClient);
+    compositor->p_clients.remove(disconnectedClient);
 
     delete disconnectedClient;
 }

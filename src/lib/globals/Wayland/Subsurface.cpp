@@ -77,7 +77,7 @@ void Louvre::Globals::Subsurface::sync_all_children_surfaces(LSurface *surface)
 {
     for(LSurface *s : surface->p_children)
     {
-        if(s->type() == LSurface::Subsurface)
+        if(s->roleType() == LSurface::Subsurface)
         {
             s->subsurface()->p_isSynced = true;
             s->subsurface()->syncModeChangedRequest();

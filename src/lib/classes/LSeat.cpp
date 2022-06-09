@@ -27,135 +27,13 @@
 #include <LTime.h>
 #include <LOutput.h>
 #include <LPopupRole.h>
+#include <LPointer.h>
 
 using namespace Louvre;
 
 
 /****************************** Virtual mehtods ******************************/
 
-void LSeat::pointerMoveEvent(float, float)
-{
-
-    // Resizing
-    if(updateResizingToplevelSize())
-        return;
-
-
-    // Moving surface
-    if(updateMovingTopLevelPos())
-    {
-        // Limits the top position
-        Int32 topbarHeight = (LOUVRE_TB_H+2)/compositor()->outputs().front()->getOutputScale();
-
-        if(movingTopLevel()->surface()->pos().y() < topbarHeight)
-            movingTopLevel()->surface()->setY(topbarHeight);
-
-        compositor()->repaintAllOutputs();
-        return;
-    }
-
-
-    // Draggin surface
-    if(draggingSurface())
-    {
-        sendPointerMoveEvent();
-        return;
-    }
-
-
-    // Find the surface at cursor positon
-    LSurface *surface = surfaceAt(cursor()->position(),LSurface::SubRole);
-
-    // If no surface was found
-    if(!surface)
-    {
-        setPointerFocus(nullptr);
-        cursor()->setCursor(LCursor::Arrow);
-    }
-    else
-    {
-        if(pointerFocusSurface() == surface)
-            sendPointerMoveEvent();
-        else
-        {
-            setPointerFocus(surface);
-        }
-    }
-
-}
-
-
-void LSeat::pointerClickEvent(UInt32 button, UInt32 state)
-{
-
-    if(!pointerFocusSurface())
-    {
-        LSurface *surface = surfaceAt(cursor()->position());
-
-        if(surface)
-        {
-            setKeyboardFocus(surface);
-            setPointerFocus(surface);
-            sendPointerButtonEvent(button,state);
-
-            if(surface->type() != LSurface::Popup)
-                dismissPopups();
-        }
-        else
-        {
-            setKeyboardFocus(nullptr);
-            dismissPopups();
-        }
-
-        return;
-    }
-
-    sendPointerButtonEvent(button,state);
-
-    if(button != LEFT_BUTTON)
-        return;
-
-    if(state == LIBINPUT_BUTTON_STATE_PRESSED)
-    {
-        if(pointerFocusSurface()->type() != LSurface::Popup)
-            dismissPopups();
-
-        setDragginSurface(pointerFocusSurface());
-        setKeyboardFocus(pointerFocusSurface());
-
-        if(pointerFocusSurface()->type() == LSurface::Toplevel)
-            pointerFocusSurface()->toplevel()->configure(pointerFocusSurface()->toplevel()->state() | LToplevelRole::Activated);
-
-        // Raise view
-        if(pointerFocusSurface()->parent())
-            compositor()->riseSurface(pointerFocusSurface()->topParent());
-        else
-            compositor()->riseSurface(pointerFocusSurface());
-
-    }
-    // Release
-    else
-    {
-
-        // Stop Resizing TopLevel
-        stopResizingToplevel();
-
-        // Stop Moving TopLevel
-        stopMovingTopLevel();
-
-        // Set dragging surface to nullptr
-        setDragginSurface(nullptr);
-
-        // Send a mouse leave event if the surface was being dragged
-        if(!pointerFocusSurface()->inputRegionContainsPoint(pointerFocusSurface()->pos(),cursor()->position()))
-        {
-            setPointerFocus(nullptr);
-            cursor()->setCursor(LCursor::Arrow);
-        }
-
-    }
-
-}
 
 void LSeat::keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
@@ -214,61 +92,14 @@ void LSeat::keyEvent(UInt32 keyCode, UInt32 keyState)
     }
 }
 
-void LSeat::setCursorRequest(LSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY)
-{
-
-    if(cursorSurface)
-        cursor()->setTexture(cursorSurface->texture(),LPointF(hotspotX,hotspotY));
-    else
-        cursor()->setCursor(LCursor::Arrow);
-
-    setCursorSurface(cursorSurface);
-
-}
-
-void LSeat::sendPointerLeaveEvent(LSurface *surface)
-{
-    // If surface is nullptr
-    if(!surface)
-        return;
-
-    // If do not have a wl_pointer
-    if(!surface->client()->pointerResource())
-        return;
-
-    // Send the unset focus event
-    wl_pointer_send_leave(surface->client()->pointerResource(),LWayland::nextSerial(),surface->resource());
-
-    // Version 5+
-    if(wl_resource_get_version(surface->client()->pointerResource()) >= 5)
-        wl_pointer_send_frame(surface->client()->pointerResource());
-
-}
-
-void LSeat::sendPointerEnterEvent(LSurface *surface, const LPoint &point)
-{
-    // If surface is nullptr
-    if(!surface)
-        return;
-
-    // If do not have a wl_pointer
-    if(!surface->client()->pointerResource())
-        return;
-
-    // Send focus event
-    wl_pointer_send_enter(surface->client()->pointerResource(),LWayland::nextSerial(),surface->resource(),wl_fixed_from_double(point.x()),wl_fixed_from_double(point.y()));
-
-    // Version 5+
-    if(wl_resource_get_version(surface->client()->pointerResource()) >= 5)
-        wl_pointer_send_frame(surface->client()->pointerResource());
-
-}
 
 /****************************** Non virtual mehtods ******************************/
 
 LSeat::LSeat(LCompositor *compositor)
 {
     p_compositor = compositor;
+
+    p_pointer = compositor->createPointerRequest(this);
 
     // Create null keys
     wl_array_init(&p_keys);
@@ -353,76 +184,22 @@ LCursor *LSeat::cursor() const
     return compositor()->cursor();
 }
 
-void LSeat::setPointerFocus(LSurface *surface)
+UInt32 LSeat::capabilities() const
 {
-    // If surface is not nullptr
-    if(surface)
+    return p_capabilities;
+}
+
+void LSeat::setCapabilities(UInt32 capabilitiesFlags)
+{
+    p_capabilities = capabilitiesFlags;
+
+    for(LClient *lClient : compositor()->clients())
     {
-        // If already has focus
-        if(pointerFocusSurface() == surface)
-            return;
-
-        // Remove focus from focused surface
-        sendPointerLeaveEvent(pointerFocusSurface());
-
-        // Set focus
-        if(surface->client()->pointerResource())
-        {
-            // Send focus event
-            sendPointerEnterEvent(surface,LPoint(0,0));
-            p_pointerFocusSurface = surface;
-        }
-        else
-            p_pointerFocusSurface = nullptr;
-    }
-
-    // If surface is nullptr
-    else
-    {
-        // Remove focus from focused surface
-        sendPointerLeaveEvent(pointerFocusSurface());
-        p_pointerFocusSurface = nullptr;
+        if(lClient->seatResource())
+            wl_seat_send_capabilities(lClient->seatResource(),p_capabilities);
     }
 }
 
-void LSeat::sendPointerMoveEvent()
-{
-    // If no surface has focus surface
-    if(!pointerFocusSurface())
-        return;
-
-    // If do not have a wl_pointer
-    if(!pointerFocusSurface()->client()->pointerResource())
-        return;
-
-    // Calculate local cursor position
-    LPoint pos = cursor()->position()-pointerFocusSurface()->pos(LSurface::SubRole);
-
-    // Send pointer move event to the focused surface
-    wl_pointer_send_motion(pointerFocusSurface()->client()->pointerResource(),LTime::ms(),wl_fixed_from_int(pos.x()),wl_fixed_from_int(pos.y()));
-
-    // Version 5+
-    if(wl_resource_get_version(pointerFocusSurface()->client()->pointerResource()) >= 5)
-        wl_pointer_send_frame(pointerFocusSurface()->client()->pointerResource());
-}
-
-void LSeat::sendPointerButtonEvent(UInt32 button, UInt32 state)
-{
-    // If no surface has focus
-    if(!pointerFocusSurface())
-        return;
-
-    // If do not have a wl_pointer
-    if(!pointerFocusSurface()->client()->pointerResource())
-        return;
-
-    // Send pointer button event
-    wl_pointer_send_button(pointerFocusSurface()->client()->pointerResource(),LWayland::nextSerial(),LTime::ms(),button,state);
-
-    // Version 5+
-    if(wl_resource_get_version(pointerFocusSurface()->client()->pointerResource()) >= 5)
-        wl_pointer_send_frame(pointerFocusSurface()->client()->pointerResource());
-}
 
 void LSeat::setKeyboardFocus(LSurface *surface)
 {
@@ -490,100 +267,6 @@ void LSeat::sendKeyboardModifiersEvent() const
     sendKeyboardModifiersEvent(p_modifiersState.depressed, p_modifiersState.latched, p_modifiersState.locked, p_modifiersState.group);
 }
 
-void LSeat::startResizingToplevel(LToplevelRole *topLevel, LToplevelRole::Edge edge)
-{
-    p_resizingToplevel = topLevel;
-    p_resizingToplevelEdge = edge;
-    p_resizingToplevelInitSize = topLevel->surface()->size();
-    p_resizingToplevelInitWindowSize = topLevel->windowGeometry().bottomRight();
-    p_resizingToplevelInitCursorPos = cursor()->position();
-    p_resizingToplevelInitPos = topLevel->surface()->pos();
-}
-
-bool LSeat::updateResizingToplevelSize()
-{
-    if(resizingToplevel())
-    {
-        LSize newSize = resizingToplevel()->calculateResizeRect(resizingToplevelInitCursorPos()-cursor()->position(),
-                                                                p_resizingToplevelInitWindowSize,
-                                                                resizingToplevelEdge());
-
-        resizingToplevel()->configure(newSize ,LToplevelRole::Activated | LToplevelRole::Resizing);
-        return true;
-    }
-    return false;
-}
-
-void LSeat::updateResizingToplevelPos()
-{
-
-    if(resizingToplevel())
-    {
-        LSize s = resizingToplevelInitSize();
-        LPoint p = resizingToplevelInitPos();
-        LToplevelRole::Edge edge =  resizingToplevelEdge();
-
-        if(edge ==  LToplevelRole::Edge::Top || edge ==  LToplevelRole::TopLeft || edge ==  LToplevelRole::TopRight)
-            resizingToplevel()->surface()->setY(p.y() + (s.h() - resizingToplevel()->surface()->size().h()));
-
-        if(edge ==  LToplevelRole::Edge::Left || edge ==  LToplevelRole::Edge::TopLeft || edge ==  LToplevelRole::Edge::BottomLeft)
-            resizingToplevel()->surface()->setX(p.x() + (s.w() - resizingToplevel()->surface()->size().w()));
-    }
-}
-
-void LSeat::stopResizingToplevel()
-{
-    if(resizingToplevel())
-        resizingToplevel()->configure(LToplevelRole::Activated);
-
-    p_resizingToplevel = nullptr;
-}
-
-void LSeat::startMovingTopLevel(LToplevelRole *topLevel)
-{
-    p_movingTopLevelInitPos = topLevel->surface()->pos();
-    p_movingTopLevelInitCursorPos = cursor()->position();
-    p_movingTopLevel = topLevel;
-}
-
-bool LSeat::updateMovingTopLevelPos()
-{
-    if(movingTopLevel())
-    {
-        movingTopLevel()->surface()->setPos(movingTopLevelInitPos() - movingTopLevelInitCursorPos() + cursor()->position());
-        return true;
-    }
-    return false;
-}
-
-void LSeat::stopMovingTopLevel()
-{
-    p_movingTopLevel = nullptr;
-}
-
-void LSeat::setDragginSurface(LSurface *surface)
-{
-    p_draggingSurface = surface;
-}
-
-void LSeat::setCursorSurface(LSurface *surface)
-{
-    p_cursorSurface = surface;
-}
-
-void LSeat::dismissPopups()
-{
-    for(LSurface *surface : compositor()->surfaces())
-    {
-        if(surface->type() == LSurface::Popup)
-            surface->popup()->sendPopupDoneEvent();
-    }
-}
-
-LSurface *LSeat::pointerFocusSurface() const
-{
-    return p_pointerFocusSurface;
-}
 
 LSurface *LSeat::keyboardFocusSurface() const
 {
@@ -595,74 +278,21 @@ LSurface *LSeat::touchFocusSurface() const
     return p_touchFocusSurface;
 }
 
-LSurface *LSeat::draggingSurface() const
-{
-    return p_draggingSurface;
-}
-
-LSurface *LSeat::cursorSurface() const
-{
-    return p_cursorSurface;
-}
-
-LToplevelRole *LSeat::resizingToplevel() const
-{
-    return p_resizingToplevel;
-}
-
-LToplevelRole *LSeat::movingTopLevel() const
-{
-    return p_movingTopLevel;
-}
-
 LToplevelRole *LSeat::activeTopLevel() const
 {
     return p_activeTopLevel;
 }
 
-const LPoint &LSeat::movingTopLevelInitPos() const
-{
-    return p_movingTopLevelInitPos;
-}
 
-const LPoint &LSeat::movingTopLevelInitCursorPos() const
-{
-    return p_movingTopLevelInitCursorPos;
-}
-
-const LPoint &LSeat::resizingToplevelInitPos() const
-{
-    return p_resizingToplevelInitPos;
-}
-
-const LPoint &LSeat::resizingToplevelInitCursorPos() const
-{
-    return p_resizingToplevelInitCursorPos;
-}
-
-const LSize &LSeat::resizingToplevelInitSize() const
-{
-    return p_resizingToplevelInitSize;
-}
-
-LToplevelRole::Edge LSeat::resizingToplevelEdge() const
-{
-    return p_resizingToplevelEdge;
-}
-
-LSurface *LSeat::surfaceAt(const LPoint &point, LSurface::PosMode mode)
-{
-    for(list<LSurface*>::const_reverse_iterator s = compositor()->surfaces().rbegin(); s != compositor()->surfaces().rend(); s++)
-        if((*s)->type() != LSurface::Undefined && (*s)->type() != LSurface::Cursor && !(*s)->minimized())
-            if((*s)->inputRegionContainsPoint((*s)->pos(mode),point))
-                return *s;
-        
-    return nullptr;
-}
 
 xkb_keysym_t LSeat::keySymbol(UInt32 keyCode)
 {
     return xkb_state_key_get_one_sym(p_xkbKeymapState,keyCode+8);
+}
+
+LPointer *LSeat::pointer() const
+{
+    return p_pointer;
 }
 
 void LSeat::processInput()
@@ -689,7 +319,7 @@ void LSeat::processInput()
 
             double x = libinput_event_pointer_get_dx(pointerEvent);
             double y = libinput_event_pointer_get_dy(pointerEvent);
-            this->pointerMoveEvent(x,y);
+            this->pointer()->pointerMoved(x,y);
             if(compositor()->cursor())
                 compositor()->cursor()->move(x,y);
         }
@@ -698,7 +328,7 @@ void LSeat::processInput()
             libinput_event_pointer *pointerEvent = libinput_event_get_pointer_event(ev);
             uint32_t button = libinput_event_pointer_get_button(pointerEvent);
             libinput_button_state state = libinput_event_pointer_get_button_state(pointerEvent);
-            this->pointerClickEvent(button,state);
+            this->pointer()->pointerButtonChanged(button,state);
         }
         else if(eventType == LIBINPUT_EVENT_KEYBOARD_KEY)
         {

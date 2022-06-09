@@ -13,6 +13,7 @@
 #include <LToplevelRole.h>
 #include <LCursor.h>
 #include <LSubsurfaceRole.h>
+#include <LPointer.h>
 
 
 using namespace Louvre;
@@ -49,6 +50,11 @@ LSeat *LCompositor::createSeatRequest()
     return new LSeat(this);
 }
 
+LPointer *LCompositor::createPointerRequest(LSeat *seat)
+{
+    return new LPointer(seat);
+}
+
 LToplevelRole *LCompositor::createToplevelRequest(wl_resource *toplevel, LSurface *surface)
 {
     return new LToplevelRole(toplevel, surface);
@@ -76,10 +82,10 @@ void LCompositor::destroyClientRequest(LClient *client)
 
 void LCompositor::destroySurfaceRequest(LSurface *surface)
 {
-    if(seat()->cursorSurface() == surface)
+    if(seat()->pointer()->cursorSurface() == surface)
     {
         cursor()->setCursor(LCursor::Arrow);
-        seat()->setCursorSurface(nullptr);
+        seat()->pointer()->setCursorSurface(nullptr);
     }
 }
 
@@ -93,6 +99,11 @@ void LCompositor::destroyPopupRequest(LPopupRole *popup)
 {
     (void)popup;
     repaintAllOutputs();
+}
+
+void LCompositor::destroyCursorRequest(LCursorRole *)
+{
+    cursor()->setCursor(LCursor::Arrow);
 }
 
 void LCompositor::start()
@@ -209,6 +220,11 @@ const list<LSurface *> &LCompositor::surfaces() const
 const list<LOutput *> &LCompositor::outputs() const
 {
     return p_outputs;
+}
+
+const list<LClient *> &LCompositor::clients() const
+{
+    return p_clients;
 }
 
 

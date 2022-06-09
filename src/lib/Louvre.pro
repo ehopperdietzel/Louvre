@@ -25,9 +25,11 @@ unix {
 
 HEADERS += \
     classes/LBackend.h \
+    classes/LBaseSurfaceRole.h \
     classes/LClient.h \
     classes/LCompositor.h \
     classes/LCursor.h \
+    classes/LCursorRole.h \
     classes/LNamespaces.h \
     classes/LOpenGL.h \
     classes/LOutput.h \
@@ -35,6 +37,7 @@ HEADERS += \
     classes/LOutputMode.h \
     classes/LPoint.h \
     classes/LPointF.h \
+    classes/LPointer.h \
     classes/LPopupRole.h \
     classes/LPositioner.h \
     classes/LRect.h \
@@ -72,15 +75,18 @@ HEADERS += \
 SOURCES += \
     classes/LBackendDRM.cpp \
     classes/LBackendX11.cpp \
+    classes/LBaseSurfaceRole.cpp \
     classes/LClient.cpp \
     classes/LCompositor.cpp \
     classes/LCursor.cpp \
+    classes/LCursorRole.cpp \
     classes/LOpenGL.cpp \
     classes/LOutput.cpp \
     classes/LOutputManager.cpp \
     classes/LOutputMode.cpp \
     classes/LPoint.cpp \
     classes/LPointF.cpp \
+    classes/LPointer.cpp \
     classes/LPopupRole.cpp \
     classes/LPositioner.cpp \
     classes/LRegion.cpp \

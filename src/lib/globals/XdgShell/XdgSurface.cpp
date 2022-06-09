@@ -65,7 +65,7 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client, wl_resource 
         return;
     }
 
-    if (lSurface->type() != LSurface::Undefined)
+    if (lSurface->roleType() != LSurface::Undefined)
     {
         wl_resource_post_error(resource, XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"xdg_surface already has a role object.");
         return;
@@ -74,7 +74,7 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client, wl_resource 
     wl_resource *toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
 
     lSurface->p_role = lSurface->compositor()->createToplevelRequest(toplevel, lSurface);
-    lSurface->pending.type = LSurface::SurfaceType::Toplevel;
+    lSurface->pending.type = LSurface::Toplevel;
     wl_resource_set_implementation(toplevel, &xdg_toplevel_implementation, lSurface->p_role, &Extensions::XdgShell::Toplevel::destroy_resource);
 
 }
@@ -89,7 +89,7 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
         return;
     }
 
-    if (lSurface->type() != LSurface::Undefined)
+    if (lSurface->roleType() != LSurface::Undefined)
     {
         wl_resource_post_error(resource, XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED, "xdg_surface already has a role object.");
         return;
@@ -136,12 +136,12 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *, wl_resource
 {
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
 
-    if(surface->type() == LSurface::Toplevel)
+    if(surface->roleType() == LSurface::Toplevel)
     {
         surface->toplevel()->p_windowGeometry = LRect(x, y, width, height);
         surface->toplevel()->geometryChangeRequest();
     }
-    else if(surface->type() == LSurface::Popup)
+    else if(surface->roleType() == LSurface::Popup)
     {
         surface->popup()->p_windowGeometry = LRect(x, y, width, height);
         surface->popup()->geometryChanged();
@@ -158,7 +158,7 @@ void Extensions::XdgShell::Surface::ack_configure(wl_client *, wl_resource *reso
 {
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
 
-    if(surface->type() == LSurface::Toplevel)
+    if(surface->roleType() == LSurface::Toplevel)
     {
         LToplevelRole *topLevel = surface->toplevel();
 
@@ -168,7 +168,7 @@ void Extensions::XdgShell::Surface::ack_configure(wl_client *, wl_resource *reso
             topLevel->p_pendingConf.set = true;
         }
     }
-    else if(surface->type() == LSurface::Popup)
+    else if(surface->roleType() == LSurface::Popup)
     {
 
     }

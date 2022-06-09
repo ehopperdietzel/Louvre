@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['norole_0',['NoRole',['../class_louvre_1_1_l_surface.html#a2678ae8b3529d1a51a0dbfea7811b912aeeab01e7ac4c7040249ecf1d226440ea',1,'Louvre::LSurface']]]
+  ['maximized_0',['Maximized',['../class_louvre_1_1_l_toplevel_role.html#a71dd90bab84c2a780229ac4d7acffc0fac27e8f3bafa7f65f324fb932ccda524e',1,'Louvre::LToplevelRole']]]
 ];

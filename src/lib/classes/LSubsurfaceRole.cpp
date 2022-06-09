@@ -4,16 +4,20 @@
 
 using namespace Louvre;
 
-LSubsurfaceRole::LSubsurfaceRole(wl_resource *resource, LSurface *surface)
+LSubsurfaceRole::LSubsurfaceRole(wl_resource *resource, LSurface *surface) : LBaseSurfaceRole(resource,surface)
 {
-    p_resource = resource;
-    p_surface = surface;
-    p_compositor = surface->compositor();
+    p_roleId = LSurface::Subsurface;
 }
 
 LSubsurfaceRole::~LSubsurfaceRole()
 {
 
+}
+
+const LPoint &LSubsurfaceRole::rolePos() const
+{
+    p_rolePos = p_localPos + surface()->parent()->pos(true);
+    return p_rolePos;
 }
 
 void LSubsurfaceRole::localPosChangedRequest()
@@ -36,22 +40,4 @@ const LPoint &LSubsurfaceRole::localPos() const
     return p_localPos;
 }
 
-LSurface *LSubsurfaceRole::surface() const
-{
-    return p_surface;
-}
 
-LCompositor *LSubsurfaceRole::compositor() const
-{
-    return p_compositor;
-}
-
-LSeat *LSubsurfaceRole::seat() const
-{
-    return compositor()->seat();
-}
-
-wl_resource *LSubsurfaceRole::resource() const
-{
-    return p_resource;
-}

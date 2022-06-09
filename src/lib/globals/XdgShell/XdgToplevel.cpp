@@ -5,6 +5,7 @@
 #include <xdg-shell.h>
 #include <LToplevelRole.h>
 #include <LSeat.h>
+#include <LPointer.h>
 
 using namespace Louvre;
 
@@ -15,11 +16,11 @@ void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
 
     // Remove focus
-    if(lToplevel->seat()->resizingToplevel() == lToplevel)
-        lToplevel->seat()->stopResizingToplevel();
+    if(lToplevel->seat()->pointer()->resizingToplevel() == lToplevel)
+        lToplevel->seat()->pointer()->stopResizingToplevel();
 
-    if(lToplevel->seat()->movingTopLevel() == lToplevel)
-        lToplevel->seat()->stopMovingTopLevel();
+    if(lToplevel->seat()->pointer()->movingTopLevel() == lToplevel)
+        lToplevel->seat()->pointer()->stopMovingTopLevel();
 
     if(lToplevel->seat()->activeTopLevel() == lToplevel)
         lToplevel->seat()->p_activeTopLevel = nullptr;

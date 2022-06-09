@@ -38,9 +38,8 @@ var NAVTREE =
       [ "01 - Basics", "^http://www.google.com", null ],
       [ "02 - More Basics", "@ref mypage", null ]
     ] ],
-    [ "Classes", "annotated.html", [
-      [ "List", "annotated.html", "annotated_dup" ],
-      [ "Index", "classes.html", null ]
+    [ "API", "annotated.html", [
+      [ "Classes", "annotated.html", "annotated_dup" ]
     ] ]
   ] ]
 ];
@@ -48,8 +47,8 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "@ref mypage",
-"class_louvre_1_1_l_positioner.html#a3772a47fd56c57b20b35a274e6334631",
-"class_louvre_1_1_l_toplevel_role.html#a20fae298e0393de3835b6f5fed77f772"
+"class_louvre_1_1_l_point_f.html#add47c021a99d31a92d3fa4f2523c5be9",
+"class_louvre_1_1_l_surface.html#aacbac7c44112f29f32794db6b94abebb"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

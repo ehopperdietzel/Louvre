@@ -127,7 +127,7 @@ GLuint LTexture::unit()
     return p_unit;
 }
 
-LTexture::BufferType LTexture::bufferType() const
+LTexture::BufferType LTexture::bufferroleType() const
 {
     return p_bufferType;
 }

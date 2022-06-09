@@ -8,6 +8,8 @@
 #include <LOutput.h>
 #include <LPoint.h>
 #include <LCursor.h>
+#include <xdg-shell.h>
+#include <LPointer.h>
 
 using namespace Louvre;
 
@@ -15,15 +17,12 @@ using namespace Louvre;
 /***************** Virtual Methods *****************/
 
 
-LToplevelRole::LToplevelRole(wl_resource *toplevel, LSurface *surface)
+LToplevelRole::LToplevelRole(wl_resource *toplevel, LSurface *surface) : LBaseSurfaceRole(toplevel, surface)
 {
     p_appId = new char(1);
     p_title = new char(1);
     p_appId[0] = '\0';
     p_title[0] = '\0';
-    p_resource = toplevel;
-    p_surface = surface;
-    p_compositor = surface->compositor();
 
     p_stateFlags = Deactivated;
     p_currentConf = TopLevelConfiguration();
@@ -44,6 +43,12 @@ LToplevelRole::~LToplevelRole()
 {
     delete []p_appId;
     delete []p_title;
+}
+
+const LPoint &LToplevelRole::rolePos() const
+{
+    p_rolePos = surface()->pos() -p_windowGeometry.topLeft();
+    return p_rolePos;
 }
 
 void LToplevelRole::pong(UInt32)
@@ -73,12 +78,12 @@ void LToplevelRole::startMoveRequest()
             surface()->setPos(0, topbarHeight);
     }
     
-    seat()->startMovingTopLevel(this);
+    seat()->pointer()->startMovingTopLevel(this);
 }
 
 void LToplevelRole::startResizeRequest(Edge edge)
 {
-    seat()->startResizingToplevel(this,edge);
+    seat()->pointer()->startResizingToplevel(this,edge);
 }
 
 void LToplevelRole::configureRequest()
@@ -153,7 +158,7 @@ void LToplevelRole::maximizeChanged()
     }
     else
     {
-        if(seat()->movingTopLevel() != this)
+        if(seat()->pointer()->movingTopLevel() != this)
         {
             // Get the main output
             LOutput *output = compositor()->outputs().front();
@@ -187,17 +192,17 @@ void LToplevelRole::minimizeRequest()
 {
     surface()->setMinimized(true);
 
-    if(surface() == seat()->pointerFocusSurface())
-        seat()->setPointerFocus(nullptr);
+    if(surface() == seat()->pointer()->focusSurface())
+        seat()->pointer()->setFocus(nullptr);
 
     if(surface() == seat()->keyboardFocusSurface())
         seat()->setKeyboardFocus(nullptr);
 
-    if(this == seat()->movingTopLevel())
-        seat()->stopMovingTopLevel();
+    if(this == seat()->pointer()->movingTopLevel())
+        seat()->pointer()->stopMovingTopLevel();
 
-    if(this == seat()->resizingToplevel())
-        seat()->stopResizingToplevel();
+    if(this == seat()->pointer()->resizingToplevel())
+        seat()->pointer()->stopResizingToplevel();
 }
 
 void LToplevelRole::fullscreenRequest(LOutput *destOutput)
@@ -235,20 +240,9 @@ bool LToplevelRole::activated() const
     return p_stateFlags & Activated;
 }
 
-
-LSurface *LToplevelRole::surface() const
-{
-    return p_surface;
-}
-
 LToplevelRole::States LToplevelRole::state() const
 {
     return (LToplevelRole::States)p_stateFlags;
-}
-
-wl_resource *LToplevelRole::resource() const
-{
-    return p_resource;
 }
 
 const char *LToplevelRole::appId() const
@@ -337,16 +331,6 @@ LSize LToplevelRole::calculateResizeRect(const LPoint &cursorPosDelta, const LSi
     }
 
     return newSize;
-}
-
-LCompositor *LToplevelRole::compositor() const
-{
-    return p_compositor;
-}
-
-LSeat *LToplevelRole::seat() const
-{
-    return compositor()->seat();
 }
 
 void LToplevelRole::dispachLastConfiguration()

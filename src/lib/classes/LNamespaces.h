@@ -1,26 +1,15 @@
 #ifndef LNAMESPACES_H
 #define LNAMESPACES_H
 
-#include <libinput.h>
-#include <xdg-shell.h>
-/*
-#include <Wayland-5.h>
-#include <wayland-server-core.h>
-#include <wayland-server-protocol.h>
 #include <wayland-server.h>
-#include <wayland-util.h>
-#include <wayland-version.h>
-#include <wayland-egl-core.h>
-#include <wayland-egl.h>
-*/
+#include <libinput.h>
 
-#define LOUVRE_TB_H 80
+#define LOUVRE_TB_H 40
 #define LOUBRE_DEBUG 1
 
 // Globals versions
-
+#define LOUVRE_COMPOSITOR_VERSION 5
 #define LOUVRE_XDG_WM_BASE_VERSION 2
-
 #define LOUVRE_SEAT_VERSION 7
 #define LOUVRE_SUBCOMPOSITOR_VERSION 1
 #define LOUVRE_XDG_SHELL_VERSION 2
@@ -43,12 +32,15 @@ namespace Louvre
     class LWayland;
 
     // Surface roles
+    class LBaseSurfaceRole;
+    class LCursorRole;
     class LToplevelRole;
     class LPopupRole;
     class LSubsurfaceRole;
 
     // Input related
     class LSeat;
+    class LPointer;
     class LCursor;
 
     // Utils

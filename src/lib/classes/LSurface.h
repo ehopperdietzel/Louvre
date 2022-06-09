@@ -23,25 +23,19 @@ class Louvre::LSurface
 public:
 
     /* Roles */
+    LCursorRole *cursor() const;
     LToplevelRole *toplevel() const;
     LPopupRole *popup() const;
     LSubsurfaceRole *subsurface() const;
-    void *role() const;
+    LBaseSurfaceRole *role() const;
 
-    enum SurfaceType : UInt32
+    enum RoleTypes : UInt32
     {
         Undefined = 0,
         Toplevel = 1,
         Popup = 2,
         Subsurface = 3,
         Cursor = 4
-    };
-
-    enum PosMode
-    {
-        SubRole = -1,
-        NoRole = 0,
-        AddRole = 1
     };
 
     LSurface(wl_resource *surface, LClient *client, GLuint textureUnit = 1);
@@ -61,10 +55,10 @@ public:
     LSeat *seat() const;
 
     // Surface info
-    SurfaceType type() const { return current.type; }
+    UInt32 roleType() const;
 
     // Size in surface coordinates
-    const LPoint &pos(PosMode mode = NoRole) const;
+    const LPoint &pos(bool useRolePos = false) const;
     void setPos(const LPoint &newPos);
     void setPos(Int32 x, Int32 y);
     void setX(Int32 x);
@@ -94,7 +88,6 @@ public:
     LSurface *parent() const;
     LSurface *topParent() const;
     const list<LSurface*>&children() const;
-    const LPoint &hotspot() const {return p_hotspot;}
 
  private:
     friend class LWayland;
@@ -114,7 +107,7 @@ public:
 
     struct State
     {
-        SurfaceType type = SurfaceType::Undefined;
+        UInt32 type = Undefined;
         wl_resource *buffer = nullptr;
         LRegion inputRegion;
         LSize size;
@@ -123,7 +116,7 @@ public:
     State current,pending;
 
     // Roles
-    void *p_role = nullptr;
+    LBaseSurfaceRole *p_role = nullptr;
 
     LTexture *p_texture = nullptr;
     list<LSurface*>p_children;
@@ -139,14 +132,12 @@ public:
     wl_resource *p_xdgSurfaceResource = nullptr;
     wl_resource *p_frameCallback   = nullptr;
 
-    LPoint p_hotspot;
     Int32 p_bufferScale = 1;
 
     bool p_isDamaged = false;
 
     LPoint p_pos = LPoint(0,200);
     bool p_minimized = false;
-    mutable LPoint p_xdgPos;
 
     // Configure event
     void dispachLastConfiguration();

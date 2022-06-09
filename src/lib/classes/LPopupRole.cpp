@@ -6,21 +6,25 @@
 #include <LCompositor.h>
 #include <LOutput.h>
 #include <LSeat.h>
-
+#include <xdg-shell.h>
+#include <LPointer.h>
 using namespace Louvre;
 
 
-Louvre::LPopupRole::LPopupRole(wl_resource *popup, LSurface *surface, LPositioner *positioner)
+Louvre::LPopupRole::LPopupRole(wl_resource *popup, LSurface *surface, LPositioner *positioner) : LBaseSurfaceRole(popup,surface)
 {
-    p_resource = popup;
-    p_surface = surface;
     p_positioner = positioner;
-    p_compositor = p_surface->compositor();
 }
 
 LPopupRole::~LPopupRole()
 {
 
+}
+
+const LPoint &LPopupRole::rolePos() const
+{
+    p_rolePos = surface()->pos() - p_windowGeometry.topLeft();
+    return p_rolePos;
 }
 
 void LPopupRole::pong(UInt32)
@@ -30,14 +34,14 @@ void LPopupRole::pong(UInt32)
 
 void LPopupRole::grabSeatRequest()
 {
-    seat()->setPointerFocus(surface());
+    seat()->pointer()->setFocus(surface());
     seat()->setKeyboardFocus(surface());
 }
 
 void LPopupRole::configureRequest()
 {
     LOutput *output = surface()->compositor()->outputs().front();
-    surface()->setPos(positioner()->calculatePopupPosition(output->rect(),surface()->parent()->pos(LSurface::NoRole)));
+    surface()->setPos(positioner()->calculatePopupPosition(output->rect(),surface()->parent()->pos(false)));
     configure(LRect(surface()->parent()->pos()-surface()->pos(),positioner()->size()));
 }
 
@@ -78,27 +82,7 @@ const LRect &LPopupRole::windowGeometry() const
     return p_windowGeometry;
 }
 
-LCompositor *LPopupRole::compositor() const
-{
-    return p_compositor;
-}
-
 LPositioner *LPopupRole::positioner() const
 {
     return p_positioner;
-}
-
-LSurface *LPopupRole::surface() const
-{
-    return p_surface;
-}
-
-LSeat *LPopupRole::seat() const
-{
-    return compositor()->seat();
-}
-
-wl_resource *LPopupRole::resource() const
-{
-    return p_resource;
 }
