@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <LToplevelRole.h>
 #include <LPopupRole.h>
+#include <LSubsurfaceRole.h>
 
 
 #include <LTime.h>
@@ -28,12 +29,26 @@ PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL = NULL;
 
 LToplevelRole *LSurface::toplevel() const
 {
-    return (LToplevelRole*)p_role;
+    if(type() == Toplevel)
+        return (LToplevelRole*)p_role;
+    else
+        return nullptr;
 }
 
 LPopupRole *LSurface::popup() const
 {
-    return (LPopupRole*)p_role;
+    if(type() == Popup)
+        return (LPopupRole*)p_role;
+    else
+        return nullptr;
+}
+
+LSubsurfaceRole *LSurface::subsurface() const
+{
+    if(type() == Subsurface)
+        return (LSubsurfaceRole*)p_role;
+    else
+        return nullptr;
 }
 
 void *LSurface::role() const
@@ -73,6 +88,11 @@ const LPoint &LSurface::pos(PosMode mode) const
         if(type() == Popup)
         {
             p_xdgPos = p_pos + popup()->windowGeometry().topLeft() * mode;
+            return p_xdgPos;
+        }
+        if(type() == Subsurface)
+        {
+            p_xdgPos = subsurface()->localPos() + subsurface()->surface()->parent()->pos(mode);
             return p_xdgPos;
         }
     }
@@ -155,6 +175,7 @@ void LSurface::applyDamages()
     // EGL
     if(eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
+        printf("EGL BUFFER.\n");
         eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_WIDTH, &width);
         eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_HEIGHT, &height);
         EGLAttrib attribs = EGL_NONE;
@@ -165,6 +186,7 @@ void LSurface::applyDamages()
     // SHM
     else
     {
+        printf("SHM BUFFER.\n");
         wl_shm_buffer *shm_buffer = wl_shm_buffer_get(current.buffer);
         wl_shm_buffer_begin_access(shm_buffer);
         width = wl_shm_buffer_get_width(shm_buffer);
@@ -189,6 +211,7 @@ void LSurface::applyDamages()
         }
 
         p_texture->setData(width, height, data, bufferFormat, GL_UNSIGNED_BYTE);
+
         wl_shm_buffer_end_access(shm_buffer);
 
     }

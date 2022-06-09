@@ -1,7 +1,7 @@
 #ifndef WBACKEND
 #define WBACKEND
 
-#define W_BACKEND 2
+#define W_BACKEND 1
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>

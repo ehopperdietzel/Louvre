@@ -16,14 +16,21 @@ public:
     bool isSynced() const;
     const LPoint &localPos() const;
     LSurface *surface() const;
+    LCompositor *compositor() const;
+    LSeat *seat() const;
     wl_resource *resource() const;
 
 private:
+    friend class Globals::Surface;
+    friend class Globals::Subsurface;
+
+    bool p_parentIsCommiting = false;
 
     bool p_isSynced = true;
     LPoint p_localPos;
     wl_resource *p_resource = nullptr;
     LSurface *p_surface = nullptr;
+    LCompositor *p_compositor = nullptr;
 };
 
 #endif // LSUBSURFACEROLE_H

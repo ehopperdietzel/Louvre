@@ -18,6 +18,8 @@
 
 #include <LToplevelRole.h>
 #include <LCursor.h>
+#include <LSubsurfaceRole.h>
+#include <LTime.h>
 
 using namespace Louvre;
 
@@ -56,7 +58,7 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
         surface->compositor()->cursor()->setCursor(LCursor::Arrow);
 
     // Parent
-    if(surface->parent() != nullptr)
+    if(surface->parent())
         surface->parent()->p_children.remove(surface);
 
     if(surface->toplevel())
@@ -79,10 +81,15 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
 }
 
 // SURFACE
-void Globals::Surface::attach(wl_client *client, wl_resource *resource, wl_resource *buffer, Int32 x, Int32 y)
+void Globals::Surface::attach(wl_client *, wl_resource *resource, wl_resource *buffer, Int32 /*x*/, Int32 /*y*/)
 {
-    (void)client;(void)x;(void)y;
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
+
+    if(surface->pending.buffer)
+    {
+        printf("ALREADY HAD A BUFFER.\n");
+        //wl_buffer_send_release(surface->pending.buffer);
+    }
     surface->pending.buffer = buffer;
 }
 
@@ -94,7 +101,11 @@ void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 ca
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
 
     if(surface->p_frameCallback)
+    {
+        printf("ALREADY HAD A FRAMECALLBACK.\n");
+        wl_callback_send_done(surface->p_frameCallback,LTime::ms());
         wl_resource_destroy(surface->p_frameCallback);
+    }
 
     surface->p_frameCallback = wl_resource_create(client, &wl_callback_interface, version, callback);
 }
@@ -104,18 +115,48 @@ void Globals::Surface::destroy(wl_client *, wl_resource *resource)
     wl_resource_destroy(resource);
 }
 
-void Globals::Surface::commit(wl_client *client, wl_resource *resource)
+void Globals::Surface::commit(wl_client *, wl_resource *resource)
 {
-    (void)client;
-
     /* Client tells the server that the current buffer is ready to be drawn.
      * (this means that the current buffer already contains all the damages and transformations) */
 
     // Get surface reference
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
+    apply_commit(surface);
+}
+
+void Globals::Surface::apply_commit(LSurface *surface)
+{
+    // Wait for parent commit if is subsurface in sync mode
+    if(surface->type() == LSurface::Subsurface && surface->subsurface()->isSynced())
+    {
+        if(!surface->subsurface()->p_parentIsCommiting)
+            return;
+        else
+            surface->subsurface()->p_parentIsCommiting = false;
+    }
+
+    /*
+     *     if(surface->type() == LSurface::Subsurface)
+    {
+        if(surface->subsurface()->isSynced())
+        {
+            if(!surface->subsurface()->p_parentIsCommiting)
+                return;
+            else
+                surface->subsurface()->p_parentIsCommiting = false;
+        }
+        else
+        {
+            if(!surface->subsurface()->p_parentIsCommiting)
+                return;
+        }
+    }
+*/
 
     // Makes the pending buffer the current buffer
     surface->current.buffer = surface->pending.buffer;
+    surface->pending.buffer = nullptr;
 
     // If the buffer is empty
     if(!surface->current.buffer)
@@ -134,8 +175,15 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
             surface->popup()->configureRequest();
             surface->typeChangeRequest();
         }
+        else if(surface->pending.type == LSurface::SurfaceType::Subsurface)
+        {
+
+        }
         return;
     }
+
+    if(!surface->current.buffer->client)
+        return;
 
 
     // Copy pending damages to current damages
@@ -149,7 +197,6 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
 
     // Convert the buffer to OpenGL texture
     surface->applyDamages();
-
 
     /************************************
      *********** SURFACE SIZE ***********
@@ -174,7 +221,7 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     else
         surface->current.inputRegion.copy(surface->pending.inputRegion);
 
-    
+
     // Toplevel configure
     if(surface->type() == LSurface::Toplevel)
     {
@@ -206,6 +253,34 @@ void Globals::Surface::commit(wl_client *client, wl_resource *resource)
     // Notify that the cursor changed content
     if(surface->type() == LSurface::Cursor)
         surface->compositor()->seat()->setCursorRequest(surface,surface->hotspot().x(),surface->hotspot().y());
+
+    // Apply cached commit to subsurfaces
+    for(LSurface *s : surface->p_children)
+    {
+        if(s->type() == LSurface::Subsurface && s->subsurface()->isSynced())
+        {
+            s->subsurface()->p_parentIsCommiting = true;
+            apply_commit(s);
+        }
+
+        /*
+         *         if(s->type() == LSurface::Subsurface)
+        {
+            if(s->subsurface()->isSynced())
+            {
+                s->subsurface()->p_parentIsCommiting = true;
+                apply_commit(s);
+            }
+            else
+            {
+                if(!s->subsurface()->p_parentIsCommiting)
+                {
+                    s->subsurface()->p_parentIsCommiting = true;
+                    apply_commit(s);
+                }
+            }
+        }*/
+    }
 
 
     // FALTA ENVIAR EVENTO
@@ -264,6 +339,8 @@ void Globals::Surface::set_buffer_scale(wl_client *client, wl_resource *resource
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
     surface->setBufferScale(scale);
 }
+
+
 
 /*
 void Globals::Surface::offset(wl_client *client, wl_resource *resource, Int32 x, Int32 y)

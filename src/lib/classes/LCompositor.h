@@ -33,6 +33,7 @@ public:
     virtual LSeat *createSeatRequest();
     virtual LToplevelRole *createToplevelRequest(wl_resource *toplevel, LSurface *surface);
     virtual LPopupRole *createPopupRequest(wl_resource *popup, LSurface *surface, LPositioner *positioner);
+    virtual LSubsurfaceRole *createSubsurfaceRequest(wl_resource *subsurface, LSurface *surface);
 
     /* Destroy requests */
     virtual void destroyOutputRequest(LOutput *output);
@@ -44,6 +45,23 @@ public:
 
     void start();
     void riseSurface(LSurface *surface);
+
+   /** Insert or move a surface after another in the surfaces list.
+     *
+     * Insert or move (if already exists) surfaceToInsert after prevSurface
+     * in the surfaces list. The function returns true only if surfaceToInsert is successfully inserted or moved.
+     * If prevSurface doesn't exists in the list, false is returned and surfaceToInsert is not inserted or moved,
+     * but also not removed from the list if already exists.
+     *
+     * @param prevSurface
+     * The surface after the which surfaceToInsert is going to be inserted or moved.
+     *
+     * @param surfaceToInsert
+     * The surface that's being inserted or moved.
+     */
+    bool insertSurfaceAfter(LSurface *prevSurface,LSurface *surfaceToInsert);
+    bool insertSurfaceBefore(LSurface *nextSurface,LSurface *surfaceToInsert);
+
 
     LCursor *cursor() const;
     LSeat *seat() const;

@@ -200,6 +200,17 @@ void LSeat::keyEvent(UInt32 keyCode, UInt32 keyState)
                 exit(0);
             }
         }
+        else if(sym == XKB_KEY_F3)
+        {
+            if (fork()==0)
+            {
+                setsid();
+                char *const envp[] = {"XDG_RUNTIME_DIR=/run/user/1000",0};
+                const char *argv[64] = {"/usr/bin/gedit" , NULL, NULL, NULL};
+                execve(argv[0], (char **)argv, envp);
+                exit(0);
+            }
+        }
     }
 }
 

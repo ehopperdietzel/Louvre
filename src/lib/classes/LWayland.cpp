@@ -178,7 +178,7 @@ int LWayland::initWayland(LCompositor *comp)
     wl_global_create(display, &wl_compositor_interface, 3, comp, &Globals::Compositor::bind); // Last 5
 
     // Create subcompositor global
-    //wl_global_create(display, &wl_subcompositor_interface, 1, comp, &Globals::Subcompositor::bind); // 1
+    wl_global_create(display, &wl_subcompositor_interface, LOUVRE_SUBCOMPOSITOR_VERSION, comp, &Globals::Subcompositor::bind);
 
     // Create output global
     wl_global_create(display, &wl_output_interface, 3, comp, &Globals::Output::bind);//3
@@ -264,7 +264,7 @@ void LWayland::runLoop()
 
         for(LSurface *surface : compositor->surfaces())
         {
-            if(surface != nullptr && surface->toplevel() != nullptr)
+            if(surface != nullptr && surface->type() == LSurface::Toplevel)
                 surface->toplevel()->dispachLastConfiguration();
         }
 

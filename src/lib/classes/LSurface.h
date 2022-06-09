@@ -25,6 +25,7 @@ public:
     /* Roles */
     LToplevelRole *toplevel() const;
     LPopupRole *popup() const;
+    LSubsurfaceRole *subsurface() const;
     void *role() const;
 
     enum SurfaceType : UInt32
@@ -104,6 +105,8 @@ public:
     friend class LPopupRole;
     friend class Globals::Surface;
     friend class Globals::Pointer;
+    friend class Globals::Subsurface;
+    friend class Globals::Subcompositor;
     friend class Extensions::XdgShell::WmBase;
     friend class Extensions::XdgShell::Surface;
     friend class Extensions::XdgShell::Toplevel;

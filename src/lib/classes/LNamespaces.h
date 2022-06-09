@@ -15,13 +15,14 @@
 */
 
 #define LOUVRE_TB_H 80
-#define LOUBRE_DEBUG 0
+#define LOUBRE_DEBUG 1
 
 // Globals versions
 
 #define LOUVRE_XDG_WM_BASE_VERSION 2
 
 #define LOUVRE_SEAT_VERSION 7
+#define LOUVRE_SUBCOMPOSITOR_VERSION 1
 #define LOUVRE_XDG_SHELL_VERSION 2
 
 

@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <LToplevelRole.h>
 #include <LCursor.h>
+#include <LSubsurfaceRole.h>
 
 
 using namespace Louvre;
@@ -56,6 +57,11 @@ LToplevelRole *LCompositor::createToplevelRequest(wl_resource *toplevel, LSurfac
 LPopupRole *LCompositor::createPopupRequest(wl_resource *popup, LSurface *surface, LPositioner *positioner)
 {
     return new LPopupRole(popup,surface,positioner);
+}
+
+LSubsurfaceRole *LCompositor::createSubsurfaceRequest(wl_resource *subsurface, LSurface *surface)
+{
+    return new LSubsurfaceRole(subsurface,surface);
 }
 
 void LCompositor::destroyOutputRequest(LOutput *output)
@@ -111,6 +117,41 @@ void LCompositor::riseSurface(LSurface *surface)
     // Rise its children
     for(LSurface *children : surface->children())
         riseSurface(children);
+}
+
+bool LCompositor::insertSurfaceAfter(LSurface *prevSurface, LSurface *surfaceToInsert)
+{
+    for(list<LSurface*>::iterator it = p_surfaces.begin(); it != p_surfaces.end(); it++)
+    {
+        if((*it) == prevSurface)
+        {
+            p_surfaces.remove(surfaceToInsert);
+
+            if(it++ == p_surfaces.end())
+                p_surfaces.push_back(surfaceToInsert);
+            else
+                p_surfaces.insert((it++),surfaceToInsert);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool LCompositor::insertSurfaceBefore(LSurface *nextSurface, LSurface *surfaceToInsert)
+{
+    for(list<LSurface*>::iterator it = p_surfaces.begin(); it != p_surfaces.end(); ++it)
+    {
+        if((*it) == nextSurface)
+        {
+            p_surfaces.remove(surfaceToInsert);
+            p_surfaces.insert(it,surfaceToInsert);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 LCursor *LCompositor::cursor() const
