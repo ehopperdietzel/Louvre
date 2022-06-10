@@ -8,7 +8,7 @@ using namespace Louvre;
 class Compositor : public LCompositor
 {
 public:
-    Compositor();
+    Compositor(const char *backendPath);
 };
 
 #endif // COMPOSITOR_H

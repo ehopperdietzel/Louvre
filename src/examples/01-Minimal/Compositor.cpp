@@ -2,7 +2,7 @@
 #include <LOutputManager.h>
 #include <LOutput.h>
 
-Compositor::Compositor():LCompositor()
+Compositor::Compositor(const char *backendPath):LCompositor(backendPath)
 {
     // Use the output manager to get connected displays
     LOutputManager *outputManager = new LOutputManager(this);

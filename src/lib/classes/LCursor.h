@@ -3,7 +3,6 @@
 
 #include <LNamespaces.h>
 #include <LPointF.h>
-#include <LBackend.h>
 #include <LPoint.h>
 #include <LTexture.h>
 
@@ -28,10 +27,11 @@ public:
     void paint();
     void setSize(const LSizeF &size);
 
-    bool hasHardwareSupport() const {return LBackend::hasHardwareCursorSupport();}
+    bool hasHardwareSupport() const;
     const LPointF &position() const {return p_pos;}
     const LPointF &hotspot()  const {return p_hotspot;}
     LTexture *texture()       const {return p_texture;}
+    LCompositor *compositor() const;
 
 private:
 

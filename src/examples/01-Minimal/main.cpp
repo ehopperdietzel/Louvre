@@ -10,7 +10,7 @@ int main(int, char *[])
     //signal(SIGINT,intHandler);
 
     // Create the compositor
-    Compositor compositor;
+    Compositor compositor("../../../src/backends/DRM/build/libLBackendDRM.so");
 
     // Start the compositor
     compositor.start();

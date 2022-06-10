@@ -1,3 +1,4 @@
+#if W_BACKEND == 2
 #include <LBackend.h>
 
 #include <X11/Xlib.h>
@@ -20,7 +21,7 @@
 #include <LSizeF.h>
 #include <LCursor.h>
 
-#if W_BACKEND == 2
+
 
 using namespace Louvre;
 

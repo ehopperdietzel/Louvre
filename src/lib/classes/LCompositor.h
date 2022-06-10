@@ -22,7 +22,7 @@ using namespace std;
 class Louvre::LCompositor
 {
 public:
-    LCompositor();
+    LCompositor(const char *backendPath);
 
     virtual ~LCompositor(){};
 
@@ -48,7 +48,7 @@ public:
 
     void start();
     void riseSurface(LSurface *surface);
-
+    bool loadBackend(const char *backendPath);
    /** Insert or move a surface after another in the surfaces list.
      *
      * Insert or move (if already exists) surfaceToInsert after prevSurface
@@ -88,6 +88,8 @@ private:
     friend class WInput;
     friend class LSurface;
     friend class LOutput;
+    friend class LOutputManager;
+    friend class LCursor;
     friend class Globals::Compositor;
     friend class Globals::Surface;
     friend class Globals::Pointer;
@@ -117,6 +119,8 @@ private:
     LOpenGL *p_painter;
 
     bool _started = false;
+
+    LGraphicBackend *p_backend = nullptr;
 };
 
 #endif // LCOMPOSITOR_H

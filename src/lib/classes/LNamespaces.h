@@ -3,6 +3,7 @@
 
 #include <wayland-server.h>
 #include <libinput.h>
+#include <list>
 
 #define LOUVRE_TB_H 40
 #define LOUBRE_DEBUG 1
@@ -63,6 +64,17 @@ namespace Louvre
 
     typedef void* EGLContext;
     typedef void* EGLDisplay;
+
+    struct LGraphicBackend
+    {
+        std::list<LOutput*>&(*getAvaliableOutputs)(LCompositor*lCompositor);
+        EGLDisplay (*getEGLDisplay)(LOutput *lOutput);
+        void (*createGLContext)(LOutput *lOutput);
+        void (*flipPage)(LOutput *lOutput);
+        bool (*hasHardwareCursorSupport)();
+        void (*setCursor)(LOutput *lOutput, LTexture *lTexture, const LSizeF &lSize);
+        void (*setCursorPosition)(LOutput *output, const LPoint &position);
+    };
 
     // Wayland Globals
     namespace Globals

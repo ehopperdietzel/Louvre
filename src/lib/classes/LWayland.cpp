@@ -1,6 +1,5 @@
 #include "LWayland.h"
 #include <LCompositor.h>
-#include <LBackend.h>
 #include <LTexture.h>
 #include <pthread.h>
 #include <xdg-shell.h>
@@ -197,13 +196,13 @@ int LWayland::initWayland(LCompositor *comp)
 
     wl_event_loop_add_fd(event_loop,comp->libinputFd,WL_EVENT_READABLE,&LWayland::readFd,comp);
 
-    printf("Wayland server initialized.\n");
-
     comp->waylandFd = wl_event_loop_get_fd(event_loop);
 
     // Listen for client connections
     clientConnectedListener.notify = &clientConnectionEvent;
     wl_display_add_client_created_listener(display,&clientConnectedListener);
+
+    printf("Wayland server initialized.\n");
     return wayland_fd;
 
 }

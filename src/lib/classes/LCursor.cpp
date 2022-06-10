@@ -7,6 +7,7 @@
 
 #include <X11/Xcursor/Xcursor.h>
 #include <string.h>
+#include <LCompositor.h>
 
 using namespace Louvre;
 
@@ -66,7 +67,7 @@ void LCursor::setTexture(LTexture *texture, const LPointF &hotspot)
     lastCursor.type = LLastCursorType::Texture;
     p_texture = texture;
     p_hotspot = hotspot;
-    LBackend::setCursor(p_output,p_texture,p_size*p_output->getOutputScale());
+    compositor()->p_backend->setCursor(p_output,p_texture,p_size*p_output->getOutputScale());
     update();
 }
 
@@ -130,6 +131,16 @@ void LCursor::setSize(const LSizeF &size)
     update();
 }
 
+bool LCursor::hasHardwareSupport() const
+{
+    return compositor()->p_backend->hasHardwareCursorSupport();
+}
+
+LCompositor *LCursor::compositor() const
+{
+    return p_output->compositor();
+}
+
 void LCursor::loadDefaultCursors()
 {
     XcursorImage *cursor =  XcursorLibraryLoadImage("arrow",p_cursorTheme,64);
@@ -152,7 +163,7 @@ void LCursor::update()
     if(pos != p_prevPos)
     {
         p_prevPos = pos;
-        LBackend::setCursorPosition(p_output,pos);
+        compositor()->p_backend->setCursorPosition(p_output,pos);
     }
 
     if(p_output && !hasHardwareSupport())

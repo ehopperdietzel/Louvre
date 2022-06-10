@@ -1,13 +1,12 @@
 #include <LOutputManager.h>
 #include <LOutput.h>
-#include <LBackend.h>
 #include <LCompositor.h>
 
 using namespace Louvre;
 
 LOutputManager::LOutputManager(LCompositor *compositor)
 {
-    p_outputs = LBackend::getAvaliableOutputs(compositor);
+    p_outputs = compositor->p_backend->getAvaliableOutputs(compositor);
     p_compositor = compositor;
 }
 

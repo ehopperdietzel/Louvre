@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <LBackend.h>
 #include <LCompositor.h>
 #include <LWayland.h>
 #include <LOpenGL.h>
@@ -140,7 +139,7 @@ Int32 LOutput::getOutputScale() const
 void LOutput::initialize()
 {
     // Initialize the backend
-    LBackend::createGLContext(this);
+    compositor()->p_backend->createGLContext(this);
 
     // Repaint FD
     _renderFd = eventfd(0,EFD_SEMAPHORE);
@@ -152,7 +151,7 @@ void LOutput::initialize()
     timerPoll.events = POLLIN;
     timerPoll.fd = timerfd_create(CLOCK_MONOTONIC,0);
 
-    LWayland::bindEGLDisplay(LBackend::getEGLDisplay(this));
+    LWayland::bindEGLDisplay(compositor()->p_backend->getEGLDisplay(this));
 
     setPainter(new LOpenGL());
 
@@ -214,7 +213,7 @@ void LOutput::startRenderLoop(void *data)
 
         // Show buffer on screen
         //if(LWayland::mainOutput() != output)
-        LBackend::flipPage(output);
+        output->p_compositor->p_backend->flipPage(output);
 
     }
 }
@@ -238,7 +237,7 @@ const LRect &LOutput::rect(bool scaled) const
 
 EGLDisplay LOutput::getDisplay()
 {
-    return LBackend::getEGLDisplay(this);
+    return compositor()->p_backend->getEGLDisplay(this);
 }
 
 void LOutput::setPainter(LOpenGL *painter)

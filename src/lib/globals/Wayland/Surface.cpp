@@ -1,6 +1,5 @@
 #include "Surface.h"
 
-#include <LBackend.h>
 #include <LCompositor.h>
 #include <LSurface.h>
 #include <LClient.h>

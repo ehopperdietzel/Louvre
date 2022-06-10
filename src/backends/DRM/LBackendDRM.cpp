@@ -1,31 +1,14 @@
-#if W_BACKEND == 1
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/epoll.h>
-#include <fcntl.h>
+
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <assert.h>
 
-
-#include <libudev.h>
-#include <locale.h>
-#include <unistd.h>
-
+#include <fcntl.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <gbm.h>
 #include <drm.h>
-
-#define GL_GLEXT_PROTOTYPES 1
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
-
-#include <assert.h>
-
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 #include <LBackend.h>
 #include <LCompositor.h>
@@ -33,8 +16,6 @@
 #include <LWayland.h>
 #include <LOpenGL.h>
 #include <LSizeF.h>
-
-
 
 using namespace Louvre;
 
@@ -584,15 +565,21 @@ void LBackend::setCursorPosition(LOutput *output, const LPoint &position)
 }
 
 
-#endif
+LGraphicBackend LBackendAPI;
 
+extern "C" LGraphicBackend *getAPI()
+{
+   printf("Louvre DRM backend loaded.\n");
+   LBackendAPI.getAvaliableOutputs      = &LBackend::getAvaliableOutputs;
+   LBackendAPI.getEGLDisplay            = &LBackend::getEGLDisplay,
+   LBackendAPI.createGLContext          = &LBackend::createGLContext;
+   LBackendAPI.flipPage                 = &LBackend::flipPage;
+   LBackendAPI.hasHardwareCursorSupport = &LBackend::hasHardwareCursorSupport;
+   LBackendAPI.setCursor                = &LBackend::setCursor;
+   LBackendAPI.setCursorPosition        = &LBackend::setCursorPosition;
 
-
-
-
-
-
-
+   return &LBackendAPI;
+}
 
 
 

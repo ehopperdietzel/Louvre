@@ -1,7 +1,6 @@
 #include "LSurface.h"
 #include <LClient.h>
 #include <LCompositor.h>
-#include <LBackend.h>
 #include <LWayland.h>
 #include <LSeat.h>
 

@@ -1,6 +1,5 @@
 #include "LCompositor.h"
 #include <LNamespaces.h>
-#include <LBackend.h>
 #include <LWayland.h>
 #include <LOutput.h>
 #include <LSeat.h>
@@ -15,13 +14,15 @@
 #include <LSubsurfaceRole.h>
 #include <LPointer.h>
 
+#include <dlfcn.h>
 
 using namespace Louvre;
 
-LCompositor::LCompositor()
+LCompositor::LCompositor(const char *backendPath)
 {
     //signal(SIGINT,SIG_IGN);
     //signal(SIGABRT,SIG_IGN);
+    loadBackend(backendPath);
 
     // Store the main thread id for later use (in LCursor)
     p_threadId = std::this_thread::get_id();
@@ -128,6 +129,29 @@ void LCompositor::riseSurface(LSurface *surface)
     // Rise its children
     for(LSurface *children : surface->children())
         riseSurface(children);
+}
+
+bool LCompositor::loadBackend(const char *backendPath)
+{
+    void *backendHandle = dlopen(backendPath, RTLD_LAZY);
+
+    if(!backendHandle)
+    {
+        printf("ERROR: No backend found at (%s)\n",backendPath);
+        return false;
+    }
+
+    LGraphicBackend *(*getAPI)() = (LGraphicBackend *(*)())dlsym(backendHandle, "getAPI");
+
+    if(!getAPI)
+    {
+        printf("ERROR: Failed to load backend (%s)\n",backendPath);
+        return false;
+    }
+
+    p_backend = getAPI();
+
+    return true;
 }
 
 bool LCompositor::insertSurfaceAfter(LSurface *prevSurface, LSurface *surfaceToInsert)
