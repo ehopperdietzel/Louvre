@@ -29,7 +29,15 @@ LCursor *LPointer::cursor() const
     return compositor()->cursor();
 }
 
-void LPointer::setFocus(LSurface *surface)
+void LPointer::setFocus(LSurface *surface, bool useRolePos)
+{
+    if(surface)
+        setFocus(surface,cursor()->position()-surface->pos(useRolePos));
+    else
+        setFocus(nullptr,LPoint());
+}
+
+void LPointer::setFocus(LSurface *surface, const LPoint &pos)
 {
     // If surface is not nullptr
     if(surface)
@@ -45,7 +53,7 @@ void LPointer::setFocus(LSurface *surface)
         if(surface->client()->pointerResource())
         {
             // Send focus event
-            sendEnterEvent(surface,cursor()->position()-surface->pos());
+            sendEnterEvent(surface, pos);
             p_pointerFocusSurface = surface;
         }
         else
@@ -61,7 +69,13 @@ void LPointer::setFocus(LSurface *surface)
     }
 }
 
-void LPointer::sendMoveEvent()
+void LPointer::sendMoveEvent(bool useRolePos)
+{
+    if(focusSurface())
+        sendMoveEvent(cursor()->position() - focusSurface()->pos(useRolePos));
+}
+
+void LPointer::sendMoveEvent(const LPoint &pos)
 {
     // If no surface has focus surface
     if(!focusSurface())
@@ -71,15 +85,13 @@ void LPointer::sendMoveEvent()
     if(!focusSurface()->client()->pointerResource())
         return;
 
-    // Calculate local cursor position
-    LPoint pos = cursor()->position() - focusSurface()->pos(true);
-
     // Send pointer move event to the focused surface
     wl_pointer_send_motion(focusSurface()->client()->pointerResource(),LTime::ms(),wl_fixed_from_int(pos.x()),wl_fixed_from_int(pos.y()));
 
-    // Version 5+
+#if LOUVRE_SEAT_VERSION >=5
     if(wl_resource_get_version(focusSurface()->client()->pointerResource()) >= 5)
         wl_pointer_send_frame(focusSurface()->client()->pointerResource());
+#endif
 }
 
 void LPointer::sendButtonEvent(UInt32 button, UInt32 state)
@@ -93,12 +105,15 @@ void LPointer::sendButtonEvent(UInt32 button, UInt32 state)
         return;
 
     // Send pointer button event
-    wl_pointer_send_button(focusSurface()->client()->pointerResource(),LWayland::nextSerial(),LTime::ms(),button,state);
+    focusSurface()->client()->p_lastPointerButtonEventSerial = LWayland::nextSerial();
+    wl_pointer_send_button(focusSurface()->client()->pointerResource(),focusSurface()->client()->p_lastPointerButtonEventSerial,LTime::ms(),button,state);
 
-    // Version 5+
+#if LOUVRE_SEAT_VERSION >=5
     if(wl_resource_get_version(focusSurface()->client()->pointerResource()) >= 5)
         wl_pointer_send_frame(focusSurface()->client()->pointerResource());
+#endif
 }
+
 
 void LPointer::startResizingToplevel(LToplevelRole *toplevel, LToplevelRole::Edge edge)
 {
@@ -240,6 +255,81 @@ LToplevelRole::Edge LPointer::resizingToplevelEdge() const
     return p_resizingToplevelEdge;
 }
 
+#if LOUVRE_SEAT_VERSION >= 5
+
+void LPointer::sendAxisEvent(double x, double y, UInt32 source)
+{
+    // If no surface has focus
+    if(!focusSurface())
+        return;
+
+    // If do not have a wl_pointer
+    wl_resource *res = focusSurface()->client()->pointerResource();
+    if(!res)
+        return;
+
+    UInt32 time = LTime::ms();
+
+    if(wl_resource_get_version(res) >= 5)
+    {
+        if(source == WL_POINTER_AXIS_SOURCE_WHEEL || source == WL_POINTER_AXIS_SOURCE_WHEEL_TILT)
+        {
+            wl_pointer_send_axis_discrete(res,WL_POINTER_AXIS_HORIZONTAL_SCROLL,scrollWheelStep().x());
+            wl_pointer_send_axis(res,time,WL_POINTER_AXIS_HORIZONTAL_SCROLL,wl_fixed_from_double(x));
+            wl_pointer_send_axis_discrete(res,WL_POINTER_AXIS_VERTICAL_SCROLL,scrollWheelStep().y());
+            wl_pointer_send_axis(res,time,WL_POINTER_AXIS_VERTICAL_SCROLL,wl_fixed_from_double(y));
+        }
+        else
+        {
+            if(x == 0.0)
+                wl_pointer_send_axis_stop(res,time,WL_POINTER_AXIS_HORIZONTAL_SCROLL);
+            else
+                wl_pointer_send_axis(res,time,WL_POINTER_AXIS_HORIZONTAL_SCROLL,wl_fixed_from_double(x));
+
+            if(y == 0.0)
+                wl_pointer_send_axis_stop(res,time,WL_POINTER_AXIS_VERTICAL_SCROLL);
+            else
+                wl_pointer_send_axis(res,time,WL_POINTER_AXIS_VERTICAL_SCROLL,wl_fixed_from_double(y));
+        }
+        wl_pointer_send_axis_source(res,source);
+        wl_pointer_send_frame(res);
+    }
+    else
+    {
+        wl_pointer_send_axis(res,time,WL_POINTER_AXIS_HORIZONTAL_SCROLL,wl_fixed_from_double(x));
+        wl_pointer_send_axis(res,time,WL_POINTER_AXIS_VERTICAL_SCROLL,wl_fixed_from_double(y));
+    }
+
+}
+
+const LPoint &LPointer::scrollWheelStep() const
+{
+    return p_axisDiscreteStep;
+}
+
+void LPointer::setScrollWheelStep(const LPoint &step)
+{
+    p_axisDiscreteStep = step;
+}
+
+#else
+void LPointer::sendAxisEvent(double x, double y)
+{
+    // If no surface has focus
+    if(!focusSurface())
+        return;
+
+    // If do not have a wl_pointer
+    wl_resource *res = focusSurface()->client()->pointerResource();
+    if(!res)
+        return;
+
+    UInt32 time = LTime::ms();
+    wl_pointer_send_axis(res,time,WL_POINTER_AXIS_HORIZONTAL_SCROLL,wl_fixed_from_double(x));
+    wl_pointer_send_axis(res,time,WL_POINTER_AXIS_VERTICAL_SCROLL,wl_fixed_from_double(y));
+}
+#endif
+
 LSurface *LPointer::surfaceAt(const LPoint &point, bool useRolePos)
 {
     for(list<LSurface*>::const_reverse_iterator s = compositor()->surfaces().rbegin(); s != compositor()->surfaces().rend(); s++)
@@ -266,11 +356,13 @@ void LPointer::sendLeaveEvent(LSurface *surface)
         return;
 
     // Send the unset focus event
-    wl_pointer_send_leave(surface->client()->pointerResource(),LWayland::nextSerial(),surface->resource());
+    surface->client()->p_lastPointerLeaveEventSerial = LWayland::nextSerial();
+    wl_pointer_send_leave(surface->client()->pointerResource(),surface->client()->p_lastPointerLeaveEventSerial,surface->resource());
 
-    // Version 5+
+#if LOUVRE_SEAT_VERSION >=5
     if(wl_resource_get_version(surface->client()->pointerResource()) >= 5)
         wl_pointer_send_frame(surface->client()->pointerResource());
+#endif
 
 }
 
@@ -292,14 +384,16 @@ void LPointer::sendEnterEvent(LSurface *surface, const LPoint &point)
                           wl_fixed_from_double(point.x()),
                           wl_fixed_from_double(point.y()));
 
-    // Version 5+
+#if LOUVRE_SEAT_VERSION >=5
     if(wl_resource_get_version(surface->client()->pointerResource()) >= 5)
         wl_pointer_send_frame(surface->client()->pointerResource());
+#endif
 }
+
 
 /* VIRTUAL */
 
-void LPointer::pointerMoved(float dx, float dy)
+void LPointer::pointerMoveEvent(float /*dx*/, float /*dy*/)
 {
     // Resizing
     if(updateResizingToplevelSize())
@@ -323,7 +417,7 @@ void LPointer::pointerMoved(float dx, float dy)
     // Draggin surface
     if(draggingSurface())
     {
-        sendMoveEvent();
+        sendMoveEvent(true);
         return;
     }
 
@@ -340,7 +434,7 @@ void LPointer::pointerMoved(float dx, float dy)
     else
     {
         if(focusSurface() == surface)
-            sendMoveEvent();
+            sendMoveEvent(true);
         else
         {
             setFocus(surface);
@@ -349,7 +443,7 @@ void LPointer::pointerMoved(float dx, float dy)
 
 }
 
-void LPointer::pointerButtonChanged(UInt32 button, UInt32 state)
+void LPointer::pointerButtonEvent(UInt32 button, UInt32 state)
 {
     if(!focusSurface())
     {
@@ -418,6 +512,19 @@ void LPointer::pointerButtonChanged(UInt32 button, UInt32 state)
 
     }
 }
+
+
+#if LOUVRE_SEAT_VERSION >= 5
+void LPointer::pointerAxisEvent(double x, double y, UInt32 source)
+{
+    sendAxisEvent(-x,-y,source);
+}
+#else
+void LPointer::pointerAxisEvent(double x, double y)
+{
+    sendAxisEvent(-x,-y);
+}
+#endif
 
 void LPointer::setCursorRequest(LSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY)
 {

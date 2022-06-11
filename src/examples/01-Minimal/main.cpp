@@ -10,7 +10,10 @@ int main(int, char *[])
     //signal(SIGINT,intHandler);
 
     // Create the compositor
-    Compositor compositor("../../../src/backends/DRM/build/libLBackendDRM.so");
+
+    //const char *backendPath = "../../../src/backends/DRM/build/libLBackendDRM.so";
+    const char *backendPath = "../../../src/backends/X11/build/libLBackendX11.so";
+    Compositor compositor(backendPath);
 
     // Start the compositor
     compositor.start();

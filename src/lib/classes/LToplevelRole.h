@@ -110,6 +110,7 @@ private:
     void setTitle(const char *title);
     char *p_appId = nullptr;
     char *p_title = nullptr;
+
 };
 
 #endif // LTOPLEVELROLE_H

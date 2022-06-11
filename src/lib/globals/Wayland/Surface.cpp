@@ -130,6 +130,7 @@ void Globals::Surface::commit(wl_client *, wl_resource *resource)
 
 void Globals::Surface::apply_commit(LSurface *surface)
 {
+    surface->p_textureChanged = true;
     // Wait for parent commit if is subsurface in sync mode
     if(surface->roleType() == LSurface::Subsurface && surface->subsurface()->isSynced())
     {
@@ -169,14 +170,12 @@ void Globals::Surface::apply_commit(LSurface *surface)
             surface->p_role->p_roleId = surface->pending.type;
             surface->pending.type = LSurface::Undefined;
             surface->toplevel()->configureRequest();
-            surface->typeChangeRequest();
         }
         else if(surface->pending.type == LSurface::Popup)
         {
             surface->p_role->p_roleId = surface->pending.type;
             surface->pending.type = LSurface::Undefined;
             surface->popup()->configureRequest();
-            surface->typeChangeRequest();
         }
         else if(surface->pending.type == LSurface::Subsurface)
         {
@@ -184,9 +183,6 @@ void Globals::Surface::apply_commit(LSurface *surface)
         }
         return;
     }
-
-    if(!surface->current.buffer->client)
-        return;
 
 
     // Copy pending damages to current damages
@@ -231,6 +227,11 @@ void Globals::Surface::apply_commit(LSurface *surface)
     else
         surface->current.inputRegion.copy(surface->pending.inputRegion);
 
+    if(!surface->p_roleChangeNotified)
+    {
+        surface->p_roleChangeNotified = true;
+        surface->typeChangeRequest();
+    }
 
     // Toplevel configure
     if(surface->roleType() == LSurface::Toplevel)
@@ -254,6 +255,9 @@ void Globals::Surface::apply_commit(LSurface *surface)
 
                 lToplevel->seat()->p_activeTopLevel = lToplevel;
             }
+
+            if((prevState & LToplevelRole::Activated) != (lToplevel->p_sentConf.flags & LToplevelRole::Activated))
+                lToplevel->activatedChanged();
 
             lToplevel->p_pendingConf.set = false;
         }
@@ -330,7 +334,7 @@ void Globals::Surface::set_input_region(wl_client *client, wl_resource *resource
 void Globals::Surface::set_buffer_transform(wl_client *client, wl_resource *resource, Int32 transform)
 {
     (void)client;(void)resource;(void)transform;
-    printf("set_buffer_transform: transform %i",transform);
+    printf("set_buffer_transform: transform %i\n",transform);
 }
 
 void Globals::Surface::damage_buffer(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)

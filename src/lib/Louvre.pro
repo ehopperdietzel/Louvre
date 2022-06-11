@@ -13,7 +13,7 @@ QMAKE_CXXFLAGS_RELEASE -= -O1
 QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE *= -O3
 
-LIBS += -L/usr/local/lib/x86_64-linux-gnu -lwayland-server -lEGL -lGL -lGLESv2 -linput -ludev -lpthread -lX11 -lXfixes -lXcursor -lxkbcommon -lSOIL
+LIBS += -L/usr/local/lib/x86_64-linux-gnu -lwayland-server -lEGL -lGL -lGLESv2 -linput -ludev -lpthread -lXcursor -lxkbcommon -lSOIL
 INCLUDEPATH += /usr/include/libdrm ./classes ./globals/Wayland ./globals/XdgShell /usr/local/include
 
 
@@ -72,8 +72,6 @@ HEADERS += \
     globals/XdgShell/xdg-shell.h
 
 SOURCES += \
-    classes/LBackendDRM.cpp \
-    classes/LBackendX11.cpp \
     classes/LBaseSurfaceRole.cpp \
     classes/LClient.cpp \
     classes/LCompositor.cpp \

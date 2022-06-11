@@ -64,6 +64,16 @@ UInt32 LClient::lastPointerEnterEventSerial() const
     return p_lastPointerEnterEventSerial;
 }
 
+UInt32 LClient::lastPointerLeaveEventSerial() const
+{
+    return p_lastPointerLeaveEventSerial;
+}
+
+UInt32 LClient::lastPointerButtonEventSerial() const
+{
+    return p_lastPointerButtonEventSerial;
+}
+
 wl_resource *LClient::xdgWmBaseResource() const
 {
     return p_xdgWmBaseResource;

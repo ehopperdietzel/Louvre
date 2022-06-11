@@ -38,6 +38,18 @@ void LOutput::paintGL()
     // Get the painter
     LOpenGL *GL = painter();
 
+    for(LSurface *surface : compositor()->surfaces())
+        if(surface->toplevel() && surface->toplevel()->maximized())
+        {
+            if(surface->textureChanged() || !compositor()->cursor()->hasHardwareSupport())
+            {
+                GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
+                surface->requestNextFrame();
+            }
+            return;
+        }
+
+
     // Clear screen
     GL->clearScreen();
 

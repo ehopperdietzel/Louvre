@@ -44,10 +44,8 @@ public:
     /* Requests */
 
     // wl_surface
-    virtual void typeChangeRequest(){};
-
-    // xdg_popup
-    virtual void parentChangeRequest(){};
+    virtual void typeChangeRequest();
+    virtual void parentChangeRequest();
     virtual void bufferScaleChangeRequest(){};
     virtual void bufferSizeChangeRequest();
 
@@ -76,6 +74,7 @@ public:
     LTexture *texture() const  { return p_texture; }
     bool isDamaged() const { return p_isDamaged; }
     void applyDamages();
+    bool textureChanged() const {return p_textureChanged;};
     void requestNextFrame();
 
     // References
@@ -139,8 +138,8 @@ public:
     LPoint p_pos = LPoint(0,200);
     bool p_minimized = false;
 
-    // Configure event
-    void dispachLastConfiguration();
+    bool p_roleChangeNotified = false;
+    bool p_textureChanged = false;
 
 
 

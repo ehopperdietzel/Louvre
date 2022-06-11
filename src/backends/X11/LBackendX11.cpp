@@ -1,6 +1,3 @@
-#if W_BACKEND == 2
-#include <LBackend.h>
-
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
 #include <linux/input.h>
@@ -15,13 +12,13 @@
 #include <time.h>
 #include <stdio.h>
 #include <poll.h>
+
+#include <LBackend.h>
 #include <LCompositor.h>
 #include <LOutput.h>
 #include <LWayland.h>
 #include <LSizeF.h>
 #include <LCursor.h>
-
-
 
 using namespace Louvre;
 
@@ -109,13 +106,13 @@ static void create_window(LOutput *output)
         &window_attributes // attributes
     );
 
-    
+
     // Make it fullscreen
     unsigned long valuemask = CWOverrideRedirect;
     XSetWindowAttributes attributes;
     attributes.override_redirect = True;
     XChangeWindowAttributes(data->x_display, data->window.window, valuemask, &attributes);
-    
+
 
     // EGL context and surface
     if(!eglBindAPI(EGL_OPENGL_ES_API))
@@ -237,4 +234,20 @@ void LBackend::setCursorPosition(LOutput *output, const LPoint &)
 
 }
 
-#endif
+
+LGraphicBackend LBackendAPI;
+
+extern "C" LGraphicBackend *getAPI()
+{
+   printf("Louvre X11 backend loaded.\n");
+   LBackendAPI.getAvaliableOutputs      = &LBackend::getAvaliableOutputs;
+   LBackendAPI.getEGLDisplay            = &LBackend::getEGLDisplay,
+   LBackendAPI.createGLContext          = &LBackend::createGLContext;
+   LBackendAPI.flipPage                 = &LBackend::flipPage;
+   LBackendAPI.hasHardwareCursorSupport = &LBackend::hasHardwareCursorSupport;
+   LBackendAPI.setCursor                = &LBackend::setCursor;
+   LBackendAPI.setCursorPosition        = &LBackend::setCursorPosition;
+
+   return &LBackendAPI;
+}
+

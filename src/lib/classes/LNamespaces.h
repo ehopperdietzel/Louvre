@@ -6,7 +6,7 @@
 #include <list>
 
 #define LOUVRE_TB_H 40
-#define LOUBRE_DEBUG 1
+#define LOUBRE_DEBUG 0
 
 // Globals versions
 #define LOUVRE_COMPOSITOR_VERSION 5

@@ -78,6 +78,20 @@ LSurface::~LSurface()
     delete p_texture;
 }
 
+void LSurface::typeChangeRequest()
+{
+    if(toplevel() && parent())
+    {
+        LSurface *parent = topParent();
+        setPos(parent->pos() + parent->toplevel()->windowGeometry().bottomRight()/2 - toplevel()->windowGeometry().bottomRight()/2);
+    }
+}
+
+void LSurface::parentChangeRequest()
+{
+
+}
+
 void LSurface::bufferSizeChangeRequest()
 {
     if(roleType() == Toplevel && toplevel() == seat()->pointer()->resizingToplevel())
@@ -222,6 +236,7 @@ void LSurface::applyDamages()
 
 void LSurface::requestNextFrame()
 {
+    p_textureChanged = false;
     if(p_frameCallback)
     {
         wl_callback_send_done(p_frameCallback,LTime::ms());

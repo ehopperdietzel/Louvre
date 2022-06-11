@@ -319,7 +319,9 @@ void LSeat::processInput()
 
             double x = libinput_event_pointer_get_dx(pointerEvent);
             double y = libinput_event_pointer_get_dy(pointerEvent);
-            this->pointer()->pointerMoved(x,y);
+
+            this->pointer()->pointerMoveEvent(x,y);
+
             if(compositor()->cursor())
                 compositor()->cursor()->move(x,y);
         }
@@ -328,7 +330,7 @@ void LSeat::processInput()
             libinput_event_pointer *pointerEvent = libinput_event_get_pointer_event(ev);
             uint32_t button = libinput_event_pointer_get_button(pointerEvent);
             libinput_button_state state = libinput_event_pointer_get_button_state(pointerEvent);
-            this->pointer()->pointerButtonChanged(button,state);
+            this->pointer()->pointerButtonEvent(button,state);
         }
         else if(eventType == LIBINPUT_EVENT_KEYBOARD_KEY)
         {
@@ -339,14 +341,33 @@ void LSeat::processInput()
             keyEvent(keyCode,keyState);
             updateModifiers();
         }
+        else if(eventType == LIBINPUT_EVENT_POINTER_AXIS)
+        {
+            libinput_event_pointer *axisEvent = libinput_event_get_pointer_event(ev);
+
+            double x = 0.0;
+            double y = 0.0;
+
+            if(libinput_event_pointer_has_axis(axisEvent,LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+                x = libinput_event_pointer_get_axis_value(axisEvent,LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
+
+            if(libinput_event_pointer_has_axis(axisEvent,LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+                y = libinput_event_pointer_get_axis_value(axisEvent,LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+
+        #if LOUVRE_SEAT_VERSION >= 5
+            UInt32 source = libinput_event_pointer_get_axis_source(axisEvent);
+            pointer()->pointerAxisEvent(x,y,source);
+        #else
+            pointer()->pointerAxisEvent(x,y);
+        #endif
+        }
+
 
 
         libinputEvent(ev);
         libinput_event_destroy(ev);
         libinput_dispatch(p_li);
     }
-
-
 }
 
 int LSeat::openRestricted(const char *path, int flags, void *)

@@ -38,6 +38,8 @@ public:
     list<LPositioner*>positioners;
 
     UInt32 lastPointerEnterEventSerial() const;
+    UInt32 lastPointerLeaveEventSerial() const;
+    UInt32 lastPointerButtonEventSerial() const;
 
 private:
     friend class LWayland;
@@ -67,6 +69,8 @@ private:
     LSurface            *p_touchFocusedSurface      = nullptr;
 
     UInt32               p_lastPointerEnterEventSerial   = 0;
+    UInt32               p_lastPointerLeaveEventSerial   = 0;
+    UInt32               p_lastPointerButtonEventSerial  = 0;
     UInt32 p_id;
 
 };

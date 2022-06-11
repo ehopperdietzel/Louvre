@@ -153,6 +153,7 @@ void LToplevelRole::maximizeChanged()
 
     if(maximized())
     {
+        compositor()->riseSurface(surface());
         surface()->setPos(0,topbarHeight);
         surface()->setMinimized(false);
     }

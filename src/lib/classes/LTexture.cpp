@@ -29,7 +29,7 @@ void LTexture::setData(Int32 width, Int32 height, void *data, GLenum buffFormat,
     p_bufferFormat = buffFormat;
 
     // Prevent gen a new texture if the buffer size is the same
-    if(width != p_size.w() || height != p_size.h() || buffType == BufferType::EGL)
+    if(buffType == BufferType::EGL)
     {
         GLuint newTexture = 0;
 
@@ -86,7 +86,7 @@ void LTexture::setData(Int32 width, Int32 height, void *data, GLenum buffFormat,
         glBindTexture (GL_TEXTURE_2D, newTexture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        LOpenGL::checkGLError("SIP");
+        //LOpenGL::checkGLError("SIP");
         glTexImage2D(GL_TEXTURE_2D, 0, buffFormat, p_size.w(), p_size.h(), 0, buffFormat, buffDepth, data);
 
         deleteTexture();
