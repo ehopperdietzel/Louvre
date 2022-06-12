@@ -243,6 +243,13 @@ static struct FB_DATA * drm_fb_get_from_bo(gbm_bo *bo, DRM *data)
     return fb_data;
 }
 
+
+EGLDisplay LBackend::getEGLDisplay(LOutput *output)
+{
+    DRM *data = (DRM*)output->data;
+    return data->gl.display;
+}
+
 static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data)
 {
     (void)fd;(void)frame;(void)sec;(void)usec;
@@ -252,14 +259,9 @@ static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsi
 }
 
 
-EGLDisplay LBackend::getEGLDisplay(LOutput *output)
-{
-    DRM *data = (DRM*)output->data;
-    return data->gl.display;
-}
-
 void LBackend::createGLContext(LOutput *output)
 {
+
     DRM *data = (DRM*)output->data;
 
     data->evctx =
@@ -305,8 +307,52 @@ void LBackend::createGLContext(LOutput *output)
     return;
 }
 
+
 void LBackend::flipPage(LOutput *output)
 {
+
+    DRM *data = (DRM*)output->data;
+    gbm_bo *next_bo;
+    int waiting_for_flip = 1;
+
+    eglSwapBuffers(data->gl.display, data->gl.surface);
+    next_bo = gbm_surface_lock_front_buffer(data->gbm.surface);
+    data->fb = drm_fb_get_from_bo(next_bo,data)->fb;
+
+
+    data->ret = drmModePageFlip(data->deviceFd, data->crtc_id, data->fb->fb_id, DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
+    if (data->ret)
+    {
+        printf("Failed to queue page flip: %s\n", strerror(errno));
+        return;
+    }
+    while (waiting_for_flip)
+    {
+        data->ret = select(data->deviceFd + 1, &data->fds, NULL, NULL, NULL);
+        /*
+        if (data->ret < 0)
+        {
+            printf("Select err: %s\n", strerror(errno));
+            return;
+        }
+        else if (data->ret == 0)
+        {
+            printf("Select timeout!\n");
+            return;
+        }
+        else if (FD_ISSET(0, &data->fds))
+        {
+            printf("User interrupted!\n");
+            break;
+        }
+        */
+        drmHandleEvent(data->deviceFd, &data->evctx);
+    }
+    // release last buffer to render on again:
+    gbm_surface_release_buffer(data->gbm.surface, data->bo);
+    data->bo = next_bo;
+
+    /*
     DRM *data = (DRM*)output->data;
 
     gbm_bo *next_bo;
@@ -324,7 +370,10 @@ void LBackend::flipPage(LOutput *output)
     // release last buffer to render on again:
     gbm_surface_release_buffer(data->gbm.surface, data->bo);
     data->bo = next_bo;
+    */
 }
+
+
 
 static uint32_t find_crtc_for_encoder(const drmModeRes *resources, const drmModeEncoder *encoder)
 {
@@ -522,6 +571,12 @@ void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
 {
 
     DRM *data = (DRM*)output->data;
+
+    if(!texture)
+    {
+        drmModeSetCursor(data->deviceFd, data->crtc_id, 0, 0, 0);
+        return;
+    }
 
     LOpenGL *GL;
 

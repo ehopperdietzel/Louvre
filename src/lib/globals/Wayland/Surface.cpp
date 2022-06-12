@@ -63,6 +63,12 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
         delete lCursor;
     }
 
+    for(LSurface *child : surface->children())
+    {
+        child->p_parent = nullptr;
+        child->parentChangeRequest();
+    }
+
     // Parent
     if(surface->parent())
         surface->parent()->p_children.remove(surface);

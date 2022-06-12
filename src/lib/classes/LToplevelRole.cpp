@@ -177,13 +177,9 @@ void LToplevelRole::maximizeChanged()
 void LToplevelRole::fullscreenChanged()
 {
     if(fullscreen())
-    {
         surface()->setPos(0,0);
-    }
     else
-    {
-        surface()->setPos(0,200);
-    }
+        surface()->setPos(0,(LOUVRE_TB_H+2)/compositor()->outputs().front()->getOutputScale());
 }
 
 void LToplevelRole::activatedChanged()

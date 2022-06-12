@@ -37,14 +37,21 @@ public:
     list<LRegion*>regions;
     list<LPositioner*>positioners;
 
+    // Serials
     UInt32 lastPointerEnterEventSerial() const;
     UInt32 lastPointerLeaveEventSerial() const;
     UInt32 lastPointerButtonEventSerial() const;
+
+    UInt32 lastKeyboardEnterEventSerial() const;
+    UInt32 lastKeyboardLeaveEventSerial() const;
+    UInt32 lastKeyboardKeyEventSerial() const;
+    UInt32 lastKeyboardModifiersEventSerial() const;
 
 private:
     friend class LWayland;
     friend class LSurface;
     friend class LPointer;
+    friend class LKeyboard;
     friend class LSeat;
     friend class Globals::Surface;
     friend class Globals::Seat;
@@ -68,9 +75,16 @@ private:
     LSurface            *p_keyboardFocusedSurface   = nullptr;
     LSurface            *p_touchFocusedSurface      = nullptr;
 
-    UInt32               p_lastPointerEnterEventSerial   = 0;
-    UInt32               p_lastPointerLeaveEventSerial   = 0;
-    UInt32               p_lastPointerButtonEventSerial  = 0;
+    // Serials
+    UInt32               p_lastPointerEnterEventSerial      = 0;
+    UInt32               p_lastPointerLeaveEventSerial      = 0;
+    UInt32               p_lastPointerButtonEventSerial     = 0;
+
+    UInt32               p_lastKeyboardEnterEventSerial     = 0;
+    UInt32               p_lastKeyboardLeaveEventSerial     = 0;
+    UInt32               p_lastKeyboardKeyEventSerial       = 0;
+    UInt32               p_lastKeyboardModifiersEventSerial = 0;
+
     UInt32 p_id;
 
 };

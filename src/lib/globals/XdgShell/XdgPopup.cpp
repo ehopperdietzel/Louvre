@@ -37,11 +37,13 @@ void Extensions::XdgShell::Popup::destroy(wl_client *, wl_resource *resource)
 
     if(!lPopup->surface()->children().empty())
     {
+        /*
         wl_resource_post_error(
                     lPopup->surface()->client()->xdgWmBaseResource(),
                     XDG_WM_BASE_ERROR_NOT_THE_TOPMOST_POPUP,
-                    "The client tried to map or destroy a non-topmost popup.");
-        return;
+                    "The client tried to map or destroy a non-topmost popup.");*/
+
+        printf("IGNORING CLIENT ERROR: The client tried to map or destroy a non-topmost popup.\n");
     }
 
     wl_resource_destroy(resource);

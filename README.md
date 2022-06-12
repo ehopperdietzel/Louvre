@@ -47,10 +47,10 @@ $ ./Minimal
 
 * Wayland :white_check_mark:
 * XDG Shell :white_check_mark:
-* Decoration Manager
-* Presentation Time
-* Viewporter
-* Qt Shell
+* XDG Decoration Manager
+* XDG Output
+* WP Viewporter
+* WP Pointer Gestures
 
 ## 💬 Buffer Sharing Mechanisms
 * Shared Memory :white_check_mark:
@@ -76,9 +76,23 @@ $ ./Minimal
 
 ## 👴 Compatibility
 * GTK Clients :white_check_mark:
-* Qt 5.x Clients :white_check_mark:
+* Ozone Clients (Chromium) :white_check_mark:
+* Qt 5.x Clients :white_check_mark: (Only tooltips reposition bug)
+* Qt 6.x Clients :white_check_mark: (Only xdg_popup position bug)
 * SDL :white_check_mark:
 * EFL :white_check_mark:
 * XWayland
 
-
+## 🔨 TODO
+* Implement wl_data_device
+* Check wl_keyboard v7 keymap MAP_PRIVATE & MAP_SHARED
+* Implement wl_touch
+* Implement zxdg_output_manager_v1
+* Implement wp_viewporter
+* Implement zxdg_decoration_manager_v1
+* Implement zwp_pointer_gestures_v1
+* Recheck wl_surface interface implementation
+* LCursor autoupdate toggle
+* LCursor hw_rendering toggle
+* LCursor gen X11 cursor textures
+* Class for output interframe and surface damage calculation

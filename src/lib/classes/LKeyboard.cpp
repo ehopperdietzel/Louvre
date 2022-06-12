@@ -115,6 +115,11 @@ LSurface *LKeyboard::focusSurface() const
     return p_keyboardFocusSurface;
 }
 
+const LKeyboard::LKeyboardModifiersState &LKeyboard::modifiersState() const
+{
+    return p_modifiersState;
+}
+
 void LKeyboard::setFocus(LSurface *surface)
 {
     // If surface is not nullptr
@@ -127,11 +132,15 @@ void LKeyboard::setFocus(LSurface *surface)
         {
             // If another surface has focus
             if(focusSurface() && focusSurface()->client()->keyboardResource())
-                wl_keyboard_send_leave(focusSurface()->client()->keyboardResource(),LWayland::nextSerial(),focusSurface()->resource());
+            {
+                focusSurface()->client()->p_lastKeyboardLeaveEventSerial = LWayland::nextSerial();
+                wl_keyboard_send_leave(focusSurface()->client()->keyboardResource(),focusSurface()->client()->p_lastKeyboardLeaveEventSerial,focusSurface()->resource());
+            }
 
             if(surface->client()->keyboardResource())
             {
-                wl_keyboard_send_enter(surface->client()->keyboardResource(),LWayland::nextSerial(),surface->resource(),&p_keys);
+                surface->client()->p_lastKeyboardEnterEventSerial = LWayland::nextSerial();
+                wl_keyboard_send_enter(surface->client()->keyboardResource(),surface->client()->p_lastKeyboardEnterEventSerial,surface->resource(),&p_keys);
                 p_keyboardFocusSurface = surface;
                 sendModifiersEvent();
             }
@@ -144,8 +153,10 @@ void LKeyboard::setFocus(LSurface *surface)
     {
         // If a surface has focus
         if(focusSurface() && focusSurface()->client()->keyboardResource())
-            wl_keyboard_send_leave(focusSurface()->client()->keyboardResource(),LWayland::nextSerial(),focusSurface()->resource());
-
+        {
+            focusSurface()->client()->p_lastKeyboardLeaveEventSerial = LWayland::nextSerial();
+            wl_keyboard_send_leave(focusSurface()->client()->keyboardResource(),focusSurface()->client()->p_lastKeyboardLeaveEventSerial,focusSurface()->resource());
+        }
         p_keyboardFocusSurface = nullptr;
     }
 }
@@ -160,7 +171,8 @@ void LKeyboard::sendKeyEvent(UInt32 keyCode, UInt32 keyState)
     if(!focusSurface()->client()->keyboardResource())
         return;
 
-    wl_keyboard_send_key(focusSurface()->client()->keyboardResource(),LWayland::nextSerial(),LTime::ms(),keyCode,keyState);
+    focusSurface()->client()->p_lastKeyboardKeyEventSerial = LWayland::nextSerial();
+    wl_keyboard_send_key(focusSurface()->client()->keyboardResource(),focusSurface()->client()->p_lastKeyboardKeyEventSerial,LTime::ms(),keyCode,keyState);
 }
 
 void LKeyboard::sendModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
@@ -173,7 +185,8 @@ void LKeyboard::sendModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 lock
     if(!focusSurface()->client()->keyboardResource())
         return;
 
-    wl_keyboard_send_modifiers(focusSurface()->client()->keyboardResource(),LWayland::nextSerial(),depressed,latched,locked,group);
+    focusSurface()->client()->p_lastKeyboardModifiersEventSerial = LWayland::nextSerial();
+    wl_keyboard_send_modifiers(focusSurface()->client()->keyboardResource(),focusSurface()->client()->p_lastKeyboardModifiersEventSerial,depressed,latched,locked,group);
 }
 
 void LKeyboard::sendModifiersEvent()
@@ -194,6 +207,33 @@ void LKeyboard::updateModifiers()
     p_modifiersState.group = xkb_state_serialize_layout(p_xkbKeymapState, XKB_STATE_LAYOUT_EFFECTIVE);
     keyModifiersEvent(p_modifiersState.depressed,p_modifiersState.latched,p_modifiersState.locked,p_modifiersState.group);
 }
+
+#if LOUVRE_SEAT_VERSION >= 4
+
+    Int32 LKeyboard::repeatRate() const
+    {
+        return p_repeatRate;
+    }
+
+    Int32 LKeyboard::repeatDelay() const
+    {
+        return p_repeatDelay;
+    }
+
+    void LKeyboard::setRepeatInfo(Int32 rate, Int32 msDelay)
+    {
+        p_repeatRate = rate;
+        p_repeatDelay = msDelay;
+
+        for(LClient *lClient : compositor()->clients())
+            if(lClient->keyboardResource() && wl_resource_get_version(lClient->keyboardResource()) >= 4)
+                wl_keyboard_send_repeat_info(lClient->keyboardResource(),rate,msDelay);
+
+    }
+
+#endif
+
+/* VIRTUAL */
 
 void LKeyboard::keyModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
 {
@@ -251,7 +291,33 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
         }
         else if (sym == XKB_KEY_F4)
         {
-            setKeymap(NULL,NULL,"latam");
+            if (fork()==0)
+            {
+                setsid();
+                system("/home/eduardo/Escritorio/run_chrome.sh");
+                exit(0);
+            }
+        }
+        else if (sym == XKB_KEY_XF86AudioLowerVolume)
+        {
+            if (fork()==0)
+            {
+                system("pactl -- set-sink-volume 0 -10%");
+                exit(0);
+            }
+        }
+        else if (sym == XKB_KEY_XF86AudioRaiseVolume)
+        {
+            if (fork()==0)
+            {
+                system("pactl -- set-sink-volume 0 +10%");
+                exit(0);
+            }
+        }
+        else if(sym == XKB_KEY_Escape)
+        {
+            if(focusSurface() && focusSurface()->toplevel() && focusSurface()->toplevel()->fullscreen())
+                focusSurface()->toplevel()->configure(focusSurface()->toplevel()->state() & ~LToplevelRole::Fullscreen);
         }
     }
 }

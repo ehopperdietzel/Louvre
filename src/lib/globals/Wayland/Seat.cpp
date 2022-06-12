@@ -22,7 +22,9 @@ static struct wl_pointer_interface pointer_implementation =
 
 static struct wl_keyboard_interface keyboard_implementation =
 {
+#if LOUVRE_SEAT_VERSION >= 3
     .release = &Keyboard::release
+#endif
 };
 
 static struct wl_seat_interface seat_implementation =
@@ -73,11 +75,14 @@ void Seat::get_keyboard (wl_client *client, wl_resource *resource, UInt32 id)
     Int32 version = wl_resource_get_version(resource);
     lClient->p_keyboardResource  = wl_resource_create(client, &wl_keyboard_interface, version, id);
     wl_resource_set_implementation(lClient->p_keyboardResource , &keyboard_implementation, lClient, &Keyboard::resource_destroy);
-    wl_keyboard_send_repeat_info(lClient->p_keyboardResource, 32, 512);
 
-    //if(version >= 7)
-        //wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,WInput::getKeymapFD(true),WInput::getKeymapSize());
-    //else
+#if LOUVRE_SEAT_VERSION >= 4
+    if(version >= 4)
+        wl_keyboard_send_repeat_info(lClient->p_keyboardResource, lClient->seat()->keyboard()->repeatRate(), lClient->seat()->keyboard()->repeatDelay());
+#endif
+
+    // TODO: CHECK v7 PRIVATE_MAP
+
     wl_keyboard_send_keymap(lClient->p_keyboardResource, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, lClient->seat()->keyboard()->keymapFd(), lClient->seat()->keyboard()->keymapSize());
 
 }

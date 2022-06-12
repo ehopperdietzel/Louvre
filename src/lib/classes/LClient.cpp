@@ -74,6 +74,26 @@ UInt32 LClient::lastPointerButtonEventSerial() const
     return p_lastPointerButtonEventSerial;
 }
 
+UInt32 LClient::lastKeyboardEnterEventSerial() const
+{
+    return p_lastKeyboardEnterEventSerial;
+}
+
+UInt32 LClient::lastKeyboardLeaveEventSerial() const
+{
+    return p_lastKeyboardLeaveEventSerial;
+}
+
+UInt32 LClient::lastKeyboardKeyEventSerial() const
+{
+    return p_lastKeyboardKeyEventSerial;
+}
+
+UInt32 LClient::lastKeyboardModifiersEventSerial() const
+{
+    return p_lastKeyboardModifiersEventSerial;
+}
+
 wl_resource *LClient::xdgWmBaseResource() const
 {
     return p_xdgWmBaseResource;

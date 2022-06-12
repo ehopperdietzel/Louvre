@@ -26,7 +26,9 @@ public:
     void setHotspot(const LPointF &hotspot);
     void paint();
     void setSize(const LSizeF &size);
+    void setVisible(bool state);
 
+    bool visible() const;
     bool hasHardwareSupport() const;
     const LPointF &position() const {return p_pos;}
     const LPointF &hotspot()  const {return p_hotspot;}
@@ -71,6 +73,8 @@ private:
     LPointF p_hotspot;
     LSizeF p_size = LSizeF(64.f,64.f);
     LPoint p_prevPos;
+
+    bool p_isVisible = true;
 };
 
 #endif // LCURSOR_H

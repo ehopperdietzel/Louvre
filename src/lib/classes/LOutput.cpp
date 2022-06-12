@@ -39,11 +39,20 @@ void LOutput::paintGL()
     LOpenGL *GL = painter();
 
     for(LSurface *surface : compositor()->surfaces())
-        if(surface->toplevel() && surface->toplevel()->maximized())
+        if(surface->toplevel() && surface->toplevel()->fullscreen())
         {
-            if(surface->textureChanged() || !compositor()->cursor()->hasHardwareSupport())
+            if(surface->textureChanged() || compositor()->cursor()->hasHardwareSupport())
             {
                 GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
+                /*
+                LRect r;
+                for(const LRect &rect : surface->texture()->damages)
+                {
+                    r = LRect(surface->pos(true)+rect.topLeft()/surface->bufferScale(),rect.bottomRight()/surface->bufferScale());
+                    //GL->drawColor(r,1.0,0.0,0.0,0.3);
+                    GL->drawTexture(surface->texture(),rect,r);
+                }
+                */
                 surface->requestNextFrame();
             }
             return;
@@ -72,6 +81,16 @@ void LOutput::paintGL()
 
         // Draw the surface
         GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
+
+        /*
+        LRect r;
+        for(const LRect &rect : surface->texture()->damages)
+        {
+            r = LRect(surface->pos(true)+rect.topLeft()/surface->bufferScale(),rect.bottomRight()/surface->bufferScale());
+            GL->drawColor(r,1.0,0.0,0.0,0.3);
+            //GL->drawTexture(surface->texture(),rect,r);
+        }
+        */
 
         /*
         for(LRect &r : surface->texture()->damages)
@@ -182,7 +201,6 @@ void LOutput::startRenderLoop(void *data)
     output->initialize();
     output->repaint();
 
-
     uint64_t res;
     itimerspec ts;
     ts.it_interval.tv_sec = 0;
@@ -216,15 +234,13 @@ void LOutput::startRenderLoop(void *data)
         LWayland::forceUpdate();
 
         // Wait for the next frame
-        poll(&output->timerPoll,1,-1);
+        //poll(&output->timerPoll,1,-1);
 
-        ssize_t r = read(output->timerPoll.fd, &res, sizeof(res));
-        (void)r;
-        
-        timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
+        //(void)read(output->timerPoll.fd, &res, sizeof(res));
+
+        //timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
 
         // Show buffer on screen
-        //if(LWayland::mainOutput() != output)
         output->p_compositor->p_backend->flipPage(output);
 
     }

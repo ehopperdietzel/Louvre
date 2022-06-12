@@ -198,11 +198,12 @@ void LPointer::setCursorSurface(LSurface *surface)
 }
 
 void LPointer::dismissPopups()
-{
-    for(LSurface *surface : compositor()->surfaces())
+{    
+    list<LSurface*>::const_reverse_iterator s = compositor()->surfaces().rbegin();
+    for (; s!= compositor()->surfaces().rend(); s++)
     {
-        if(surface->roleType() == LSurface::Popup)
-            surface->popup()->sendPopupDoneEvent();
+        if((*s)->popup())
+            (*s)->popup()->sendPopupDoneEvent();
     }
 }
 
@@ -431,6 +432,7 @@ void LPointer::pointerMoveEvent(float /*dx*/, float /*dy*/)
     {
         setFocus(nullptr);
         cursor()->setCursor(LCursor::Arrow);
+        cursor()->setVisible(true);
     }
     else
     {
@@ -509,6 +511,7 @@ void LPointer::pointerButtonEvent(UInt32 button, UInt32 state)
         {
             setFocus(nullptr);
             cursor()->setCursor(LCursor::Arrow);
+            cursor()->setVisible(true);
         }
 
     }
@@ -530,9 +533,12 @@ void LPointer::pointerAxisEvent(double x, double y)
 void LPointer::setCursorRequest(LSurface *cursorSurface, Int32 hotspotX, Int32 hotspotY)
 {
     if(cursorSurface)
+    {
         cursor()->setTexture(cursorSurface->texture(),LPointF(hotspotX,hotspotY));
+        cursor()->setVisible(true);
+    }
     else
-        cursor()->setCursor(LCursor::Arrow);
+        cursor()->setVisible(false);
 
     setCursorSurface(cursorSurface);
 }

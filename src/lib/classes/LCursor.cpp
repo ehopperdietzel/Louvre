@@ -107,7 +107,7 @@ void LCursor::setHotspot(const LPointF &hotspot)
 
 void LCursor::paint()
 {
-    if(p_output == nullptr || p_texture == nullptr)
+    if(!visible() || !p_output || !p_texture)
         return;
 
     LPointF hotspot = (p_hotspot*p_size)/p_texture->size();
@@ -129,6 +129,28 @@ void LCursor::setSize(const LSizeF &size)
     }
 
     update();
+}
+
+void LCursor::setVisible(bool state)
+{
+    if(state == visible())
+        return;
+
+    p_isVisible = state;
+
+    if(!p_isVisible)
+        compositor()->p_backend->setCursor(p_output,nullptr,LPoint());
+    else if(p_texture)
+    {
+        compositor()->p_backend->setCursor(p_output,p_texture,p_size*p_output->getOutputScale());
+        update();
+    }
+
+}
+
+bool LCursor::visible() const
+{
+    return p_isVisible;
 }
 
 bool LCursor::hasHardwareSupport() const
@@ -153,10 +175,12 @@ void LCursor::loadDefaultCursors()
 
 void LCursor::update()
 {
-    LPoint hotspot;
 
-    if(p_texture != nullptr)
-        hotspot = (p_hotspot*p_size)/p_texture->size();
+    if(!visible() || !p_output || !p_texture)
+        return;
+
+    LPoint hotspot;
+    hotspot = (p_hotspot*p_size)/p_texture->size();
 
     LPoint pos = (p_pos- hotspot)*p_output->getOutputScale();
 
@@ -166,6 +190,6 @@ void LCursor::update()
         compositor()->p_backend->setCursorPosition(p_output,pos);
     }
 
-    if(p_output && !hasHardwareSupport())
+    if(!hasHardwareSupport())
         p_output->repaint();
 }
