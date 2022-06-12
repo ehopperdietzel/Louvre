@@ -6,6 +6,7 @@
 #include <LOutput.h>
 #include <LPopupRole.h>
 #include <LTime.h>
+#include <LKeyboard.h>
 
 using namespace Louvre;
 
@@ -451,7 +452,7 @@ void LPointer::pointerButtonEvent(UInt32 button, UInt32 state)
 
         if(surface)
         {
-            seat()->setKeyboardFocus(surface);
+            seat()->keyboard()->setFocus(surface);
             setFocus(surface);
             sendButtonEvent(button,state);
 
@@ -460,7 +461,7 @@ void LPointer::pointerButtonEvent(UInt32 button, UInt32 state)
         }
         else
         {
-            seat()->setKeyboardFocus(nullptr);
+            seat()->keyboard()->setFocus(nullptr);
             dismissPopups();
         }
 
@@ -478,7 +479,7 @@ void LPointer::pointerButtonEvent(UInt32 button, UInt32 state)
             dismissPopups();
 
         setDragginSurface(focusSurface());
-        seat()->setKeyboardFocus(focusSurface());
+        seat()->keyboard()->setFocus(focusSurface());
 
         if(focusSurface()->roleType() == LSurface::Toplevel)
             focusSurface()->toplevel()->configure(focusSurface()->toplevel()->state() | LToplevelRole::Activated);

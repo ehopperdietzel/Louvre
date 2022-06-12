@@ -29,6 +29,7 @@ HEADERS += \
     classes/LCompositor.h \
     classes/LCursor.h \
     classes/LCursorRole.h \
+    classes/LKeyboard.h \
     classes/LNamespaces.h \
     classes/LOpenGL.h \
     classes/LOutput.h \
@@ -77,6 +78,7 @@ SOURCES += \
     classes/LCompositor.cpp \
     classes/LCursor.cpp \
     classes/LCursorRole.cpp \
+    classes/LKeyboard.cpp \
     classes/LOpenGL.cpp \
     classes/LOutput.cpp \
     classes/LOutputManager.cpp \

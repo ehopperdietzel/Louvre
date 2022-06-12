@@ -9,7 +9,9 @@
 #include <LPoint.h>
 #include <LCursor.h>
 #include <xdg-shell.h>
+
 #include <LPointer.h>
+#include <LKeyboard.h>
 
 using namespace Louvre;
 
@@ -196,8 +198,8 @@ void LToplevelRole::minimizeRequest()
     if(surface() == seat()->pointer()->focusSurface())
         seat()->pointer()->setFocus(nullptr);
 
-    if(surface() == seat()->keyboardFocusSurface())
-        seat()->setKeyboardFocus(nullptr);
+    if(surface() == seat()->keyboard()->focusSurface())
+        seat()->keyboard()->setFocus(nullptr);
 
     if(this == seat()->pointer()->movingTopLevel())
         seat()->pointer()->stopMovingTopLevel();

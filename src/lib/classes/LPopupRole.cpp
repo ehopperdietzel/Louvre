@@ -7,7 +7,10 @@
 #include <LOutput.h>
 #include <LSeat.h>
 #include <xdg-shell.h>
+
 #include <LPointer.h>
+#include <LKeyboard.h>
+
 using namespace Louvre;
 
 
@@ -35,7 +38,7 @@ void LPopupRole::pong(UInt32)
 void LPopupRole::grabSeatRequest()
 {
     seat()->pointer()->setFocus(surface());
-    seat()->setKeyboardFocus(surface());
+    seat()->keyboard()->setFocus(surface());
 }
 
 void LPopupRole::configureRequest()

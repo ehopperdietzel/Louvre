@@ -21,6 +21,7 @@
 #include <LTime.h>
 #include <LCursorRole.h>
 #include <LPointer.h>
+#include <LKeyboard.h>
 
 using namespace Louvre;
 
@@ -32,8 +33,8 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
 
     // Clear keyboard focus
-    if(surface->seat()->p_keyboardFocusSurface == surface)
-        surface->seat()->p_keyboardFocusSurface = nullptr;
+    if(surface->seat()->keyboard()->focusSurface() == surface)
+        surface->seat()->keyboard()->p_keyboardFocusSurface = nullptr;
 
     // Clear pointer focus
     if(surface->seat()->pointer()->p_pointerFocusSurface == surface)

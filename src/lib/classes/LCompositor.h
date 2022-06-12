@@ -26,6 +26,8 @@ public:
 
     virtual ~LCompositor(){};
 
+    virtual void initialize(){};
+
     /* Create requests */
     virtual LOutput *createOutputRequest();
     virtual LClient *createClientRequest(wl_client *client);
@@ -33,6 +35,8 @@ public:
 
     virtual LSeat *createSeatRequest();
     virtual LPointer *createPointerRequest(LSeat *seat);
+    virtual LKeyboard *createKeyboardRequest(LSeat *seat);
+
     virtual LToplevelRole *createToplevelRequest(wl_resource *toplevel, LSurface *surface);
     virtual LPopupRole *createPopupRequest(wl_resource *popup, LSurface *surface, LPositioner *positioner);
     virtual LSubsurfaceRole *createSubsurfaceRequest(wl_resource *subsurface, LSurface *surface);

@@ -4,6 +4,8 @@
 
 #include <Pointer.h>
 #include <Keyboard.h>
+
+#include <LKeyboard.h>
 #include <LSeat.h>
 
 #include <sys/mman.h>
@@ -76,7 +78,7 @@ void Seat::get_keyboard (wl_client *client, wl_resource *resource, UInt32 id)
     //if(version >= 7)
         //wl_keyboard_send_keymap(keyboard, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,WInput::getKeymapFD(true),WInput::getKeymapSize());
     //else
-    wl_keyboard_send_keymap(lClient->p_keyboardResource, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, lClient->seat()->keymapFd(), lClient->seat()->keymapSize());
+    wl_keyboard_send_keymap(lClient->p_keyboardResource, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, lClient->seat()->keyboard()->keymapFd(), lClient->seat()->keyboard()->keymapSize());
 
 }
 

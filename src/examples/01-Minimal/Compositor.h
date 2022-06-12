@@ -9,6 +9,8 @@ class Compositor : public LCompositor
 {
 public:
     Compositor(const char *backendPath);
+
+    void initialize() override;
 };
 
 #endif // COMPOSITOR_H

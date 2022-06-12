@@ -42,6 +42,7 @@ namespace Louvre
     // Input related
     class LSeat;
     class LPointer;
+    class LKeyboard;
     class LCursor;
 
     // Utils

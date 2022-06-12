@@ -13,6 +13,7 @@
 #include <LCursor.h>
 #include <LSubsurfaceRole.h>
 #include <LPointer.h>
+#include <LKeyboard.h>
 
 #include <dlfcn.h>
 
@@ -55,6 +56,13 @@ LPointer *LCompositor::createPointerRequest(LSeat *seat)
 {
     return new LPointer(seat);
 }
+
+LKeyboard *LCompositor::createKeyboardRequest(LSeat *seat)
+{
+    return new LKeyboard(seat);
+}
+
+
 
 LToplevelRole *LCompositor::createToplevelRequest(wl_resource *toplevel, LSurface *surface)
 {
@@ -115,6 +123,8 @@ void LCompositor::start()
     // Ask the developer to return a LSeat
     p_seat = createSeatRequest();
     LWayland::setSeat(p_seat);
+
+    initialize();
 
     // Init wayland
     _started = true;
