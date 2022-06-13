@@ -119,13 +119,13 @@ void Extensions::XdgShell::Toplevel::set_min_size (wl_client *, wl_resource *res
 void Extensions::XdgShell::Toplevel::set_maximized (wl_client *, wl_resource *resource)
 {
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->maximizeRequest();
+    lToplevel->setMaximizedRequest();
 }
 
 void Extensions::XdgShell::Toplevel::unset_maximized (wl_client *, wl_resource *resource)
 {
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->unmaximizeRequest();
+    lToplevel->unsetMaximizedRequest();
 }
 
 void Extensions::XdgShell::Toplevel::set_fullscreen(wl_client *, wl_resource *resource, wl_resource *output)
@@ -136,18 +136,19 @@ void Extensions::XdgShell::Toplevel::set_fullscreen(wl_client *, wl_resource *re
         lOutput = (LOutput*)wl_resource_get_user_data(output);
 
     LToplevelRole *lTopLevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lTopLevel->fullscreenRequest(lOutput);
+    lTopLevel->setFullscreenRequest(lOutput);
 }
 
-void Extensions::XdgShell::Toplevel::unset_fullscreen(wl_client *client, wl_resource *resource)
+void Extensions::XdgShell::Toplevel::unset_fullscreen(wl_client *, wl_resource *resource)
 {
-
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    lToplevel->unsetFullscreenRequest();
 }
 
 void Extensions::XdgShell::Toplevel::set_minimized(wl_client *, wl_resource *resource)
 {
     LToplevelRole *lToplevel= (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->minimizeRequest();
+    lToplevel->setMinimizedRequest();
 }
 
 #if LOUVRE_XDG_WM_BASE_VERSION >= 4

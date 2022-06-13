@@ -2,50 +2,76 @@
 #include <DataSource.h>
 #include <DataDevice.h>
 #include <LCompositor.h>
+#include <LDataSource.h>
+#include <LClient.h>
+#include <LDataDevice.h>
+
+using namespace Louvre::Globals;
 
 struct wl_data_source_interface dataSource_implementation =
 {
-    .offer = &Louvre::Globals::DataSource::offer,
-    .destroy = &Louvre::Globals::DataSource::destroy,
-    .set_actions = &Louvre::Globals::DataSource::set_actions,
+    .offer = &DataSource::offer,
+    .destroy = &DataSource::destroy,
+#if LOUVRE_DATA_DEVICE_MANAGER_VERSION >= 3
+    .set_actions = &DataSource::set_actions,
+#endif
 };
 
 struct wl_data_device_interface dataDevice_implementation =
 {
-    .start_drag = &Louvre::Globals::DataDevice::start_drag,
-    .set_selection = &Louvre::Globals::DataDevice::set_selection,
-    .release = &Louvre::Globals::DataDevice::release
+    .start_drag = &DataDevice::start_drag,
+    .set_selection = &DataDevice::set_selection,
+    .release = &DataDevice::release
 };
 
 struct wl_data_device_manager_interface dataDeviceManager_implementation =
 {
-    .create_data_source = &Louvre::Globals::DataDeviceManager::create_data_source,
-    .get_data_device = &Louvre::Globals::DataDeviceManager::get_data_device
+    .create_data_source = &DataDeviceManager::create_data_source,
+    .get_data_device = &DataDeviceManager::get_data_device
 };
 
-void Louvre::Globals::DataDeviceManager::resource_destroy(wl_resource *)
+void DataDeviceManager::resource_destroy(wl_resource *)
 {
     printf("DATA DEVICE MANAGER DESTROYED.\n");
 }
 
-void Louvre::Globals::DataDeviceManager::create_data_source(wl_client *client, wl_resource *resource, UInt32 id)
+void DataDeviceManager::create_data_source(wl_client *client, wl_resource *resource, UInt32 id)
 {
-    LCompositor *lCompositor = (LCompositor*)wl_resource_get_user_data(resource);
+    LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
     UInt32 version = wl_resource_get_version(resource);
     wl_resource *dataSource = wl_resource_create(client, &wl_data_source_interface, version, id);
-    wl_resource_set_implementation(dataSource, &dataDevice_implementation, lCompositor, &DataDevice::resource_destroy);
+    LDataSource *lDataSource = new LDataSource(dataSource,lClient);
+    wl_resource_set_implementation(dataSource, &dataDevice_implementation, lDataSource, &DataDevice::resource_destroy);
 }
-void Louvre::Globals::DataDeviceManager::get_data_device(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *seat)
+void DataDeviceManager::get_data_device(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *seat)
 {
-    LCompositor *lCompositor = (LCompositor*)wl_resource_get_user_data(resource);
+    LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
     UInt32 version = wl_resource_get_version(resource);
     wl_resource *dataDevice = wl_resource_create(client, &wl_data_device_interface, version, id);
-    wl_resource_set_implementation(dataDevice, &dataDevice_implementation, lCompositor, &DataDevice::resource_destroy);
+    LDataDevice *lDataDevice = new LDataDevice(dataDevice,lClient);
+    lClient->p_dataDevice = lDataDevice;
+    wl_resource_set_implementation(dataDevice, &dataDevice_implementation, lDataDevice, &DataDevice::resource_destroy);
 }
 
-void Louvre::Globals::DataDeviceManager::bind(wl_client *client, void *data, UInt32 version, UInt32 id)
+void DataDeviceManager::bind(wl_client *client, void *data, UInt32 version, UInt32 id)
 {
     LCompositor *lCompositor = (LCompositor*)data;
+
+    LClient *lClient = nullptr;
+
+    // Search for the client object
+    for(LClient *c : lCompositor->clients())
+    {
+        if(c->client() == client)
+        {
+            lClient = c;
+            break;
+        }
+    }
+
+    if(!lClient)
+        return;
+
     wl_resource *resource = wl_resource_create(client, &wl_data_device_manager_interface, version, id);
-    wl_resource_set_implementation(resource, &dataDeviceManager_implementation, lCompositor, &DataDeviceManager::resource_destroy);
+    wl_resource_set_implementation(resource, &dataDeviceManager_implementation, lClient, &DataDeviceManager::resource_destroy);
 }

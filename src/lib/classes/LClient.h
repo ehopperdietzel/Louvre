@@ -17,6 +17,7 @@ public:
     LSeat *seat() const;
     wl_client *client() const;
     UInt32 id() const;
+    LDataDevice *dataDevice() const;
 
     const list<LSurface*>&surfaces() const;
 
@@ -28,14 +29,6 @@ public:
     wl_resource *pointerResource() const;
     wl_resource *keyboardResource() const;
     wl_resource *touchResource() const;
-
-    // Requests
-    //virtual void newRegionRequest(LRegion *region) = 0;
-    //virtual void regionDestroyRequest(LRegion *region) = 0;
-    //virtual void newPositionerRequest(LPositioner *positioner) = 0;
-
-    list<LRegion*>regions;
-    list<LPositioner*>positioners;
 
     // Serials
     UInt32 lastPointerEnterEventSerial() const;
@@ -58,11 +51,14 @@ private:
     friend class Globals::Compositor;
     friend class Globals::Keyboard;
     friend class Globals::Pointer;
+    friend class Globals::DataDeviceManager;
+    friend class Globals::DataDevice;
     friend class Extensions::XdgShell::WmBase;
 
     list<LSurface*>p_surfaces;
 
     LCompositor         *p_compositor               = nullptr;
+    LDataDevice         *p_dataDevice               = nullptr;
     wl_client           *p_client                   = nullptr;
 
     wl_resource         *p_seatResource             = nullptr;

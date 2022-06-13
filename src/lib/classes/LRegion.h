@@ -26,7 +26,7 @@ public:
     };
 
 
-    list<LRegionRect>&rects(){return p_rects;}
+    list<LRegionRect>&rects();
 private:
     friend class Louvre::Globals::Compositor;
     friend class Louvre::Globals::Region;
@@ -34,9 +34,6 @@ private:
 
     list<LRegionRect>p_rects;
 
-    // Wayland
-    wl_resource     *p_resource = nullptr;
-    LClient         *p_client   = nullptr;
 
 };
 

@@ -51,3 +51,8 @@ bool LRegion::containsPoint(const LPoint &point)
 
     return contains;
 }
+
+list<LRegion::LRegionRect> &LRegion::rects()
+{
+    return p_rects;
+}

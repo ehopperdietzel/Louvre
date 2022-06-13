@@ -46,10 +46,11 @@ public:
     virtual void startMoveRequest();
     virtual void startResizeRequest(Edge edge);
     virtual void configureRequest();
-    virtual void maximizeRequest();
-    virtual void unmaximizeRequest();
-    virtual void minimizeRequest();
-    virtual void fullscreenRequest(LOutput *destOutput);
+    virtual void setMaximizedRequest();
+    virtual void unsetMaximizedRequest();
+    virtual void setMinimizedRequest();
+    virtual void setFullscreenRequest(LOutput *destOutput);
+    virtual void unsetFullscreenRequest();
     virtual void showWindowMenuRequest(Int32 x, Int32 y);
 
     // State change notification

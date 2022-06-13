@@ -7,7 +7,6 @@ using namespace Louvre;
 LPositioner::LPositioner(LClient *client)
 {
     p_client = client;
-    p_client->positioners.push_back(this);
 }
 
 LClient *LPositioner::client() const

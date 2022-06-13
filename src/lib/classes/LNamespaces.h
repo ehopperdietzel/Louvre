@@ -6,13 +6,14 @@
 #include <list>
 
 #define LOUVRE_TB_H 40
-#define LOUBRE_DEBUG 0
+#define LOUBRE_DEBUG 1
 
 // Globals versions
 #define LOUVRE_COMPOSITOR_VERSION 5
 #define LOUVRE_XDG_WM_BASE_VERSION 2
 #define LOUVRE_SEAT_VERSION 7
 #define LOUVRE_SUBCOMPOSITOR_VERSION 1
+#define LOUVRE_DATA_DEVICE_MANAGER_VERSION 3
 #define LOUVRE_XDG_SHELL_VERSION 2
 
 
@@ -31,6 +32,11 @@ namespace Louvre
     class LSurface;
     class LTexture;
     class LWayland;
+
+    // Data
+    class LDataDevice;
+    class LDataSource;
+    class LDataOffer;
 
     // Surface roles
     class LBaseSurfaceRole;
@@ -85,6 +91,7 @@ namespace Louvre
         class DataDeviceManager;
         class DataDevice;
         class DataSource;
+        class DataOffer;
         class Keyboard;
         class Output;
         class Pointer;

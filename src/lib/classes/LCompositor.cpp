@@ -210,6 +210,11 @@ LSeat *LCompositor::seat() const
     return p_seat;
 }
 
+LDataSource *LCompositor::dataSource() const
+{
+    return p_dataSource;
+}
+
 void LCompositor::repaintAllOutputs()
 {
     for(list<LOutput*>::iterator it = p_outputs.begin(); it != p_outputs.end(); ++it)

@@ -332,9 +332,8 @@ void Globals::Surface::set_input_region(wl_client *client, wl_resource *resource
         wSurface->pending.inputRegion.clear();
     else
     {
-        LRegion *wRegion = (LRegion*)wl_resource_get_user_data(region);
-        wSurface->current.inputRegion.p_client = wRegion->p_client;
-        wSurface->pending.inputRegion.copy(*wRegion);
+        LRegion *lRegion = (LRegion*)wl_resource_get_user_data(region);
+        wSurface->pending.inputRegion.copy(*lRegion);
     }
 }
 

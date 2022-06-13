@@ -34,6 +34,11 @@ UInt32 LClient::id() const
     return p_id;
 }
 
+LDataDevice *LClient::dataDevice() const
+{
+    return p_dataDevice;
+}
+
 const list<LSurface *> &LClient::surfaces() const
 {
     return p_surfaces;

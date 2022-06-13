@@ -66,55 +66,16 @@ void Globals::Compositor::create_region (wl_client *client, wl_resource *resourc
     // New region
     wl_resource *region = wl_resource_create(client, &wl_region_interface, wl_resource_get_version(resource), id); // 1
 
-    // Find client
-    LClient *wClient = (LClient*)wl_resource_get_user_data(resource);
-
     // Create region
-    LRegion *wRegion = new LRegion();
-    wRegion->p_client = wClient;
-    wRegion->p_resource = resource;
-
-    // Append region to client
-    wClient->regions.push_back(wRegion);
+    LRegion *lRegion = new LRegion();
 
     // Implement region
-    wl_resource_set_implementation(region, &region_implementation, wRegion, &Region::resource_destroy);
+    wl_resource_set_implementation(region, &region_implementation, lRegion, &Region::resource_destroy);
 }
 
 void Globals::Compositor::resource_destroy(wl_resource *resource)
 {
-
     printf("COMPOSITOR DESTROYED.\n");
-
-    // Find client
-    //LClient *client = (LClient*)wl_resource_get_user_data(resource);
-
-    /*
-
-    // Destroy surfaces ( when client crashes )
-    while(!client->surfaces.empty())
-        Globals::Surface::delete_surface(client->surfaces.back()->getResource());
-
-    client->surfaces.clear();
-
-    // Destroy regions ( when client crashes )
-    while(!client->regions.empty())
-        Globals::Region::remove(client->regions.back()->getResource());
-
-    client->regions.clear();
-    */
-
-
-
-
-
-    // Notify
-    //11client->getCompositor()->clientDisconnectRequest(client);
-
-    // Destroy client
-    //delete client;
-
-
 }
 
 void Globals::Compositor::bind(wl_client *client, void *data, UInt32 version, UInt32 id)

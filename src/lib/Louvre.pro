@@ -29,6 +29,9 @@ HEADERS += \
     classes/LCompositor.h \
     classes/LCursor.h \
     classes/LCursorRole.h \
+    classes/LDataDevice.h \
+    classes/LDataOffer.h \
+    classes/LDataSource.h \
     classes/LKeyboard.h \
     classes/LNamespaces.h \
     classes/LOpenGL.h \
@@ -56,6 +59,7 @@ HEADERS += \
     globals/Wayland/Compositor.h \
     globals/Wayland/DataDevice.h \
     globals/Wayland/DataDeviceManager.h \
+    globals/Wayland/DataOffer.h \
     globals/Wayland/DataSource.h \
     globals/Wayland/Keyboard.h \
     globals/Wayland/Output.h \
@@ -78,6 +82,9 @@ SOURCES += \
     classes/LCompositor.cpp \
     classes/LCursor.cpp \
     classes/LCursorRole.cpp \
+    classes/LDataDevice.cpp \
+    classes/LDataOffer.cpp \
+    classes/LDataSource.cpp \
     classes/LKeyboard.cpp \
     classes/LOpenGL.cpp \
     classes/LOutput.cpp \
@@ -101,6 +108,7 @@ SOURCES += \
     globals/Wayland/Compositor.cpp \
     globals/Wayland/DataDevice.cpp \
     globals/Wayland/DataDeviceManager.cpp \
+    globals/Wayland/DataOffer.cpp \
     globals/Wayland/DataSource.cpp \
     globals/Wayland/Keyboard.cpp \
     globals/Wayland/Output.cpp \

@@ -72,6 +72,7 @@ public:
 
     LCursor *cursor() const;
     LSeat *seat() const;
+    LDataSource *dataSource() const;
 
     // Output
     void repaintAllOutputs();
@@ -98,6 +99,9 @@ private:
     friend class Globals::Surface;
     friend class Globals::Pointer;
     friend class Globals::Seat;
+    friend class Globals::DataDeviceManager;
+    friend class Globals::DataDevice;
+    friend class Globals::DataSource;
 
 
     LCursor *p_cursor = nullptr;
@@ -120,6 +124,7 @@ private:
     int libinputFd, waylandFd;
     eventfd_t libinputVal, waylandVal = 1;
 
+    LDataSource *p_dataSource = nullptr;
     LOpenGL *p_painter;
 
     bool _started = false;

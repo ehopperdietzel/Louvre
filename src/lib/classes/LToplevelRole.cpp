@@ -93,6 +93,11 @@ void LToplevelRole::configureRequest()
     configure(Activated);
 }
 
+void LToplevelRole::unsetFullscreenRequest()
+{
+    configure(Activated);
+}
+
 void LToplevelRole::titleChanged()
 {
 
@@ -113,7 +118,7 @@ void LToplevelRole::ping(UInt32 serial)
     xdg_wm_base_send_ping(surface()->client()->xdgWmBaseResource(),serial);
 }
 
-void LToplevelRole::maximizeRequest()
+void LToplevelRole::setMaximizedRequest()
 {
     // Get the main output
     LOutput *output = compositor()->outputs().front();
@@ -127,7 +132,7 @@ void LToplevelRole::maximizeRequest()
     // We now wait for the maximizeChanged() event to move it to the top left corner
 }
 
-void LToplevelRole::unmaximizeRequest()
+void LToplevelRole::unsetMaximizedRequest()
 {
     // Get the main output
     LOutput *output = compositor()->outputs().front();
@@ -187,7 +192,7 @@ void LToplevelRole::activatedChanged()
 
 }
 
-void LToplevelRole::minimizeRequest()
+void LToplevelRole::setMinimizedRequest()
 {
     surface()->setMinimized(true);
 
@@ -204,7 +209,7 @@ void LToplevelRole::minimizeRequest()
         seat()->pointer()->stopResizingToplevel();
 }
 
-void LToplevelRole::fullscreenRequest(LOutput *destOutput)
+void LToplevelRole::setFullscreenRequest(LOutput *destOutput)
 {
     LOutput *output;
 
