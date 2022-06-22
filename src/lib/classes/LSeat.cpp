@@ -43,18 +43,18 @@ using namespace Louvre;
 
 LSeat::LSeat(LCompositor *compositor)
 {
-    p_compositor = compositor;
+    m_compositor = compositor;
 
     // Setup libinput
-    p_udev = udev_new();
-    p_libinputInterface.open_restricted = &Louvre::LSeat::openRestricted;
-    p_libinputInterface.close_restricted = &Louvre::LSeat::closeRestricted;
-    p_li = libinput_udev_create_context(&p_libinputInterface, NULL, p_udev);
-    libinput_udev_assign_seat(p_li, "seat0");
-    libinput_dispatch(p_li);
+    m_udev = udev_new();
+    m_libinputInterface.open_restricted = &Louvre::LSeat::openRestricted;
+    m_libinputInterface.close_restricted = &Louvre::LSeat::closeRestricted;
+    m_li = libinput_udev_create_context(&m_libinputInterface, NULL, m_udev);
+    libinput_udev_assign_seat(m_li, "seat0");
+    libinput_dispatch(m_li);
 
-    p_pointer = compositor->createPointerRequest(this);
-    p_keyboard = compositor->createKeyboardRequest(this);
+    m_pointer = compositor->createPointerRequest(this);
+    m_keyboard = compositor->createKeyboardRequest(this);
 }
 
 LSeat::~LSeat()
@@ -64,12 +64,12 @@ LSeat::~LSeat()
 
 Int32 LSeat::libinputFd() const
 {
-    return libinput_get_fd(p_li);
+    return libinput_get_fd(m_li);
 }
 
 LCompositor *LSeat::compositor() const
 {
-    return p_compositor;
+    return m_compositor;
 }
 
 LCursor *LSeat::cursor() const
@@ -79,44 +79,44 @@ LCursor *LSeat::cursor() const
 
 UInt32 LSeat::capabilities() const
 {
-    return p_capabilities;
+    return m_capabilities;
 }
 
 void LSeat::setCapabilities(UInt32 capabilitiesFlags)
 {
-    p_capabilities = capabilitiesFlags;
+    m_capabilities = capabilitiesFlags;
 
     for(LClient *lClient : compositor()->clients())
     {
         if(lClient->seatResource())
-            wl_seat_send_capabilities(lClient->seatResource(),p_capabilities);
+            wl_seat_send_capabilities(lClient->seatResource(),m_capabilities);
     }
 }
 
 LSurface *LSeat::touchFocusSurface() const
 {
-    return p_touchFocusSurface;
+    return m_touchFocusSurface;
 }
 
 LToplevelRole *LSeat::activeTopLevel() const
 {
-    return p_activeTopLevel;
+    return m_activeTopLevel;
 }
 
 
 LPointer *LSeat::pointer() const
 {
-    return p_pointer;
+    return m_pointer;
 }
 
 LKeyboard *LSeat::keyboard() const
 {
-    return p_keyboard;
+    return m_keyboard;
 }
 
 void LSeat::processInput()
 {
-    int ret = libinput_dispatch(p_li);
+    int ret = libinput_dispatch(m_li);
 
     if (ret != 0)
     {
@@ -126,7 +126,7 @@ void LSeat::processInput()
 
     libinput_event *ev;
 
-    while ((ev = libinput_get_event(p_li)) != NULL)
+    while ((ev = libinput_get_event(m_li)) != NULL)
     {
 
         libinput_event_type eventType = libinput_event_get_type(ev);
@@ -161,7 +161,7 @@ void LSeat::processInput()
                 libinput_event_keyboard *keyEv = libinput_event_get_keyboard_event(ev);
                 libinput_key_state keyState = libinput_event_keyboard_get_key_state(keyEv);
                 int keyCode = libinput_event_keyboard_get_key(keyEv);
-                xkb_state_update_key(keyboard()->p_xkbKeymapState,keyCode+8,(xkb_key_direction)keyState);
+                xkb_state_update_key(keyboard()->m_xkbKeymapState,keyCode+8,(xkb_key_direction)keyState);
                 keyboard()->keyEvent(keyCode,keyState);
                 keyboard()->updateModifiers();
             }
@@ -194,7 +194,7 @@ void LSeat::processInput()
 
         libinputEvent(ev);
         libinput_event_destroy(ev);
-        libinput_dispatch(p_li);
+        libinput_dispatch(m_li);
     }
 }
 

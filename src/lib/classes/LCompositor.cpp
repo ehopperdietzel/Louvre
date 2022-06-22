@@ -1,4 +1,4 @@
-#include "LCompositor.h"
+#include <LCompositorPrivate.h>
 #include <LNamespaces.h>
 #include <LWayland.h>
 #include <LOutput.h>
@@ -21,15 +21,21 @@ using namespace Louvre;
 
 LCompositor::LCompositor(const char *backendPath)
 {
-    //signal(SIGINT,SIG_IGN);
-    //signal(SIGABRT,SIG_IGN);
+    m_imp = new LCompositorPrivate();
+
     loadBackend(backendPath);
 
     // Store the main thread id for later use (in LCursor)
-    p_threadId = std::this_thread::get_id();
+    m_imp->m_threadId = std::this_thread::get_id();
 
-    libinputFd = eventfd(0,EFD_SEMAPHORE);
+    m_imp->libinputFd = eventfd(0,EFD_SEMAPHORE);
+
     LWayland::initWayland(this);
+}
+
+LCompositor::~LCompositor()
+{
+    delete m_imp;
 }
 
 LOutput *LCompositor::createOutputRequest()
@@ -117,24 +123,24 @@ void LCompositor::destroyCursorRequest(LCursorRole *)
 
 void LCompositor::start()
 {    
-    if(_started)
+    if(m_imp->_started)
         return;
 
     // Ask the developer to return a LSeat
-    p_seat = createSeatRequest();
-    LWayland::setSeat(p_seat);
+    m_imp->m_seat = createSeatRequest();
+    LWayland::setSeat(m_imp->m_seat);
 
     initialize();
 
     // Init wayland
-    _started = true;
+    m_imp->_started = true;
     LWayland::runLoop();
 }
 
 void LCompositor::riseSurface(LSurface *surface)
 {
-    p_surfaces.remove(surface);
-    p_surfaces.push_back(surface);
+    m_imp->m_surfaces.remove(surface);
+    m_imp->m_surfaces.push_back(surface);
 
     // Rise its children
     for(LSurface *children : surface->children())
@@ -159,23 +165,23 @@ bool LCompositor::loadBackend(const char *backendPath)
         return false;
     }
 
-    p_backend = getAPI();
+    m_imp->m_backend = getAPI();
 
     return true;
 }
 
 bool LCompositor::insertSurfaceAfter(LSurface *prevSurface, LSurface *surfaceToInsert)
 {
-    for(list<LSurface*>::iterator it = p_surfaces.begin(); it != p_surfaces.end(); it++)
+    for(list<LSurface*>::iterator it = m_imp->m_surfaces.begin(); it != m_imp->m_surfaces.end(); it++)
     {
         if((*it) == prevSurface)
         {
-            p_surfaces.remove(surfaceToInsert);
+            m_imp->m_surfaces.remove(surfaceToInsert);
 
-            if(it++ == p_surfaces.end())
-                p_surfaces.push_back(surfaceToInsert);
+            if(it++ == m_imp->m_surfaces.end())
+                m_imp->m_surfaces.push_back(surfaceToInsert);
             else
-                p_surfaces.insert((it++),surfaceToInsert);
+                m_imp->m_surfaces.insert((it++),surfaceToInsert);
 
             return true;
         }
@@ -186,12 +192,12 @@ bool LCompositor::insertSurfaceAfter(LSurface *prevSurface, LSurface *surfaceToI
 
 bool LCompositor::insertSurfaceBefore(LSurface *nextSurface, LSurface *surfaceToInsert)
 {
-    for(list<LSurface*>::iterator it = p_surfaces.begin(); it != p_surfaces.end(); ++it)
+    for(list<LSurface*>::iterator it = m_imp->m_surfaces.begin(); it != m_imp->m_surfaces.end(); ++it)
     {
         if((*it) == nextSurface)
         {
-            p_surfaces.remove(surfaceToInsert);
-            p_surfaces.insert(it,surfaceToInsert);
+            m_imp->m_surfaces.remove(surfaceToInsert);
+            m_imp->m_surfaces.insert(it,surfaceToInsert);
             return true;
         }
     }
@@ -201,30 +207,30 @@ bool LCompositor::insertSurfaceBefore(LSurface *nextSurface, LSurface *surfaceTo
 
 LCursor *LCompositor::cursor() const
 {
-    return p_cursor;
+    return m_imp->m_cursor;
 }
 
 
 LSeat *LCompositor::seat() const
 {
-    return p_seat;
+    return m_imp->m_seat;
 }
 
 LDataSource *LCompositor::dataSource() const
 {
-    return p_dataSource;
+    return m_imp->m_dataSource;
 }
 
 void LCompositor::repaintAllOutputs()
 {
-    for(list<LOutput*>::iterator it = p_outputs.begin(); it != p_outputs.end(); ++it)
+    for(list<LOutput*>::iterator it = m_imp->m_outputs.begin(); it != m_imp->m_outputs.end(); ++it)
         (*it)->repaint();
 }
 
 void LCompositor::addOutput(LOutput *output)
 {
     // Add the output to the compositor list
-    p_outputs.push_back(output);
+    m_imp->m_outputs.push_back(output);
 
     // This method inits the Output rendering thread and its OpenGL context
     output->setCompositor(this);
@@ -253,17 +259,27 @@ void LCompositor::removeOutput(LOutput *output)
 
 const list<LSurface *> &LCompositor::surfaces() const
 {
-    return p_surfaces;
+    return m_imp->m_surfaces;
 }
 
 const list<LOutput *> &LCompositor::outputs() const
 {
-    return p_outputs;
+    return m_imp->m_outputs;
 }
 
 const list<LClient *> &LCompositor::clients() const
 {
-    return p_clients;
+    return m_imp->m_clients;
+}
+
+thread::id LCompositor::mainThreadId() const
+{
+    return m_imp->m_threadId;
+}
+
+LCompositor::LCompositorPrivate *LCompositor::imp() const
+{
+    return m_imp;
 }
 
 

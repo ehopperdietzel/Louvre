@@ -10,6 +10,7 @@ using namespace std;
 class Louvre::LClient
 {
 public:
+
     LClient(wl_client *client, LCompositor *compositor);
     virtual ~LClient();
 
@@ -40,48 +41,10 @@ public:
     UInt32 lastKeyboardKeyEventSerial() const;
     UInt32 lastKeyboardModifiersEventSerial() const;
 
+    class LClientPrivate;
+    LClientPrivate *imp() const;
 private:
-    friend class LWayland;
-    friend class LSurface;
-    friend class LPointer;
-    friend class LKeyboard;
-    friend class LSeat;
-    friend class Globals::Surface;
-    friend class Globals::Seat;
-    friend class Globals::Compositor;
-    friend class Globals::Keyboard;
-    friend class Globals::Pointer;
-    friend class Globals::DataDeviceManager;
-    friend class Globals::DataDevice;
-    friend class Extensions::XdgShell::WmBase;
-
-    list<LSurface*>p_surfaces;
-
-    LCompositor         *p_compositor               = nullptr;
-    LDataDevice         *p_dataDevice               = nullptr;
-    wl_client           *p_client                   = nullptr;
-
-    wl_resource         *p_seatResource             = nullptr;
-    wl_resource         *p_pointerResource          = nullptr;
-    wl_resource         *p_keyboardResource         = nullptr;
-    wl_resource         *p_touchResource            = nullptr;
-    wl_resource         *p_xdgWmBaseResource        = nullptr;
-
-    LSurface            *p_pointerFocusedSurface    = nullptr;
-    LSurface            *p_keyboardFocusedSurface   = nullptr;
-    LSurface            *p_touchFocusedSurface      = nullptr;
-
-    // Serials
-    UInt32               p_lastPointerEnterEventSerial      = 0;
-    UInt32               p_lastPointerLeaveEventSerial      = 0;
-    UInt32               p_lastPointerButtonEventSerial     = 0;
-
-    UInt32               p_lastKeyboardEnterEventSerial     = 0;
-    UInt32               p_lastKeyboardLeaveEventSerial     = 0;
-    UInt32               p_lastKeyboardKeyEventSerial       = 0;
-    UInt32               p_lastKeyboardModifiersEventSerial = 0;
-
-    UInt32 p_id;
+    LClientPrivate *m_imp = nullptr;
 
 };
 

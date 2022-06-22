@@ -40,7 +40,7 @@ private:
     modeUniform,
     colorUniform;
 
-    LOutput *p_output = nullptr;
+    LOutput *m_output = nullptr;
 };
 
 #endif // LOPENGL_H

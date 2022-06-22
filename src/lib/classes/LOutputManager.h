@@ -14,8 +14,8 @@ public:
     const list<LOutput*>*getOutputsList();
 
 private:
-    LCompositor *p_compositor = nullptr;
-    list<LOutput*>p_outputs;
+    LCompositor *m_compositor = nullptr;
+    list<LOutput*>m_outputs;
 };
 
 #endif // LOUTPUTMANAGER_H

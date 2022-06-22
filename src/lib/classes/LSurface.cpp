@@ -1,4 +1,4 @@
-#include "LSurface.h"
+#include <LSurfacePrivate.h>
 #include <LClient.h>
 #include <LCompositor.h>
 #include <LWayland.h>
@@ -30,7 +30,7 @@ PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL = NULL;
 LCursorRole *LSurface::cursor() const
 {
     if(roleType() == Cursor)
-        return (LCursorRole*)p_role;
+        return (LCursorRole*)m_imp->m_role;
     else
         return nullptr;
 }
@@ -38,7 +38,7 @@ LCursorRole *LSurface::cursor() const
 LToplevelRole *LSurface::toplevel() const
 {
     if(roleType() == Toplevel)
-        return (LToplevelRole*)p_role;
+        return (LToplevelRole*)m_imp->m_role;
     else
         return nullptr;
 }
@@ -46,7 +46,7 @@ LToplevelRole *LSurface::toplevel() const
 LPopupRole *LSurface::popup() const
 {
     if(roleType() == Popup)
-        return (LPopupRole*)p_role;
+        return (LPopupRole*)m_imp->m_role;
     else
         return nullptr;
 }
@@ -54,28 +54,30 @@ LPopupRole *LSurface::popup() const
 LSubsurfaceRole *LSurface::subsurface() const
 {
     if(roleType() == Subsurface)
-        return (LSubsurfaceRole*)p_role;
+        return (LSubsurfaceRole*)m_imp->m_role;
     else
         return nullptr;
 }
 
 LBaseSurfaceRole *LSurface::role() const
 {
-    return p_role;
+    return m_imp->m_role;
 }
 
 LSurface::LSurface(wl_resource *surface, LClient *client, GLuint textureUnit)
 {
+    m_imp = new LSurfacePrivate();
     eglQueryWaylandBufferWL = (PFNEGLQUERYWAYLANDBUFFERWL) eglGetProcAddress ("eglQueryWaylandBufferWL");
-    p_texture = new LTexture(textureUnit);
+    m_imp->m_texture = new LTexture(textureUnit);
     srand(time(NULL));
-    p_resource = surface;
-    p_client = client;
+    m_imp->m_resource = surface;
+    m_imp->m_client = client;
 }
 
 LSurface::~LSurface()
 {
-    delete p_texture;
+    delete m_imp->m_texture;
+    delete m_imp;
 }
 
 void LSurface::typeChangeRequest()
@@ -98,17 +100,27 @@ void LSurface::bufferSizeChangeRequest()
         seat()->pointer()->updateResizingToplevelPos();
 }
 
+void LSurface::opaqueRegionChanged()
+{
+
+}
+
+void LSurface::inputRegionChanged()
+{
+
+}
+
 const LPoint &LSurface::pos(bool useRolePos) const
 {
     if(useRolePos && roleType() != Undefined)
         return role()->rolePos();
 
-    return p_pos;
+    return m_imp->m_pos;
 }
 
 void LSurface::setPos(const LPoint &newPos)
 {
-    p_pos = newPos;
+    m_imp->m_pos = newPos;
 }
 
 void LSurface::setPos(Int32 x, Int32 y)
@@ -119,17 +131,17 @@ void LSurface::setPos(Int32 x, Int32 y)
 
 void LSurface::setX(Int32 x)
 {
-    p_pos.setX(x);
+    m_imp->m_pos.setX(x);
 }
 
 void LSurface::setY(Int32 y, bool useRolePos)
 {
     if(!useRolePos)
-        p_pos.setY(y);
+        m_imp->m_pos.setY(y);
     else
     {
         if(roleType() == Toplevel)
-            p_pos.setY(p_pos.y() + toplevel()->windowGeometry().y());
+            m_imp->m_pos.setY(m_imp->m_pos.y() + toplevel()->windowGeometry().y());
     }
 }
 
@@ -137,17 +149,47 @@ const LSize &LSurface::size(bool useBufferSize) const
 {
     if(useBufferSize)
         return texture()->size();
-    return current.size;
+    return m_imp->current.size;
+}
+
+const LRegion &LSurface::inputRegion() const
+{
+    return m_imp->current.inputRegion;
+}
+
+const LRegion &LSurface::opaqueRegion() const
+{
+    return m_imp->current.opaqueRegion;
+}
+
+const LRegion &LSurface::damages() const
+{
+    return m_imp->m_currentDamages;
 }
 
 void LSurface::setMinimized(bool state)
 {
-    p_minimized = state;
+    m_imp->m_minimized = state;
+}
+
+Int32 LSurface::bufferScale() const
+{
+    return m_imp->m_bufferScale;
+}
+
+LTexture *LSurface::texture() const
+{
+    return m_imp->m_texture;
+}
+
+bool LSurface::isDamaged() const
+{
+    return m_imp->m_isDamaged;
 }
 
 bool LSurface::minimized() const
 {
-    return p_minimized;
+    return m_imp->m_minimized;
 }
 
 LSeat *LSurface::seat() const
@@ -166,7 +208,7 @@ UInt32 LSurface::roleType() const
 
 bool LSurface::inputRegionContainsPoint(const LPoint &surfacePos, const LPoint &point)
 {
-    return current.inputRegion.containsPoint(point-surfacePos);
+    return m_imp->current.inputRegion.containsPoint(point-surfacePos);
 }
 
 LPoint LSurface::mapToLocal(const LPoint &point)
@@ -174,26 +216,97 @@ LPoint LSurface::mapToLocal(const LPoint &point)
     return point - pos();
 }
 
+bool LSurface::textureChanged() const
+{
+    return m_imp->m_textureChanged;
+}
 
-void LSurface::applyDamages()
+void LSurface::requestNextFrame()
+{
+    m_imp->m_textureChanged = false;
+    if(m_imp->m_frameCallback)
+    {
+        wl_callback_send_done(m_imp->m_frameCallback,LTime::ms());
+        wl_resource_destroy(m_imp->m_frameCallback);
+        m_imp->m_frameCallback = nullptr;
+    }
+}
+
+wl_resource *LSurface::resource() const
+{
+    return m_imp->m_resource;
+}
+
+wl_resource *LSurface::xdgSurfaceResource() const
+{
+    return m_imp->m_xdgSurfaceResource;
+}
+
+LClient *LSurface::client() const
+{
+    return m_imp->m_client;
+}
+
+LCompositor *LSurface::compositor() const
+{
+    if(m_imp->m_client != nullptr)
+        return m_imp->m_client->compositor();
+    else
+        return nullptr;
+}
+
+Louvre::LSurface *LSurface::parent() const
+{
+    return m_imp->m_parent;
+}
+
+LSurface *findTopmostParent(LSurface *surface)
+{
+    if(surface->parent() == nullptr)
+        return surface;
+
+    return findTopmostParent(surface->parent());
+}
+Louvre::LSurface *LSurface::topParent() const
+{
+    if(parent() == nullptr)
+        return nullptr;
+
+    return findTopmostParent(parent());
+}
+
+const list<Louvre::LSurface *> &LSurface::children() const
+{
+    return m_imp->m_children;
+}
+
+LSurface::LSurfacePrivate *LSurface::imp() const
+{
+    return m_imp;
+}
+
+// Private
+
+void LSurface::LSurfacePrivate::m_bufferToTexture()
 {
 
-    if(!p_isDamaged || resource() == nullptr)
+    if(!m_isDamaged || !m_resource)
         return;
 
-    LOutput *output = compositor()->outputs().front();
+    //LOutput *output = compositor()->outputs().front();
     Int32 width, height;
     EGLint texture_format;
 
+
     // EGL
-    if(eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_TEXTURE_FORMAT, &texture_format))
+    if(eglQueryWaylandBufferWL(LWayland::eglDisplay(), current.buffer, EGL_TEXTURE_FORMAT, &texture_format))
     {
-        eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_WIDTH, &width);
-        eglQueryWaylandBufferWL(output->getDisplay(), current.buffer, EGL_HEIGHT, &height);
+        eglQueryWaylandBufferWL(LWayland::eglDisplay(), current.buffer, EGL_WIDTH, &width);
+        eglQueryWaylandBufferWL(LWayland::eglDisplay(), current.buffer, EGL_HEIGHT, &height);
         EGLAttrib attribs = EGL_NONE;
-        EGLImage image = eglCreateImage(output->getDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, current.buffer, &attribs);
-        p_texture->setData(width, height, &image, texture_format, GL_UNSIGNED_BYTE, LTexture::BufferType::EGL);
-        eglDestroyImage (output->getDisplay(), image);
+        EGLImage image = eglCreateImage(LWayland::eglDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, current.buffer, &attribs);
+        m_texture->setData(width, height, &image, texture_format, GL_UNSIGNED_BYTE, LTexture::BufferType::EGL);
+        eglDestroyImage(LWayland::eglDisplay(), image);
     }
     // SHM
     else
@@ -219,11 +332,11 @@ void LSurface::applyDamages()
         {
             printf("Texture format not supported.\n");
             wl_shm_buffer_end_access(shm_buffer);
-            wl_client_destroy(client()->client());
+            wl_client_destroy(m_client->client());
             return;
         }
 
-        p_texture->setData(width, height, data, bufferFormat, GL_UNSIGNED_BYTE);
+        m_texture->setData(width, height, data, bufferFormat, GL_UNSIGNED_BYTE);
 
         wl_shm_buffer_end_access(shm_buffer);
 
@@ -231,61 +344,5 @@ void LSurface::applyDamages()
 
     wl_buffer_send_release(current.buffer);
     current.buffer = nullptr;
-    p_isDamaged = false;
+    m_isDamaged = false;
 }
-
-void LSurface::requestNextFrame()
-{
-    p_textureChanged = false;
-    if(p_frameCallback)
-    {
-        wl_callback_send_done(p_frameCallback,LTime::ms());
-        wl_resource_destroy(p_frameCallback);
-        p_frameCallback = nullptr;
-    }
-}
-
-wl_resource *LSurface::xdgSurfaceResource() const
-{
-    return p_xdgSurfaceResource;
-}
-
-void LSurface::setBufferScale(Int32 scale)
-{
-    p_bufferScale = scale;
-}
-
-LCompositor *LSurface::compositor() const
-{
-    if(p_client != nullptr)
-        return p_client->compositor();
-    else
-        return nullptr;
-}
-
-Louvre::LSurface *LSurface::parent() const
-{
-    return p_parent;
-}
-
-LSurface *findTopmostParent(LSurface *surface)
-{
-    if(surface->parent() == nullptr)
-        return surface;
-
-    return findTopmostParent(surface->parent());
-}
-Louvre::LSurface *LSurface::topParent() const
-{
-    if(parent() == nullptr)
-        return nullptr;
-
-    return findTopmostParent(parent());
-}
-
-const list<Louvre::LSurface *> &LSurface::children() const
-{
-    return p_children;
-}
-
-

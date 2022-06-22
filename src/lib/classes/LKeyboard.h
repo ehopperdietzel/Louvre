@@ -55,29 +55,29 @@ private:
     friend class LSeat;
     friend class Globals::Surface;
 
-    LSeat *p_seat = nullptr;
+    LSeat *m_seat = nullptr;
 
     // Wayland
-    LSurface            *p_keyboardFocusSurface     = nullptr;
+    LSurface            *m_keyboardFocusSurface     = nullptr;
 
 #if LOUVRE_SEAT_VERSION >= 4
-    Int32                p_repeatRate               = 32;
-    Int32                p_repeatDelay              = 500;
+    Int32                m_repeatRate               = 32;
+    Int32                m_repeatDelay              = 500;
 #endif
 
-    wl_array             p_keys;
+    wl_array             m_keys;
 
     // XKB
-    xkb_context         *p_xkbContext               = nullptr;
-    xkb_keymap          *p_xkbKeymap                = nullptr;
-    xkb_state           *p_xkbKeymapState           = nullptr;
-    xkb_rule_names       p_xkbKeymapName;
-    Int32                p_xkbKeymapSize;
-    Int32                p_xkbKeymapFd              = -1;
+    xkb_context         *m_xkbContext               = nullptr;
+    xkb_keymap          *m_xkbKeymap                = nullptr;
+    xkb_state           *m_xkbKeymapState           = nullptr;
+    xkb_rule_names       m_xkbKeymapName;
+    Int32                m_xkbKeymapSize;
+    Int32                m_xkbKeymapFd              = -1;
 
     void updateModifiers();
 
-    LKeyboardModifiersState p_modifiersState;
+    LKeyboardModifiersState m_modifiersState;
 };
 
 #endif // LKEYBOARD_H

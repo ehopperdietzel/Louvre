@@ -1,12 +1,12 @@
 #include "Keyboard.h"
-#include <LClient.h>
+#include <LClientPrivate.h>
 #include <stdio.h>
 
 void Louvre::Globals::Keyboard::resource_destroy(wl_resource *resource)
 {
     printf("KEYBOARD DESTROYED.\n");
     LClient *client = (LClient*)wl_resource_get_user_data(resource);
-    client->p_keyboardResource = nullptr;
+    client->imp()->m_keyboardResource = nullptr;
 }
 
 #if LOUVRE_SEAT_VERSION >= 3

@@ -17,11 +17,11 @@ public:
 
 protected:
     friend class Globals::Surface;
-    mutable LPoint p_rolePos;
-    UInt32 p_roleId = 0;
-    wl_resource *p_resource = nullptr;
-    LSurface *p_surface = nullptr;
-    LCompositor *p_compositor = nullptr;
+    mutable LPoint m_rolePos;
+    UInt32 m_roleId = 0;
+    wl_resource *m_resource = nullptr;
+    LSurface *m_surface = nullptr;
+    LCompositor *m_compositor = nullptr;
 };
 
 #endif // LBASESURFACEROLE_H

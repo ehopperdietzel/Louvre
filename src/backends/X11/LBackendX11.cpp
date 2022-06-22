@@ -203,11 +203,11 @@ void LBackend::createGLContext(LOutput *output)
     //XInitThreads();
     create_window(output);
     X11 *data = (X11*)output->data;
-    output->p_rect.setW(data->window.width);
-    output->p_rect.setH(data->window.height);
+    output->m_rect.setW(data->window.width);
+    output->m_rect.setH(data->window.height);
 
-    output->p_rectScaled = output->p_rect/output->getOutputScale();
-    output->p_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
+    output->m_rectScaled = output->m_rect/output->getOutputScale();
+    output->m_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
     printf("X11 backend initialized.\n");
 }
 

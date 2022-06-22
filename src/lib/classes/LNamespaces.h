@@ -5,11 +5,12 @@
 #include <libinput.h>
 #include <list>
 
-#define LOUVRE_TB_H 40
-#define LOUBRE_DEBUG 1
+#define LOUVRE_TB_H 60
+#define LOUBRE_DEBUG 0
+
 
 // Globals versions
-#define LOUVRE_COMPOSITOR_VERSION 5
+#define LOUVRE_COMPOSITOR_VERSION 4 //5
 #define LOUVRE_XDG_WM_BASE_VERSION 2
 #define LOUVRE_SEAT_VERSION 7
 #define LOUVRE_SUBCOMPOSITOR_VERSION 1

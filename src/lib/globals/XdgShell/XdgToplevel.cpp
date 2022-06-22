@@ -1,6 +1,6 @@
 #include "XdgToplevel.h"
 #include <stdio.h>
-#include <LSurface.h>
+#include <LSurfacePrivate.h>
 #include <LCompositor.h>
 #include <xdg-shell.h>
 #include <LToplevelRole.h>
@@ -23,7 +23,7 @@ void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
         lToplevel->seat()->pointer()->stopMovingTopLevel();
 
     if(lToplevel->seat()->activeTopLevel() == lToplevel)
-        lToplevel->seat()->p_activeTopLevel = nullptr;
+        lToplevel->seat()->m_activeTopLevel = nullptr;
 
     // Notify
     lToplevel->compositor()->destroyToplevelRequest(lToplevel);
@@ -34,13 +34,13 @@ void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
         // Parent
         if(lToplevel->surface()->parent())
         {
-            lToplevel->surface()->parent()->p_children.remove(lToplevel->surface());
-            lToplevel->surface()->p_parent = nullptr;
+            lToplevel->surface()->parent()->imp()->m_children.remove(lToplevel->surface());
+            lToplevel->surface()->imp()->m_parent = nullptr;
             lToplevel->surface()->parentChangeRequest();
         }
 
-        lToplevel->surface()->current.type = LSurface::Undefined;
-        lToplevel->surface()->p_role = nullptr;
+        lToplevel->surface()->imp()->current.type = LSurface::Undefined;
+        lToplevel->surface()->imp()->m_role = nullptr;
         lToplevel->surface()->typeChangeRequest();
     }
 
@@ -59,13 +59,13 @@ void Extensions::XdgShell::Toplevel::set_parent (wl_client *, wl_resource *resou
     if(parent == NULL)
     {
         if(lToplevel->surface()->parent())
-            lToplevel->surface()->parent()->p_children.remove(lToplevel->surface());
-        lToplevel->surface()->p_parent = nullptr;
+            lToplevel->surface()->parent()->imp()->m_children.remove(lToplevel->surface());
+        lToplevel->surface()->imp()->m_parent = nullptr;
     }
     else
     {
-        lToplevel->surface()->p_parent = ((LToplevelRole*)wl_resource_get_user_data(parent))->surface();
-        lToplevel->surface()->parent()->p_children.push_front(lToplevel->surface());
+        lToplevel->surface()->imp()->m_parent = ((LToplevelRole*)wl_resource_get_user_data(parent))->surface();
+        lToplevel->surface()->parent()->imp()->m_children.push_front(lToplevel->surface());
     }
 
     lToplevel->surface()->parentChangeRequest();
@@ -103,16 +103,16 @@ void Extensions::XdgShell::Toplevel::resize(wl_client *, wl_resource *resource, 
 void Extensions::XdgShell::Toplevel::set_max_size (wl_client *, wl_resource *resource, Int32 width, Int32 height)
 {
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->p_maxSize.setW(width);
-    lToplevel->p_maxSize.setH(height);
+    lToplevel->m_maxSize.setW(width);
+    lToplevel->m_maxSize.setH(height);
     lToplevel->maxSizeChanged();
 }
 
 void Extensions::XdgShell::Toplevel::set_min_size (wl_client *, wl_resource *resource, Int32 width, Int32 height)
 {
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->p_minSize.setW(width);
-    lToplevel->p_minSize.setH(height);
+    lToplevel->m_minSize.setW(width);
+    lToplevel->m_minSize.setH(height);
     lToplevel->minSizeChanged();
 }
 

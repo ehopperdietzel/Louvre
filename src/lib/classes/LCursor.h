@@ -30,9 +30,9 @@ public:
 
     bool visible() const;
     bool hasHardwareSupport() const;
-    const LPointF &position() const {return p_pos;}
-    const LPointF &hotspot()  const {return p_hotspot;}
-    LTexture *texture()       const {return p_texture;}
+    const LPointF &position() const {return m_pos;}
+    const LPointF &hotspot()  const {return m_hotspot;}
+    LTexture *texture()       const {return m_texture;}
     LCompositor *compositor() const;
 
 private:
@@ -45,7 +45,7 @@ private:
 
     void loadDefaultCursors();
 
-    LCursorData p_cursors[1];
+    LCursorData m_cursors[1];
 
     enum LLastCursorType
     {
@@ -65,16 +65,16 @@ private:
     }lastCursor;
 
     void update();
-    char *p_cursorTheme = NULL;
-    LTexture *p_x11Texture;
-    LTexture *p_texture = nullptr;
-    LOutput *p_output = nullptr;
-    LPointF p_pos;
-    LPointF p_hotspot;
-    LSizeF p_size = LSizeF(64.f,64.f);
-    LPoint p_prevPos;
+    char *m_cursorTheme = NULL;
+    LTexture *m_x11Texture;
+    LTexture *m_texture = nullptr;
+    LOutput *m_output = nullptr;
+    LPointF m_pos;
+    LPointF m_hotspot;
+    LSizeF m_size = LSizeF(64.f,64.f);
+    LPoint m_prevPos;
 
-    bool p_isVisible = true;
+    bool m_isVisible = true;
 };
 
 #endif // LCURSOR_H

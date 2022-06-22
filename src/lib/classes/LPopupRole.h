@@ -38,13 +38,13 @@ private:
     friend class Extensions::XdgShell::Surface;
     friend class Extensions::XdgShell::Popup;
 
-    LRect p_windowGeometry;
+    LRect m_windowGeometry;
 
 #if LOUVRE_XDG_WM_BASE_VERSION >= 3
-    UInt32 p_repositionSerial = 0;
+    UInt32 m_repositionSerial = 0;
 #endif
 
-    LPositioner *p_positioner = nullptr;
+    LPositioner *m_positioner = nullptr;
 
 
 };

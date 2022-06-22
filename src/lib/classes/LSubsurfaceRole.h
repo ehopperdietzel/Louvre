@@ -22,9 +22,9 @@ private:
     friend class Globals::Surface;
     friend class Globals::Subsurface;
 
-    bool p_parentIsCommiting = false;
-    bool p_isSynced = true;
-    LPoint p_localPos;
+    bool m_parentIsCommiting = false;
+    bool m_isSynced = true;
+    LPoint m_localPos;
 
 };
 

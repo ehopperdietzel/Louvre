@@ -5,7 +5,7 @@ using namespace Louvre;
 
 LCursorRole::LCursorRole(wl_resource *resource, LSurface *surface) : LBaseSurfaceRole(resource, surface)
 {
-    p_roleId = LSurface::Cursor;
+    m_roleId = LSurface::Cursor;
 }
 
 LCursorRole::~LCursorRole()
@@ -15,11 +15,11 @@ LCursorRole::~LCursorRole()
 
 const LPoint &LCursorRole::rolePos() const
 {
-    p_rolePos = surface()->pos() - hotspot();
-    return p_rolePos;
+    m_rolePos = surface()->pos() - hotspot();
+    return m_rolePos;
 }
 
 const LPoint &Louvre::LCursorRole::hotspot() const
 {
-    return p_hotspot;
+    return m_hotspot;
 }

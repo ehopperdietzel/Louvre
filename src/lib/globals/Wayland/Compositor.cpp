@@ -1,6 +1,5 @@
-
-// Wayland++
-#include <LCompositor.h>
+#include <LCompositorPrivate.h>
+#include <LClientPrivate.h>
 
 // Globals
 #include <Compositor.h>
@@ -53,8 +52,8 @@ void Globals::Compositor::create_surface(wl_client *client, wl_resource *resourc
     LSurface *wSurface = wClient->compositor()->createSurfaceRequest(surface,wClient);
 
     // Append surface
-    wClient->p_surfaces.push_back(wSurface);
-    wClient->compositor()->p_surfaces.push_back(wSurface);
+    wClient->imp()->m_surfaces.push_back(wSurface);
+    wClient->compositor()->imp()->m_surfaces.push_back(wSurface);
 
     // Implement surface
     wl_resource_set_implementation(surface, &surface_implementation, wSurface, &Surface::resource_destroy);
@@ -64,7 +63,7 @@ void Globals::Compositor::create_surface(wl_client *client, wl_resource *resourc
 void Globals::Compositor::create_region (wl_client *client, wl_resource *resource, UInt32 id)
 {
     // New region
-    wl_resource *region = wl_resource_create(client, &wl_region_interface, wl_resource_get_version(resource), id); // 1
+    wl_resource *region = wl_resource_create(client, &wl_region_interface, wl_resource_get_version(resource), id);
 
     // Create region
     LRegion *lRegion = new LRegion();

@@ -7,24 +7,24 @@ using namespace Louvre;
 
 LBaseSurfaceRole::LBaseSurfaceRole(wl_resource *resource, LSurface *surface)
 {
-    p_resource = resource;
-    p_surface = surface;
-    p_compositor = surface->compositor();
+    m_resource = resource;
+    m_surface = surface;
+    m_compositor = surface->compositor();
 }
 
 UInt32 LBaseSurfaceRole::roleId()
 {
-    return p_roleId;
+    return m_roleId;
 }
 
 LCompositor *LBaseSurfaceRole::compositor() const
 {
-    return p_compositor;
+    return m_compositor;
 }
 
 LSurface *LBaseSurfaceRole::surface() const
 {
-    return p_surface;
+    return m_surface;
 }
 
 LSeat *LBaseSurfaceRole::seat() const
@@ -34,5 +34,5 @@ LSeat *LBaseSurfaceRole::seat() const
 
 wl_resource *LBaseSurfaceRole::resource() const
 {
-    return p_resource;
+    return m_resource;
 }

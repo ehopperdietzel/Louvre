@@ -11,7 +11,7 @@
 #include <drm.h>
 
 #include <LBackend.h>
-#include <LCompositor.h>
+#include <LCompositorPrivate.h>
 #include <LOutput.h>
 #include <LWayland.h>
 #include <LOpenGL.h>
@@ -301,7 +301,7 @@ void LBackend::createGLContext(LOutput *output)
         return;
     }
 
-    output->p_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
+    output->m_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
     printf("DRM backend initialized.\n");
 
     return;
@@ -329,6 +329,7 @@ void LBackend::flipPage(LOutput *output)
     while (waiting_for_flip)
     {
         data->ret = select(data->deviceFd + 1, &data->fds, NULL, NULL, NULL);
+
         /*
         if (data->ret < 0)
         {
@@ -346,13 +347,17 @@ void LBackend::flipPage(LOutput *output)
             break;
         }
         */
+
         drmHandleEvent(data->deviceFd, &data->evctx);
     }
     // release last buffer to render on again:
     gbm_surface_release_buffer(data->gbm.surface, data->bo);
     data->bo = next_bo;
 
+
+
     /*
+
     DRM *data = (DRM*)output->data;
 
     gbm_bo *next_bo;
@@ -540,9 +545,9 @@ std::list<LOutput *> &LBackend::getAvaliableOutputs(LCompositor *compositor)
                 data->encoder = encoder;
                 data->mode = defaultMode;
 
-                newOutput->p_rect.setW(defaultMode->hdisplay);
-                newOutput->p_rect.setH(defaultMode->vdisplay);
-                newOutput->p_rectScaled = newOutput->p_rect/newOutput->getOutputScale();
+                newOutput->m_rect.setW(defaultMode->hdisplay);
+                newOutput->m_rect.setH(defaultMode->vdisplay);
+                newOutput->m_rectScaled = newOutput->m_rect/newOutput->getOutputScale();
 
                 newOutput->refreshRate = defaultMode->vrefresh;
                 outputs.push_front(newOutput);
@@ -581,7 +586,7 @@ void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
     LOpenGL *GL;
 
     if(std::this_thread::get_id() == output->compositor()->mainThreadId())
-        GL = output->compositor()->p_painter;
+        GL = output->compositor()->imp()->m_painter;
     else
         GL = output->painter();
 

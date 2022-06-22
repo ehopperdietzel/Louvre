@@ -1,6 +1,6 @@
 #include "LPopupRole.h"
 #include <LRect.h>
-#include <LSurface.h>
+#include <LSurfacePrivate.h>
 #include <LWayland.h>
 #include <LPositioner.h>
 #include <LCompositor.h>
@@ -16,7 +16,7 @@ using namespace Louvre;
 
 Louvre::LPopupRole::LPopupRole(wl_resource *popup, LSurface *surface, LPositioner *positioner) : LBaseSurfaceRole(popup,surface)
 {
-    p_positioner = positioner;
+    m_positioner = positioner;
 }
 
 LPopupRole::~LPopupRole()
@@ -26,8 +26,8 @@ LPopupRole::~LPopupRole()
 
 const LPoint &LPopupRole::rolePos() const
 {
-    p_rolePos = surface()->pos() - p_windowGeometry.topLeft();
-    return p_rolePos;
+    m_rolePos = surface()->pos() - m_windowGeometry.topLeft();
+    return m_rolePos;
 }
 
 void LPopupRole::pong(UInt32)
@@ -72,7 +72,7 @@ void LPopupRole::ping(UInt32 serial)
 void LPopupRole::configure(const LRect &rect)
 {
     xdg_popup_send_configure(resource(),rect.x(),rect.y(),rect.w(),rect.h());
-    xdg_surface_send_configure(surface()->p_xdgSurfaceResource,LWayland::nextSerial());
+    xdg_surface_send_configure(surface()->imp()->m_xdgSurfaceResource,LWayland::nextSerial());
 }
 
 void LPopupRole::sendPopupDoneEvent()
@@ -82,10 +82,10 @@ void LPopupRole::sendPopupDoneEvent()
 
 const LRect &LPopupRole::windowGeometry() const
 {
-    return p_windowGeometry;
+    return m_windowGeometry;
 }
 
 LPositioner *LPopupRole::positioner() const
 {
-    return p_positioner;
+    return m_positioner;
 }

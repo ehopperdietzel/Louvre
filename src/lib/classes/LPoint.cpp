@@ -18,55 +18,55 @@ LPoint LPoint::constrainedToHeight(UInt32 size) const
 
 LPoint &LPoint::operator+=(const LPointF &p)
 {
-    p_x += p.p_x;
-    p_y += p.p_y;
+    m_x += p.m_x;
+    m_y += p.m_y;
     return *this;
 }
 
 LPoint &LPoint::operator-=(const LPointF &p)
 {
-    p_x -= p.p_x;
-    p_y -= p.p_y;
+    m_x -= p.m_x;
+    m_y -= p.m_y;
     return *this;
 }
 
 LPoint &LPoint::operator*=(const LPointF &p)
 {
-    p_x *= p.p_x;
-    p_y *= p.p_y;
+    m_x *= p.m_x;
+    m_y *= p.m_y;
     return *this;
 }
 
 LPoint &LPoint::operator/=(const LPointF &p)
 {
-    p_x /= p.p_x;
-    p_y /= p.p_y;
+    m_x /= p.m_x;
+    m_y /= p.m_y;
     return *this;
 }
 
 LPoint LPoint::operator+(const LPointF &p) const
 {
-    return LPoint(p_x+p.p_x,p_y+p.p_y);
+    return LPoint(m_x+p.m_x,m_y+p.m_y);
 }
 
 LPoint LPoint::operator-(const LPointF &p) const
 {
-    return LPoint(p_x-p.p_x,p_y-p.p_y);
+    return LPoint(m_x-p.m_x,m_y-p.m_y);
 }
 
 LPoint LPoint::operator*(const LPointF &p) const
 {
-    return LPoint(p_x*p.p_x,p_y*p.p_y);
+    return LPoint(m_x*p.m_x,m_y*p.m_y);
 }
 
 LPoint LPoint::operator/(const LPointF &p) const
 {
-    return LPoint(p_x/p.p_x,p_y/p.p_y);
+    return LPoint(m_x/p.m_x,m_y/p.m_y);
 }
 
 
 LPoint::LPoint(const LPointF &pointF)
 {
-    p_x = pointF.p_x;
-    p_y = pointF.p_y;
+    m_x = pointF.m_x;
+    m_y = pointF.m_y;
 }

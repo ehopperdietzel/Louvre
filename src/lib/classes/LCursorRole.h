@@ -14,8 +14,8 @@ public:
 private:
     friend class Globals::Pointer;
     friend class Globals::Surface;
-    LPoint p_hotspot;
-    LPoint p_pendingHotspotOffset;
+    LPoint m_hotspot;
+    LPoint m_pendingHotspotOffset;
 };
 
 #endif // LCURSORROLE_H

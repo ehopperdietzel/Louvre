@@ -8,106 +8,106 @@ class Louvre::LPointF
 public:
 
     // Constructors
-    inline LPointF() : p_x(0), p_y(0) {}
-    inline LPointF(double x, double y) : p_x(x), p_y(y){}
+    inline LPointF() : m_x(0), m_y(0) {}
+    inline LPointF(double x, double y) : m_x(x), m_y(y){}
     LPointF(const LPoint &point);
 
-    float x()       const   {return p_x;}
-    float y()       const   {return p_y;}
-    float w()       const   {return p_x;}
-    float h()       const   {return p_y;}
-    float width()   const   {return p_x;}
-    float height()  const   {return p_y;}
-    float area()    const   {return p_x*p_y;}
+    float x()       const   {return m_x;}
+    float y()       const   {return m_y;}
+    float w()       const   {return m_x;}
+    float h()       const   {return m_y;}
+    float width()   const   {return m_x;}
+    float height()  const   {return m_y;}
+    float area()    const   {return m_x*m_y;}
 
-    void setX(Int32 x){p_x = x;}
-    void setY(Int32 y){p_y = y;}
-    void setW(Int32 x){p_x = x;}
-    void setH(Int32 y){p_y = y;}
-    void setWidth(Int32 x){p_x = x;}
-    void setHeight(Int32 y){p_y = y;}
+    void setX(Int32 x){m_x = x;}
+    void setY(Int32 y){m_y = y;}
+    void setW(Int32 x){m_x = x;}
+    void setH(Int32 y){m_y = y;}
+    void setWidth(Int32 x){m_x = x;}
+    void setHeight(Int32 y){m_y = y;}
 
     inline LPointF &operator+=(Int32 factor)
     {
-        p_x += factor;
-        p_y += factor;
+        m_x += factor;
+        m_y += factor;
         return *this;
     }
 
     inline LPointF &operator-=(Int32 factor)
     {
-        p_x -= factor;
-        p_y -= factor;
+        m_x -= factor;
+        m_y -= factor;
         return *this;
     }
 
     inline LPointF &operator*=(Int32 factor)
     {
-        p_x *= factor;
-        p_y *= factor;
+        m_x *= factor;
+        m_y *= factor;
         return *this;
     }
 
     inline LPointF &operator/=(Int32 factor)
     {
-        p_x /= factor;
-        p_y /= factor;
+        m_x /= factor;
+        m_y /= factor;
         return *this;
     }
 
     inline LPointF &operator+=(double factor)
     {
-        p_x += factor;
-        p_y += factor;
+        m_x += factor;
+        m_y += factor;
         return *this;
     }
 
     inline LPointF &operator-=(double factor)
     {
-        p_x -= factor;
-        p_y -= factor;
+        m_x -= factor;
+        m_y -= factor;
         return *this;
     }
 
     inline LPointF &operator*=(double factor)
     {
-        p_x *= factor;
-        p_y *= factor;
+        m_x *= factor;
+        m_y *= factor;
         return *this;
     }
 
     inline LPointF &operator/=(double factor)
     {
-        p_x /= factor;
-        p_y /= factor;
+        m_x /= factor;
+        m_y /= factor;
         return *this;
     }
 
     inline LPointF &operator+=(const LPointF &p)
     {
-        p_x += p.p_x;
-        p_y += p.p_y;
+        m_x += p.m_x;
+        m_y += p.m_y;
         return *this;
     }
 
     inline LPointF &operator-=(const LPointF &p)
     {
-        p_x -= p.p_x;
-        p_y -= p.p_y;
+        m_x -= p.m_x;
+        m_y -= p.m_y;
         return *this;
     }
 
     inline LPointF &operator*=(const LPointF &p)
     {
-        p_x *= p.p_x;
-        p_y *= p.p_y;
+        m_x *= p.m_x;
+        m_y *= p.m_y;
         return *this;
     }
 
     inline LPointF &operator/=(const LPointF &p)
     {
-        p_x /= p.p_x;
-        p_y /= p.p_y;
+        m_x /= p.m_x;
+        m_y /= p.m_y;
         return *this;
     }
 
@@ -118,62 +118,62 @@ public:
 
     inline LPointF operator+(Int32 factor) const
     {
-        return LPointF(p_x+factor,p_y+factor);
+        return LPointF(m_x+factor,m_y+factor);
     }
 
     inline LPointF operator-(Int32 factor) const
     {
-        return LPointF(p_x-factor,p_y-factor);
+        return LPointF(m_x-factor,m_y-factor);
     }
 
     inline LPointF operator*(Int32 factor) const
     {
-        return LPointF(p_x*factor,p_y*factor);
+        return LPointF(m_x*factor,m_y*factor);
     }
 
     inline LPointF operator/(Int32 factor) const
     {
-        return LPointF(p_x/factor,p_y/factor);
+        return LPointF(m_x/factor,m_y/factor);
     }
 
     inline LPointF operator+(double factor) const
     {
-        return LPointF(p_x+factor,p_y+factor);
+        return LPointF(m_x+factor,m_y+factor);
     }
 
     inline LPointF operator-(double factor) const
     {
-        return LPointF(p_x-factor,p_y-factor);
+        return LPointF(m_x-factor,m_y-factor);
     }
 
     inline LPointF operator*(double factor) const
     {
-        return LPointF(p_x*factor,p_y*factor);
+        return LPointF(m_x*factor,m_y*factor);
     }
 
     inline LPointF operator/(double factor) const
     {
-        return LPointF(p_x/factor,p_y/factor);
+        return LPointF(m_x/factor,m_y/factor);
     }
 
     inline LPointF operator+(const LPointF &p) const
     {
-        return LPointF(p_x+p.p_x,p_y+p.p_y);
+        return LPointF(m_x+p.m_x,m_y+p.m_y);
     }
 
     inline LPointF operator-(const LPointF &p) const
     {
-        return LPointF(p_x-p.p_x,p_y-p.p_y);
+        return LPointF(m_x-p.m_x,m_y-p.m_y);
     }
 
     inline LPointF operator*(const LPointF &p) const
     {
-        return LPointF(p_x*p.p_x,p_y*p.p_y);
+        return LPointF(m_x*p.m_x,m_y*p.m_y);
     }
 
     inline LPointF operator/(const LPointF &p) const
     {
-        return LPointF(p_x*p.p_x,p_y*p.p_y);
+        return LPointF(m_x*p.m_x,m_y*p.m_y);
     }
 
     LPointF operator+(const LPoint &p) const;
@@ -183,17 +183,17 @@ public:
 
     inline bool operator==(const LPointF &p) const
     {
-        return p_x == p.p_x && p_y == p.p_y;
+        return m_x == p.m_x && m_y == p.m_y;
     }
 
     inline bool operator!=(const LPointF &p) const
     {
-        return p_x != p.p_x || p_y != p.p_y;
+        return m_x != p.m_x || m_y != p.m_y;
     }
 
 private:
     friend class LRect;
     friend class LPoint;
-    float p_x,p_y;
+    float m_x,m_y;
 };
 #endif // LPointFF_H

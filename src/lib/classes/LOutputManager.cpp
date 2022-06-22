@@ -1,22 +1,22 @@
 #include <LOutputManager.h>
 #include <LOutput.h>
-#include <LCompositor.h>
+#include <LCompositorPrivate.h>
 
 using namespace Louvre;
 
 LOutputManager::LOutputManager(LCompositor *compositor)
 {
-    p_outputs = compositor->p_backend->getAvaliableOutputs(compositor);
-    p_compositor = compositor;
+    m_outputs = compositor->imp()->m_backend->getAvaliableOutputs(compositor);
+    m_compositor = compositor;
 }
 
 LCompositor *LOutputManager::getCompositor() const
 {
-    return p_compositor;
+    return m_compositor;
 }
 
 const list<LOutput *> *LOutputManager::getOutputsList()
 {
-    return &p_outputs;
+    return &m_outputs;
 }
 

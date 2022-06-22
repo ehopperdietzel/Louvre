@@ -2,7 +2,7 @@
 #include <XdgToplevel.h>
 #include <XdgPopup.h>
 #include <xdg-shell.h>
-#include <LSurface.h>
+#include <LSurfacePrivate.h>
 #include <LCompositor.h>
 #include <LPositioner.h>
 #include <LToplevelRole.h>
@@ -47,7 +47,7 @@ void Extensions::XdgShell::Surface::resource_destroy(wl_resource *resource)
 {
     printf("XDG_SURFACE DESTROYED.\n");
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
-    lSurface->p_xdgSurfaceResource = nullptr;
+    lSurface->imp()->m_xdgSurfaceResource = nullptr;
 }
 
 void Extensions::XdgShell::Surface::destroy (wl_client *, wl_resource *resource)
@@ -59,7 +59,7 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client, wl_resource 
 {
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
 
-    if(lSurface->pending.buffer != nullptr || lSurface->current.buffer != nullptr)
+    if(lSurface->imp()->pending.buffer != nullptr || lSurface->imp()->current.buffer != nullptr)
     {
         wl_resource_post_error(resource,XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"Given wl_surface already has a buffer attached.");
         return;
@@ -73,9 +73,9 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client, wl_resource 
 
     wl_resource *toplevel = wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(resource), id); // 4
 
-    lSurface->p_role = lSurface->compositor()->createToplevelRequest(toplevel, lSurface);
-    lSurface->pending.type = LSurface::Toplevel;
-    wl_resource_set_implementation(toplevel, &xdg_toplevel_implementation, lSurface->p_role, &Extensions::XdgShell::Toplevel::destroy_resource);
+    lSurface->imp()->m_role = lSurface->compositor()->createToplevelRequest(toplevel, lSurface);
+    lSurface->imp()->pending.type = LSurface::Toplevel;
+    wl_resource_set_implementation(toplevel, &xdg_toplevel_implementation, lSurface->imp()->m_role, &Extensions::XdgShell::Toplevel::destroy_resource);
 
 }
 void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *parent, wl_resource *positioner)
@@ -83,7 +83,7 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
 
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
 
-    if(lSurface->pending.buffer != nullptr || lSurface->current.buffer != nullptr)
+    if(lSurface->imp()->pending.buffer != nullptr || lSurface->imp()->current.buffer != nullptr)
     {
         wl_resource_post_error(resource, XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED, "Given wl_surface already has a buffer attached.");
         return;
@@ -125,10 +125,10 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
     LPopupRole *lPopup = lSurface->compositor()->createPopupRequest(popup,lSurface,lPositioner);
     wl_resource_set_implementation(popup, &xdg_popup_implementation, lPopup, &Extensions::XdgShell::Popup::destroy_resource);
 
-    lSurface->pending.type = LSurface::Popup;
-    lSurface->p_role = lPopup;
-    lSurface->p_parent = lParent;
-    lParent->p_children.push_back(lSurface);
+    lSurface->imp()->pending.type = LSurface::Popup;
+    lSurface->imp()->m_role = lPopup;
+    lSurface->imp()->m_parent = lParent;
+    lParent->imp()->m_children.push_back(lSurface);
     lSurface->parentChangeRequest();
 
 }
@@ -138,12 +138,12 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *, wl_resource
 
     if(surface->roleType() == LSurface::Toplevel)
     {
-        surface->toplevel()->p_windowGeometry = LRect(x, y, width, height);
+        surface->toplevel()->m_windowGeometry = LRect(x, y, width, height);
         surface->toplevel()->geometryChangeRequest();
     }
     else if(surface->roleType() == LSurface::Popup)
     {
-        surface->popup()->p_windowGeometry = LRect(x, y, width, height);
+        surface->popup()->m_windowGeometry = LRect(x, y, width, height);
         surface->popup()->geometryChanged();
     }
     else
@@ -162,10 +162,10 @@ void Extensions::XdgShell::Surface::ack_configure(wl_client *, wl_resource *reso
     {
         LToplevelRole *topLevel = surface->toplevel();
 
-        if(topLevel->p_sentConf.serial == serial)
+        if(topLevel->m_sentConf.serial == serial)
         {
-            topLevel->p_pendingConf = topLevel->p_sentConf;
-            topLevel->p_pendingConf.set = true;
+            topLevel->m_pendingConf = topLevel->m_sentConf;
+            topLevel->m_pendingConf.set = true;
         }
     }
     else if(surface->roleType() == LSurface::Popup)

@@ -9,7 +9,7 @@ public:
     LDataOffer(wl_resource *resource);
     wl_resource *resource() const;
 private:
-    wl_resource *p_resource = nullptr;
+    wl_resource *m_resource = nullptr;
 };
 
 #endif // LDATAOFFER_H

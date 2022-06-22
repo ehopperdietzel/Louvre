@@ -1,7 +1,7 @@
 #include "XdgPopup.h"
 
 #include <LCompositor.h>
-#include <LSurface.h>
+#include <LSurfacePrivate.h>
 #include <LClient.h>
 #include <LPositioner.h>
 #include <LPopupRole.h>
@@ -17,8 +17,8 @@ void Extensions::XdgShell::Popup::destroy_resource(wl_resource *resource)
     // Unset role
     if(lPopup->surface())
     {
-        lPopup->surface()->current.type = LSurface::Undefined;
-        lPopup->surface()->p_role = nullptr;
+        lPopup->surface()->imp()->current.type = LSurface::Undefined;
+        lPopup->surface()->imp()->m_role = nullptr;
         lPopup->surface()->typeChangeRequest();
     }
 
@@ -26,7 +26,7 @@ void Extensions::XdgShell::Popup::destroy_resource(wl_resource *resource)
     lPopup->compositor()->destroyPopupRequest(lPopup);
 
     if(lPopup->positioner())
-        delete lPopup->p_positioner;
+        delete lPopup->m_positioner;
 
     delete lPopup;
 }
@@ -69,12 +69,12 @@ void Extensions::XdgShell::Popup::reposition(wl_client *client, wl_resource *res
 
     LPositioner *wPositioner = (LPositioner*)wl_resource_get_user_data(positioner);
     LPopupRole *wPopup = (LPopupRole*)wl_resource_get_user_data(resource);
-    wPopup->p_repositionSerial = serial;
+    wPopup->m_repositionSerial = serial;
 
     if(wPopup->positioner())
-        delete wPopup->p_positioner;
+        delete wPopup->m_positioner;
 
-    wPopup->p_positioner = wPositioner;
+    wPopup->m_positioner = wPositioner;
     wPopup->configureRequest();
 }
 #endif

@@ -24,7 +24,7 @@ class Louvre::LCompositor
 public:
     LCompositor(const char *backendPath);
 
-    virtual ~LCompositor(){};
+    virtual ~LCompositor();
 
     virtual void initialize(){};
 
@@ -82,54 +82,13 @@ public:
     const list<LOutput*>&outputs() const;
     const list<LClient*>&clients() const;
 
+    std::thread::id mainThreadId() const;
 
-    std::thread::id mainThreadId() const {return p_threadId;}
-
-    mutex renderMutex;
+    class LCompositorPrivate;
+    LCompositorPrivate *imp() const;
 
 private:
-    friend class LWayland;
-    friend class LBackend;
-    friend class WInput;
-    friend class LSurface;
-    friend class LOutput;
-    friend class LOutputManager;
-    friend class LCursor;
-    friend class Globals::Compositor;
-    friend class Globals::Surface;
-    friend class Globals::Pointer;
-    friend class Globals::Seat;
-    friend class Globals::DataDeviceManager;
-    friend class Globals::DataDevice;
-    friend class Globals::DataSource;
-
-
-    LCursor *p_cursor = nullptr;
-    LSeat *p_seat = nullptr;
-
-    std::thread::id p_threadId;
-
-    // Clients
-    list<LClient*>p_clients;
-
-    // Outputs
-    list<LOutput*>p_outputs;
-
-    // Surfaces
-    list<LSurface*>p_surfaces;
-
-    // Destroyed clients
-    list<LClient*>p_destroyedClients;
-
-    int libinputFd, waylandFd;
-    eventfd_t libinputVal, waylandVal = 1;
-
-    LDataSource *p_dataSource = nullptr;
-    LOpenGL *p_painter;
-
-    bool _started = false;
-
-    LGraphicBackend *p_backend = nullptr;
+    LCompositorPrivate *m_imp = nullptr;
 };
 
 #endif // LCOMPOSITOR_H

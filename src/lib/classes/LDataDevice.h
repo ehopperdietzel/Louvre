@@ -12,9 +12,9 @@ public:
     void sendDataOfferEvent();
 
 private:
-    LClient *p_client = nullptr;
-    wl_resource *p_resource = nullptr;
-    LDataOffer *p_dataOffer = nullptr;
+    LClient *m_client = nullptr;
+    wl_resource *m_resource = nullptr;
+    LDataOffer *m_dataOffer = nullptr;
 };
 
 #endif // LDATADEVICE_H

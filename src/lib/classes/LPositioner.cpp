@@ -6,59 +6,59 @@ using namespace Louvre;
 
 LPositioner::LPositioner(LClient *client)
 {
-    p_client = client;
+    m_client = client;
 }
 
 LClient *LPositioner::client() const
 {
-    return p_client;
+    return m_client;
 }
 
 wl_resource *LPositioner::resource() const
 {
-    return p_resource;
+    return m_resource;
 }
 
 const LSize &LPositioner::size() const
 {
-    return p_size;
+    return m_size;
 }
 
 const LRect &LPositioner::anchorRect() const
 {
-    return p_anchorRect;
+    return m_anchorRect;
 }
 
 LPositioner::LAnchor LPositioner::anchor() const
 {
-    return p_anchor;
+    return m_anchor;
 }
 
 LPositioner::LGravity LPositioner::gravity() const
 {
-    return p_gravity;
+    return m_gravity;
 }
 
 const LPoint &LPositioner::offset() const
 {
-    return p_offset;
+    return m_offset;
 }
 
 #if LOUVRE_XDG_WM_BASE_VERSION >=3
 
     bool LPositioner::isReactive() const
     {
-        return p_isReactive;
+        return m_isReactive;
     }
 
     const LSize &LPositioner::parentSize() const
     {
-        return p_parentSize;
+        return m_parentSize;
     }
 
     UInt32 LPositioner::parentConfigureSerial() const
     {
-        return p_parentConfigureSerial;
+        return m_parentConfigureSerial;
     }
 
 #endif
@@ -162,6 +162,6 @@ LPoint LPositioner::calculatePopupPosition(const LRect &outputRect, const LPoint
 
 LPositioner::LConstraintAdjustment LPositioner::constraintAdjustment() const
 {
-    return p_constraintAdjustment;
+    return m_constraintAdjustment;
 }
 

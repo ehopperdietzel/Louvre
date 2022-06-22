@@ -8,6 +8,8 @@
 #include <LKeyboard.h>
 #include <LSeat.h>
 
+#include <LClientPrivate.h>
+
 #include <sys/mman.h>
 
 using namespace Louvre::Globals;
@@ -43,7 +45,7 @@ void Seat::resource_destroy(wl_resource *resource)
 {
     printf("SEAT DESTROYED.\n");
     LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
-    lClient->p_seatResource = nullptr;
+    lClient->imp()->m_seatResource = nullptr;
 }
 
 void Seat::get_pointer(wl_client *client, wl_resource *resource, UInt32 id)
@@ -59,7 +61,7 @@ void Seat::get_pointer(wl_client *client, wl_resource *resource, UInt32 id)
     Int32 version = wl_resource_get_version(resource);
     wl_resource *pointer = wl_resource_create(client, &wl_pointer_interface, version, id);
     wl_resource_set_implementation(pointer, &pointer_implementation, lClient, &Pointer::resource_destroy);
-    lClient->p_pointerResource = pointer;
+    lClient->imp()->m_pointerResource = pointer;
 }
 
 void Seat::get_keyboard (wl_client *client, wl_resource *resource, UInt32 id)
@@ -73,17 +75,17 @@ void Seat::get_keyboard (wl_client *client, wl_resource *resource, UInt32 id)
     }
 
     Int32 version = wl_resource_get_version(resource);
-    lClient->p_keyboardResource  = wl_resource_create(client, &wl_keyboard_interface, version, id);
-    wl_resource_set_implementation(lClient->p_keyboardResource , &keyboard_implementation, lClient, &Keyboard::resource_destroy);
+    lClient->imp()->m_keyboardResource  = wl_resource_create(client, &wl_keyboard_interface, version, id);
+    wl_resource_set_implementation(lClient->keyboardResource() , &keyboard_implementation, lClient, &Keyboard::resource_destroy);
 
 #if LOUVRE_SEAT_VERSION >= 4
     if(version >= 4)
-        wl_keyboard_send_repeat_info(lClient->p_keyboardResource, lClient->seat()->keyboard()->repeatRate(), lClient->seat()->keyboard()->repeatDelay());
+        wl_keyboard_send_repeat_info(lClient->keyboardResource(), lClient->seat()->keyboard()->repeatRate(), lClient->seat()->keyboard()->repeatDelay());
 #endif
 
     // TODO: CHECK v7 PRIVATE_MAP
 
-    wl_keyboard_send_keymap(lClient->p_keyboardResource, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, lClient->seat()->keyboard()->keymapFd(), lClient->seat()->keyboard()->keymapSize());
+    wl_keyboard_send_keymap(lClient->keyboardResource(), WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, lClient->seat()->keyboard()->keymapFd(), lClient->seat()->keyboard()->keymapSize());
 
 }
 
@@ -119,13 +121,13 @@ void Seat::bind(wl_client *client, void *data, UInt32 version, UInt32 id)
     if(!lClient)
         return;
 
-    lClient->p_seatResource = wl_resource_create(client, &wl_seat_interface, version, id);
-    wl_resource_set_implementation(lClient->p_seatResource, &seat_implementation, lClient, &Seat::resource_destroy);
-    wl_seat_send_capabilities(lClient->p_seatResource, lClient->seat()->capabilities());
+    lClient->imp()->m_seatResource = wl_resource_create(client, &wl_seat_interface, version, id);
+    wl_resource_set_implementation(lClient->seatResource(), &seat_implementation, lClient, &Seat::resource_destroy);
+    wl_seat_send_capabilities(lClient->seatResource(), lClient->seat()->capabilities());
 
 #if LOUVRE_SEAT_VERSION >= 2
     if(version >= 2)
-        wl_seat_send_name(lClient->p_seatResource, "seat0");
+        wl_seat_send_name(lClient->seatResource(), "seat0");
 #endif
 
 }

@@ -48,6 +48,8 @@ public:
     virtual void parentChangeRequest();
     virtual void bufferScaleChangeRequest(){};
     virtual void bufferSizeChangeRequest();
+    virtual void opaqueRegionChanged();
+    virtual void inputRegionChanged();
 
     // Input
     LSeat *seat() const;
@@ -62,7 +64,9 @@ public:
     void setX(Int32 x);
     void setY(Int32 y, bool useRolePos = false);
     const LSize &size(bool useBufferSize = false) const;
-    const LRegion &inputRegion() const { return current.inputRegion; }
+    const LRegion &inputRegion() const;
+    const LRegion &opaqueRegion() const;
+    const LRegion &damages() const;
     bool inputRegionContainsPoint(const LPoint &surfacePos,const LPoint &point);
     LPoint mapToLocal(const LPoint &point);
 
@@ -70,17 +74,16 @@ public:
     void setMinimized(bool state);
 
     // Buffer
-    Int32 bufferScale() const { return p_bufferScale; }
-    LTexture *texture() const  { return p_texture; }
-    bool isDamaged() const { return p_isDamaged; }
-    void applyDamages();
-    bool textureChanged() const {return p_textureChanged;};
+    Int32 bufferScale() const;
+    LTexture *texture() const;
+    bool isDamaged() const;
+    bool textureChanged() const;
     void requestNextFrame();
 
     // References
-    wl_resource *resource() const { return p_resource; }
+    wl_resource *resource() const;
     wl_resource *xdgSurfaceResource() const;
-    LClient *client() const { return p_client; }
+    LClient *client() const;
     LCompositor *compositor() const;
 
     // Hierarchy
@@ -88,60 +91,11 @@ public:
     LSurface *topParent() const;
     const list<LSurface*>&children() const;
 
+    class LSurfacePrivate;
+    LSurfacePrivate *imp() const;
  private:
-    friend class LWayland;
-    friend class LCompositor;
-    friend class LOutput;
-    friend class LPointer;
-    friend class LToplevelRole;
-    friend class LPopupRole;
-    friend class Globals::Surface;
-    friend class Globals::Pointer;
-    friend class Globals::Subsurface;
-    friend class Globals::Subcompositor;
-    friend class Extensions::XdgShell::WmBase;
-    friend class Extensions::XdgShell::Surface;
-    friend class Extensions::XdgShell::Toplevel;
-    friend class Extensions::XdgShell::Popup;
 
-    struct State
-    {
-        UInt32 type = Undefined;
-        wl_resource *buffer = nullptr;
-        LRegion inputRegion;
-        LSize size;
-    };
-
-    State current,pending;
-
-    // Roles
-    LBaseSurfaceRole *p_role = nullptr;
-
-    LTexture *p_texture = nullptr;
-    list<LSurface*>p_children;
-
-    // Buffer
-    void setBufferScale(Int32 scale);
-
-    LClient     *p_client         = nullptr;
-    LSurface    *p_parent         = nullptr;
-
-    wl_resource *p_resource       = nullptr;
-
-    wl_resource *p_xdgSurfaceResource = nullptr;
-    wl_resource *p_frameCallback   = nullptr;
-
-    Int32 p_bufferScale = 1;
-
-    bool p_isDamaged = false;
-
-    LPoint p_pos = LPoint(0,200);
-    bool p_minimized = false;
-
-    bool p_roleChangeNotified = false;
-    bool p_textureChanged = false;
-
-
+    LSurfacePrivate *m_imp = nullptr;
 
 };
 

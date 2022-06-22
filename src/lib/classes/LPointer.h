@@ -100,27 +100,27 @@ private:
     void sendEnterEvent(LSurface *surface, const LPoint &point);
 
     // Wayland
-    LSeat               *p_seat                     = nullptr;
-    LSurface            *p_pointerFocusSurface      = nullptr;
-    LSurface            *p_draggingSurface          = nullptr;
-    LSurface            *p_cursorSurface            = nullptr;
-    LToplevelRole       *p_movingTopLevel           = nullptr;
-    LToplevelRole       *p_resizingToplevel         = nullptr;
+    LSeat               *m_seat                     = nullptr;
+    LSurface            *m_pointerFocusSurface      = nullptr;
+    LSurface            *m_draggingSurface          = nullptr;
+    LSurface            *m_cursorSurface            = nullptr;
+    LToplevelRole       *m_movingTopLevel           = nullptr;
+    LToplevelRole       *m_resizingToplevel         = nullptr;
 
     // TopLevel Moving
-    LPoint               p_movingTopLevelInitPos;
-    LPoint               p_movingTopLevelInitCursorPos;
+    LPoint               m_movingTopLevelInitPos;
+    LPoint               m_movingTopLevelInitCursorPos;
 
     // Resizing
-    LPoint               p_resizingToplevelInitPos;
-    LPoint               p_resizingToplevelInitCursorPos;
-    LSize                p_resizingToplevelInitSize;
-    LSize                p_resizingToplevelInitWindowSize;
-    LToplevelRole::Edge  p_resizingToplevelEdge;
+    LPoint               m_resizingToplevelInitPos;
+    LPoint               m_resizingToplevelInitCursorPos;
+    LSize                m_resizingToplevelInitSize;
+    LSize                m_resizingToplevelInitWindowSize;
+    LToplevelRole::Edge  m_resizingToplevelEdge;
 
     // Axis
 #if LOUVRE_SEAT_VERSION >= 5
-    LPoint               p_axisDiscreteStep = LPoint(15,15);
+    LPoint               m_axisDiscreteStep = LPoint(15,15);
 #endif
 protected:
 

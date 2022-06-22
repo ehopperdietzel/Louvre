@@ -4,6 +4,7 @@
 
 #include <LCompositor.h>
 #include <LSubsurfaceRole.h>
+#include <LSurfacePrivate.h>
 
 using namespace Louvre;
 
@@ -49,17 +50,17 @@ void Globals::Subcompositor::get_subsurface(wl_client *client, wl_resource *reso
 
     wl_resource *subsurface = wl_resource_create(client, &wl_subsurface_interface, version, id);
     LSubsurfaceRole *lSubsurface = lCompositor->createSubsurfaceRequest(subsurface, lSurface);
-    lSurface->p_role = lSubsurface;
+    lSurface->imp()->m_role = lSubsurface;
 
     LSurface *lParent = (LSurface*)wl_resource_get_user_data(parent);
     lCompositor->insertSurfaceAfter(lParent,lSurface);
-    lParent->p_children.push_back(lSurface);
-    lSurface->p_parent = lParent;
+    lParent->imp()->m_children.push_back(lSurface);
+    lSurface->imp()->m_parent = lParent;
 
     wl_resource_set_implementation(subsurface, &subsurface_implementation, lSubsurface, &Subsurface::resource_destroy);
 
-    lSurface->current.type = LSurface::Subsurface;
-    lSurface->pending.type = LSurface::Undefined;
+    lSurface->imp()->current.type = LSurface::Subsurface;
+    lSurface->imp()->pending.type = LSurface::Undefined;
     lSurface->typeChangeRequest();
     lSurface->parentChangeRequest();
 

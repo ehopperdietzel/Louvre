@@ -3,8 +3,9 @@
 #include <DataDevice.h>
 #include <LCompositor.h>
 #include <LDataSource.h>
-#include <LClient.h>
 #include <LDataDevice.h>
+
+#include <LClientPrivate.h>
 
 using namespace Louvre::Globals;
 
@@ -49,7 +50,7 @@ void DataDeviceManager::get_data_device(wl_client *client, wl_resource *resource
     UInt32 version = wl_resource_get_version(resource);
     wl_resource *dataDevice = wl_resource_create(client, &wl_data_device_interface, version, id);
     LDataDevice *lDataDevice = new LDataDevice(dataDevice,lClient);
-    lClient->p_dataDevice = lDataDevice;
+    lClient->imp()->m_dataDevice = lDataDevice;
     wl_resource_set_implementation(dataDevice, &dataDevice_implementation, lDataDevice, &DataDevice::resource_destroy);
 }
 

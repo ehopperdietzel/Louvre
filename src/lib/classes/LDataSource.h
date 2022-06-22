@@ -26,12 +26,12 @@ public:
 
 private:
     friend class Globals::DataSource;
-    LClient *p_client = nullptr;
-    wl_resource *p_resource = nullptr;
-    std::list<const char*>p_mimeTypes;
+    LClient *m_client = nullptr;
+    wl_resource *m_resource = nullptr;
+    std::list<const char*>m_mimeTypes;
 
 #if LOUVRE_DATA_DEVICE_MANAGER_VERSION >= 3
-    UInt32 p_dndActions = 0;
+    UInt32 m_dndActions = 0;
 #endif
 };
 

@@ -9,19 +9,21 @@
 #include <LWayland.h>
 #include <LCompositor.h>
 #include <LSeat.h>
+
 #include <LClient.h>
+#include <LClientPrivate.h>
 
 using namespace Louvre;
 
 LKeyboard::LKeyboard(LSeat *seat)
 {
-    p_seat = seat;
+    m_seat = seat;
 
     // Create null keys
-    wl_array_init(&p_keys);
+    wl_array_init(&m_keys);
 
     // Create XKB context
-    p_xkbContext = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+    m_xkbContext = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
     // Set the default keymap
     setKeymap();
@@ -29,12 +31,12 @@ LKeyboard::LKeyboard(LSeat *seat)
 
 LKeyboard::~LKeyboard()
 {
-    wl_array_release(&p_keys);
+    wl_array_release(&m_keys);
 }
 
 LSeat *LKeyboard::seat() const
 {
-    return p_seat;
+    return m_seat;
 }
 
 LCompositor *LKeyboard::compositor() const
@@ -44,54 +46,54 @@ LCompositor *LKeyboard::compositor() const
 
 void LKeyboard::setKeymap(const char *rules, const char *model, const char *layout, const char *variant, const char *options)
 {
-    if(p_xkbKeymapFd != -1)
+    if(m_xkbKeymapFd != -1)
     {
-         close(p_xkbKeymapFd);
+         close(m_xkbKeymapFd);
     }
 
     char *keymapString,*map;
 
-    const char *xdgRuntimeDir = "/run/user/1000";
+    //const char *xdgRuntimeDir = "/run/user/1000";
 
-    p_xkbKeymapName.rules = rules;
-    p_xkbKeymapName.model = model;
-    p_xkbKeymapName.layout = layout;
-    p_xkbKeymapName.variant = variant;
-    p_xkbKeymapName.options = options;
+    m_xkbKeymapName.rules = rules;
+    m_xkbKeymapName.model = model;
+    m_xkbKeymapName.layout = layout;
+    m_xkbKeymapName.variant = variant;
+    m_xkbKeymapName.options = options;
 
     // Find a keymap matching suggestions
-    p_xkbKeymap = xkb_keymap_new_from_names(p_xkbContext, &p_xkbKeymapName, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    m_xkbKeymap = xkb_keymap_new_from_names(m_xkbContext, &m_xkbKeymapName, XKB_KEYMAP_COMPILE_NO_FLAGS);
 
     // Get the keymap string
-    keymapString = xkb_keymap_get_as_string(p_xkbKeymap, XKB_KEYMAP_FORMAT_TEXT_V1);
+    keymapString = xkb_keymap_get_as_string(m_xkbKeymap, XKB_KEYMAP_FORMAT_TEXT_V1);
 
     // Store the keymap size
-    p_xkbKeymapSize = strlen(keymapString) + 1;
+    m_xkbKeymapSize = strlen(keymapString) + 1;
 
     // Get the XDG_RUNTIME_DIR env
-    //xdgRuntimeDir = "/run/user/1000/louvre_keymap";//getenv("XDG_RUNTIME_DIR");
+    char *xdgRuntimeDir = getenv("XDG_RUNTIME_DIR");
 
     // Open and store the file descritor
-    p_xkbKeymapFd = open(xdgRuntimeDir, O_TMPFILE|O_RDWR|O_EXCL, 0600);
+    m_xkbKeymapFd = open(xdgRuntimeDir, O_TMPFILE|O_RDWR|O_EXCL, 0600);
 
-    if(p_xkbKeymapFd < 0)
+    if(m_xkbKeymapFd < 0)
     {
         printf("Error creating shared memory for keyboard layout.\n");
         exit(-1);
     }
 
     // Write the keymap string
-    ftruncate(p_xkbKeymapFd, p_xkbKeymapSize);
-    map = (char*)mmap(NULL, p_xkbKeymapSize, PROT_READ|PROT_WRITE, MAP_SHARED, p_xkbKeymapFd, 0);
+    ftruncate(m_xkbKeymapFd, m_xkbKeymapSize);
+    map = (char*)mmap(NULL, m_xkbKeymapSize, PROT_READ|PROT_WRITE, MAP_SHARED, m_xkbKeymapFd, 0);
     //strcpy(map, keymapString);
-    memcpy(map,keymapString,p_xkbKeymapSize);
-    munmap(map, p_xkbKeymapSize);
+    memcpy(map,keymapString,m_xkbKeymapSize);
+    munmap(map, m_xkbKeymapSize);
 
     // Keymap string not needed anymore
     free(keymapString);
 
     // Create a xkb keyboard state to handle modifiers
-    p_xkbKeymapState = xkb_state_new(p_xkbKeymap);
+    m_xkbKeymapState = xkb_state_new(m_xkbKeymap);
 
     for(LClient *lClient : compositor()->clients())
     {
@@ -102,22 +104,22 @@ void LKeyboard::setKeymap(const char *rules, const char *model, const char *layo
 
 Int32 LKeyboard::keymapFd() const
 {
-    return p_xkbKeymapFd;
+    return m_xkbKeymapFd;
 }
 
 Int32 LKeyboard::keymapSize() const
 {
-    return p_xkbKeymapSize;
+    return m_xkbKeymapSize;
 }
 
 LSurface *LKeyboard::focusSurface() const
 {
-    return p_keyboardFocusSurface;
+    return m_keyboardFocusSurface;
 }
 
 const LKeyboard::LKeyboardModifiersState &LKeyboard::modifiersState() const
 {
-    return p_modifiersState;
+    return m_modifiersState;
 }
 
 void LKeyboard::setFocus(LSurface *surface)
@@ -133,19 +135,19 @@ void LKeyboard::setFocus(LSurface *surface)
             // If another surface has focus
             if(focusSurface() && focusSurface()->client()->keyboardResource())
             {
-                focusSurface()->client()->p_lastKeyboardLeaveEventSerial = LWayland::nextSerial();
-                wl_keyboard_send_leave(focusSurface()->client()->keyboardResource(),focusSurface()->client()->p_lastKeyboardLeaveEventSerial,focusSurface()->resource());
+                focusSurface()->client()->imp()->m_lastKeyboardLeaveEventSerial = LWayland::nextSerial();
+                wl_keyboard_send_leave(focusSurface()->client()->keyboardResource(),focusSurface()->client()->lastKeyboardLeaveEventSerial(),focusSurface()->resource());
             }
 
             if(surface->client()->keyboardResource())
             {
-                surface->client()->p_lastKeyboardEnterEventSerial = LWayland::nextSerial();
-                wl_keyboard_send_enter(surface->client()->keyboardResource(),surface->client()->p_lastKeyboardEnterEventSerial,surface->resource(),&p_keys);
-                p_keyboardFocusSurface = surface;
+                surface->client()->imp()->m_lastKeyboardEnterEventSerial = LWayland::nextSerial();
+                wl_keyboard_send_enter(surface->client()->keyboardResource(),surface->client()->lastKeyboardKeyEventSerial(),surface->resource(),&m_keys);
+                m_keyboardFocusSurface = surface;
                 sendModifiersEvent();
             }
             else
-                p_keyboardFocusSurface = nullptr;
+                m_keyboardFocusSurface = nullptr;
         }
 
     }
@@ -154,10 +156,10 @@ void LKeyboard::setFocus(LSurface *surface)
         // If a surface has focus
         if(focusSurface() && focusSurface()->client()->keyboardResource())
         {
-            focusSurface()->client()->p_lastKeyboardLeaveEventSerial = LWayland::nextSerial();
-            wl_keyboard_send_leave(focusSurface()->client()->keyboardResource(),focusSurface()->client()->p_lastKeyboardLeaveEventSerial,focusSurface()->resource());
+            focusSurface()->client()->imp()->m_lastKeyboardLeaveEventSerial = LWayland::nextSerial();
+            wl_keyboard_send_leave(focusSurface()->client()->keyboardResource(),focusSurface()->client()->lastKeyboardLeaveEventSerial(),focusSurface()->resource());
         }
-        p_keyboardFocusSurface = nullptr;
+        m_keyboardFocusSurface = nullptr;
     }
 }
 
@@ -171,8 +173,8 @@ void LKeyboard::sendKeyEvent(UInt32 keyCode, UInt32 keyState)
     if(!focusSurface()->client()->keyboardResource())
         return;
 
-    focusSurface()->client()->p_lastKeyboardKeyEventSerial = LWayland::nextSerial();
-    wl_keyboard_send_key(focusSurface()->client()->keyboardResource(),focusSurface()->client()->p_lastKeyboardKeyEventSerial,LTime::ms(),keyCode,keyState);
+    focusSurface()->client()->imp()->m_lastKeyboardKeyEventSerial = LWayland::nextSerial();
+    wl_keyboard_send_key(focusSurface()->client()->keyboardResource(),focusSurface()->client()->lastKeyboardKeyEventSerial(),LTime::ms(),keyCode,keyState);
 }
 
 void LKeyboard::sendModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 locked, UInt32 group)
@@ -185,45 +187,45 @@ void LKeyboard::sendModifiersEvent(UInt32 depressed, UInt32 latched, UInt32 lock
     if(!focusSurface()->client()->keyboardResource())
         return;
 
-    focusSurface()->client()->p_lastKeyboardModifiersEventSerial = LWayland::nextSerial();
-    wl_keyboard_send_modifiers(focusSurface()->client()->keyboardResource(),focusSurface()->client()->p_lastKeyboardModifiersEventSerial,depressed,latched,locked,group);
+    focusSurface()->client()->imp()->m_lastKeyboardModifiersEventSerial = LWayland::nextSerial();
+    wl_keyboard_send_modifiers(focusSurface()->client()->keyboardResource(),focusSurface()->client()->lastKeyboardModifiersEventSerial(),depressed,latched,locked,group);
 }
 
 void LKeyboard::sendModifiersEvent()
 {
-    sendModifiersEvent(p_modifiersState.depressed, p_modifiersState.latched, p_modifiersState.locked, p_modifiersState.group);
+    sendModifiersEvent(m_modifiersState.depressed, m_modifiersState.latched, m_modifiersState.locked, m_modifiersState.group);
 }
 
 xkb_keysym_t LKeyboard::keySymbol(UInt32 keyCode)
 {
-    return xkb_state_key_get_one_sym(p_xkbKeymapState,keyCode+8);
+    return xkb_state_key_get_one_sym(m_xkbKeymapState,keyCode+8);
 }
 
 void LKeyboard::updateModifiers()
 {
-    p_modifiersState.depressed = xkb_state_serialize_mods(p_xkbKeymapState, XKB_STATE_MODS_DEPRESSED);
-    p_modifiersState.latched = xkb_state_serialize_mods(p_xkbKeymapState, XKB_STATE_MODS_LATCHED);
-    p_modifiersState.locked = xkb_state_serialize_mods(p_xkbKeymapState, XKB_STATE_MODS_LOCKED);
-    p_modifiersState.group = xkb_state_serialize_layout(p_xkbKeymapState, XKB_STATE_LAYOUT_EFFECTIVE);
-    keyModifiersEvent(p_modifiersState.depressed,p_modifiersState.latched,p_modifiersState.locked,p_modifiersState.group);
+    m_modifiersState.depressed = xkb_state_serialize_mods(m_xkbKeymapState, XKB_STATE_MODS_DEPRESSED);
+    m_modifiersState.latched = xkb_state_serialize_mods(m_xkbKeymapState, XKB_STATE_MODS_LATCHED);
+    m_modifiersState.locked = xkb_state_serialize_mods(m_xkbKeymapState, XKB_STATE_MODS_LOCKED);
+    m_modifiersState.group = xkb_state_serialize_layout(m_xkbKeymapState, XKB_STATE_LAYOUT_EFFECTIVE);
+    keyModifiersEvent(m_modifiersState.depressed,m_modifiersState.latched,m_modifiersState.locked,m_modifiersState.group);
 }
 
 #if LOUVRE_SEAT_VERSION >= 4
 
     Int32 LKeyboard::repeatRate() const
     {
-        return p_repeatRate;
+        return m_repeatRate;
     }
 
     Int32 LKeyboard::repeatDelay() const
     {
-        return p_repeatDelay;
+        return m_repeatDelay;
     }
 
     void LKeyboard::setRepeatInfo(Int32 rate, Int32 msDelay)
     {
-        p_repeatRate = rate;
-        p_repeatDelay = msDelay;
+        m_repeatRate = rate;
+        m_repeatDelay = msDelay;
 
         for(LClient *lClient : compositor()->clients())
             if(lClient->keyboardResource() && wl_resource_get_version(lClient->keyboardResource()) >= 4)
@@ -258,11 +260,8 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
         {
             if (fork()==0)
             {
-                //system("gnome-terminal");
                 setsid();
-                char *const envp[] = {"XDG_RUNTIME_DIR=/run/user/1000",0};
-                const char *argv[64] = {"/usr/bin/weston-terminal" , NULL, NULL , NULL};
-                execve(argv[0], (char **)argv, envp);
+                system("weston-terminal");
                 exit(0);
             }
         }
@@ -270,11 +269,8 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
         {
             if (fork()==0)
             {
-                //system("/home/eduardo/Escritorio/build-notepad-Desktop_Qt_5_15_2_GCC_64bit-Release/notepad --platform wayland");
                 setsid();
-                char *const envp[] = {"XDG_RUNTIME_DIR=/run/user/1000",0};
-                const char *argv[64] = {"/home/eduardo/Escritorio/build-notepad-Desktop_Qt_5_15_2_GCC_64bit-Release/notepad" , "--platform", "wayland" , NULL};
-                execve(argv[0], (char **)argv, envp);
+                system("google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland");
                 exit(0);
             }
         }
@@ -283,9 +279,7 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
             if (fork()==0)
             {
                 setsid();
-                char *const envp[] = {"XDG_RUNTIME_DIR=/run/user/1000",0};
-                const char *argv[64] = {"/usr/bin/gedit" , NULL, NULL, NULL};
-                execve(argv[0], (char **)argv, envp);
+                system("GDK_BACKEND=wayland gedit");
                 exit(0);
             }
         }
@@ -294,7 +288,7 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
             if (fork()==0)
             {
                 setsid();
-                system("/home/eduardo/Escritorio/run_chrome.sh");
+                system("GDK_BACKEND=wayland gnome-terminal");
                 exit(0);
             }
         }
@@ -318,6 +312,10 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
         {
             if(focusSurface() && focusSurface()->toplevel() && focusSurface()->toplevel()->fullscreen())
                 focusSurface()->toplevel()->configure(focusSurface()->toplevel()->state() & ~LToplevelRole::Fullscreen);
+        }
+        else if(sym == XKB_KEY_Down)
+        {
+            compositor()->repaintAllOutputs();
         }
     }
 }

@@ -196,6 +196,7 @@ LTexture *LOpenGL::loadTexture(const char *fileName)
 
 void LOpenGL::scaleCursor(LTexture *texture, const LRect &src, const LRect &dst)
 {
+    glEnable(GL_BLEND);
     glScissor(0,0,64,64);
     glViewport(0,0,64,64);
     glClearColor(0,0,0,0);
@@ -239,10 +240,10 @@ void LOpenGL::drawColor(const LRect &dst, Float32 r, Float32 g, Float32 b, Float
 
 void LOpenGL::setViewport(const LRect &rect)
 {
-    if(p_output)
+    if(m_output)
     {
-        LRect r = rect*p_output->getOutputScale();
-        r.setY(p_output->rect(false).h()-r.y()-r.h());
+        LRect r = rect*m_output->getOutputScale();
+        r.setY(m_output->rect(false).h()-r.y()-r.h());
         glScissor(r.x(),r.y(),r.w(),r.h());
         glViewport(r.x(),r.y(),r.w(),r.h());
     }
@@ -251,8 +252,8 @@ void LOpenGL::setViewport(const LRect &rect)
 void LOpenGL::clearScreen()
 {
     glDisable(GL_BLEND);
-    glScissor(0,0,p_output->rect(false).w(),p_output->rect(false).h());
-    glViewport(0,0,p_output->rect(false).w(),p_output->rect(false).h());
+    glScissor(0,0,m_output->rect(false).w(),m_output->rect(false).h());
+    glViewport(0,0,m_output->rect(false).w(),m_output->rect(false).h());
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
 }

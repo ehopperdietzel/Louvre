@@ -7,14 +7,15 @@
 
 #include <X11/Xcursor/Xcursor.h>
 #include <string.h>
-#include <LCompositor.h>
+
+#include <LCompositorPrivate.h>
 
 using namespace Louvre;
 
 LCursor::LCursor(LOutput *output)
 {
     setOutput(output);
-    p_x11Texture = new LTexture();
+    m_x11Texture = new LTexture();
     setSize(LPoint(24,24));
     loadDefaultCursors();
     setCursor(LCursor::Arrow);
@@ -22,13 +23,13 @@ LCursor::LCursor(LOutput *output)
 
 void LCursor::setCursorTheme(const char *themeName)
 {
-    if(p_cursorTheme != NULL)
-        delete []p_cursorTheme;
+    if(m_cursorTheme != NULL)
+        delete []m_cursorTheme;
 
     Int32 length = strlen(themeName);
-    p_cursorTheme = new char(length+1);
-    p_cursorTheme[length] = '\0';
-    memcpy(p_cursorTheme,themeName,length);
+    m_cursorTheme = new char(length+1);
+    m_cursorTheme[length] = '\0';
+    memcpy(m_cursorTheme,themeName,length);
 }
 
 void LCursor::setCursor(const char *cursorName)
@@ -45,9 +46,9 @@ void LCursor::setCursor(const char *cursorName)
     memcpy(lastCursor.name,cursorName,len);
     lastCursor.name[len] = '\0';
 
-    XcursorImage *cursor =  XcursorLibraryLoadImage(cursorName,p_cursorTheme,64);
-    p_x11Texture->setData(cursor->width,cursor->height,cursor->pixels,GL_RGBA,GL_UNSIGNED_BYTE);
-    setTexture(p_x11Texture,LPointF(cursor->xhot,cursor->yhot));
+    XcursorImage *cursor =  XcursorLibraryLoadImage(cursorName,m_cursorTheme,64);
+    m_x11Texture->setData(cursor->width,cursor->height,cursor->pixels,GL_RGBA,GL_UNSIGNED_BYTE);
+    setTexture(m_x11Texture,LPointF(cursor->xhot,cursor->yhot));
     XcursorImageDestroy(cursor);
     lastCursor.type = LLastCursorType::String;
 }
@@ -57,7 +58,7 @@ void LCursor::setCursor(CursorNames cursor)
     if(lastCursor.type == LLastCursorType::Default && lastCursor.defaultName == int(cursor))
         return;
 
-    setTexture(p_cursors[int(cursor)].texture,p_cursors[int(cursor)].hotspot);
+    setTexture(m_cursors[int(cursor)].texture,m_cursors[int(cursor)].hotspot);
     lastCursor.defaultName = int(cursor);
     lastCursor.type = LLastCursorType::Default;
 }
@@ -65,67 +66,67 @@ void LCursor::setCursor(CursorNames cursor)
 void LCursor::setTexture(LTexture *texture, const LPointF &hotspot)
 {
     lastCursor.type = LLastCursorType::Texture;
-    p_texture = texture;
-    p_hotspot = hotspot;
-    compositor()->p_backend->setCursor(p_output,p_texture,p_size*p_output->getOutputScale());
+    m_texture = texture;
+    m_hotspot = hotspot;
+    compositor()->imp()->m_backend->setCursor(m_output,m_texture,m_size*m_output->getOutputScale());
     update();
 }
 
 void LCursor::setOutput(LOutput *output)
 {
-    p_output = output;
+    m_output = output;
 }
 
 void LCursor::move(float x, float y)
 {
-    setPosition(p_pos + LPointF(x,y));
+    setPosition(m_pos + LPointF(x,y));
     update();
 }
 
 void Louvre::LCursor::setPosition(const LPointF &position)
 {
-    p_pos = position;
+    m_pos = position;
 
-    if(p_pos.x() > p_output->rect().w())
-        p_pos.setX(p_output->rect().w());
-    if(p_pos.x() < p_output->rect().x())
-        p_pos.setX(p_output->rect().x());
+    if(m_pos.x() > m_output->rect().w())
+        m_pos.setX(m_output->rect().w());
+    if(m_pos.x() < m_output->rect().x())
+        m_pos.setX(m_output->rect().x());
 
-    if(p_pos.y() > p_output->rect().h())
-        p_pos.setY(p_output->rect().h());
-    if(p_pos.y() < p_output->rect().y())
-        p_pos.setY(p_output->rect().y());
+    if(m_pos.y() > m_output->rect().h())
+        m_pos.setY(m_output->rect().h());
+    if(m_pos.y() < m_output->rect().y())
+        m_pos.setY(m_output->rect().y());
 
     update();
 }
 
 void LCursor::setHotspot(const LPointF &hotspot)
 {
-    p_hotspot = hotspot;
+    m_hotspot = hotspot;
     update();
 }
 
 void LCursor::paint()
 {
-    if(!visible() || !p_output || !p_texture)
+    if(!visible() || !m_output || !m_texture)
         return;
 
-    LPointF hotspot = (p_hotspot*p_size)/p_texture->size();
+    LPointF hotspot = (m_hotspot*m_size)/m_texture->size();
 
-    p_output->painter()->drawTexture(p_texture,LRect(LPoint(),p_texture->size()),LRect(p_pos-hotspot,p_size));
+    m_output->painter()->drawTexture(m_texture,LRect(LPoint(),m_texture->size()),LRect(m_pos-hotspot,m_size));
 }
 
 void LCursor::setSize(const LSizeF &size)
 {
-    p_size = size;
+    m_size = size;
 
     if(hasHardwareSupport())
     {
         if(size.w() > 64.f)
-            p_size.setW(64.f);
+            m_size.setW(64.f);
 
         if(size.h() > 64.f)
-            p_size.setH(64.f);
+            m_size.setH(64.f);
     }
 
     update();
@@ -136,13 +137,13 @@ void LCursor::setVisible(bool state)
     if(state == visible())
         return;
 
-    p_isVisible = state;
+    m_isVisible = state;
 
-    if(!p_isVisible)
-        compositor()->p_backend->setCursor(p_output,nullptr,LPoint());
-    else if(p_texture)
+    if(!m_isVisible)
+        compositor()->imp()->m_backend->setCursor(m_output,nullptr,LPoint());
+    else if(m_texture)
     {
-        compositor()->p_backend->setCursor(p_output,p_texture,p_size*p_output->getOutputScale());
+        compositor()->imp()->m_backend->setCursor(m_output,m_texture,m_size*m_output->getOutputScale());
         update();
     }
 
@@ -150,46 +151,46 @@ void LCursor::setVisible(bool state)
 
 bool LCursor::visible() const
 {
-    return p_isVisible;
+    return m_isVisible;
 }
 
 bool LCursor::hasHardwareSupport() const
 {
-    return compositor()->p_backend->hasHardwareCursorSupport();
+    return compositor()->imp()->m_backend->hasHardwareCursorSupport();
 }
 
 LCompositor *LCursor::compositor() const
 {
-    return p_output->compositor();
+    return m_output->compositor();
 }
 
 void LCursor::loadDefaultCursors()
 {
-    XcursorImage *cursor =  XcursorLibraryLoadImage("arrow",p_cursorTheme,64);
-    p_cursors[0].texture = new LTexture(1);
-    p_cursors[0].texture->setData(cursor->width,cursor->height,cursor->pixels,GL_RGBA,GL_UNSIGNED_BYTE);
-    p_cursors[0].hotspot.setX(cursor->xhot);
-    p_cursors[0].hotspot.setY(cursor->yhot);
+    XcursorImage *cursor =  XcursorLibraryLoadImage("arrow",m_cursorTheme,64);
+    m_cursors[0].texture = new LTexture(1);
+    m_cursors[0].texture->setData(cursor->width,cursor->height,cursor->pixels,GL_RGBA,GL_UNSIGNED_BYTE);
+    m_cursors[0].hotspot.setX(cursor->xhot);
+    m_cursors[0].hotspot.setY(cursor->yhot);
     XcursorImageDestroy(cursor);
 }
 
 void LCursor::update()
 {
 
-    if(!visible() || !p_output || !p_texture)
+    if(!visible() || !m_output || !m_texture)
         return;
 
     LPoint hotspot;
-    hotspot = (p_hotspot*p_size)/p_texture->size();
+    hotspot = (m_hotspot*m_size)/m_texture->size();
 
-    LPoint pos = (p_pos- hotspot)*p_output->getOutputScale();
+    LPoint pos = (m_pos- hotspot)*m_output->getOutputScale();
 
-    if(pos != p_prevPos)
+    if(pos != m_prevPos)
     {
-        p_prevPos = pos;
-        compositor()->p_backend->setCursorPosition(p_output,pos);
+        m_prevPos = pos;
+        compositor()->imp()->m_backend->setCursorPosition(m_output,pos);
     }
 
     if(!hasHardwareSupport())
-        p_output->repaint();
+        m_output->repaint();
 }

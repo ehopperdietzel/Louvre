@@ -1,8 +1,8 @@
 #include "Surface.h"
 
-#include <LCompositor.h>
-#include <LSurface.h>
-#include <LClient.h>
+#include <LClientPrivate.h>
+#include <LCompositorPrivate.h>
+#include <LSurfacePrivate.h>
 #include <LSeat.h>
 #include <LPopupRole.h>
 
@@ -34,27 +34,27 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
 
     // Clear keyboard focus
     if(surface->seat()->keyboard()->focusSurface() == surface)
-        surface->seat()->keyboard()->p_keyboardFocusSurface = nullptr;
+        surface->seat()->keyboard()->m_keyboardFocusSurface = nullptr;
 
     // Clear pointer focus
-    if(surface->seat()->pointer()->p_pointerFocusSurface == surface)
-        surface->seat()->pointer()->p_pointerFocusSurface = nullptr;
+    if(surface->seat()->pointer()->m_pointerFocusSurface == surface)
+        surface->seat()->pointer()->m_pointerFocusSurface = nullptr;
 
     // Clear dragging surface
-    if(surface->seat()->pointer()->p_draggingSurface == surface)
-        surface->seat()->pointer()->p_draggingSurface = nullptr;
+    if(surface->seat()->pointer()->m_draggingSurface == surface)
+        surface->seat()->pointer()->m_draggingSurface = nullptr;
 
     // Clear active toplevel focus
-    if(surface->seat()->p_activeTopLevel == surface->toplevel())
-        surface->seat()->p_activeTopLevel = nullptr;
+    if(surface->seat()->m_activeTopLevel == surface->toplevel())
+        surface->seat()->m_activeTopLevel = nullptr;
 
     // Clear moving toplevel
-    if(surface->seat()->pointer()->p_movingTopLevel == surface->toplevel())
-        surface->seat()->pointer()->p_movingTopLevel = nullptr;
+    if(surface->seat()->pointer()->m_movingTopLevel == surface->toplevel())
+        surface->seat()->pointer()->m_movingTopLevel = nullptr;
 
     // Clear resizing toplevel
-    if(surface->seat()->pointer()->p_resizingToplevel == surface->toplevel())
-        surface->seat()->pointer()->p_resizingToplevel = nullptr;
+    if(surface->seat()->pointer()->m_resizingToplevel == surface->toplevel())
+        surface->seat()->pointer()->m_resizingToplevel = nullptr;
 
     if(surface->roleType() == LSurface::Cursor)
     {
@@ -65,27 +65,27 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
 
     for(LSurface *child : surface->children())
     {
-        child->p_parent = nullptr;
+        child->imp()->m_parent = nullptr;
         child->parentChangeRequest();
     }
 
     // Parent
     if(surface->parent())
-        surface->parent()->p_children.remove(surface);
+        surface->parent()->imp()->m_children.remove(surface);
 
     if(surface->toplevel())
-        surface->toplevel()->p_surface = nullptr;
+        surface->toplevel()->m_surface = nullptr;
     else if(surface->popup())
-        surface->popup()->p_surface = nullptr;
+        surface->popup()->m_surface = nullptr;
 
 
-    surface->p_role = nullptr;
+    surface->imp()->m_role = nullptr;
 
     // Remove surface from its client list
-    surface->client()->p_surfaces.remove(surface);
+    surface->client()->imp()->m_surfaces.remove(surface);
 
     // Remove the surface from the compositor list
-    surface->compositor()->p_surfaces.remove(surface);
+    surface->compositor()->imp()->m_surfaces.remove(surface);
 
     // Notify from client
     surface->compositor()->destroySurfaceRequest(surface);
@@ -97,10 +97,10 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
 void Globals::Surface::attach(wl_client *, wl_resource *resource, wl_resource *buffer, Int32 x, Int32 y)
 {
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
-    lSurface->pending.buffer = buffer;
+    lSurface->imp()->pending.buffer = buffer;
 
     if(lSurface->cursor())
-        lSurface->cursor()->p_pendingHotspotOffset = LPoint(x,y);
+        lSurface->cursor()->m_pendingHotspotOffset = LPoint(x,y);
 
 }
 
@@ -111,13 +111,13 @@ void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 ca
     Int32 version = wl_resource_get_version(resource);
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
 
-    if(surface->p_frameCallback)
+    if(surface->imp()->m_frameCallback)
     {
-        wl_callback_send_done(surface->p_frameCallback,LTime::ms());
-        wl_resource_destroy(surface->p_frameCallback);
+        wl_callback_send_done(surface->imp()->m_frameCallback,LTime::ms());
+        wl_resource_destroy(surface->imp()->m_frameCallback);
     }
 
-    surface->p_frameCallback = wl_resource_create(client, &wl_callback_interface, version, callback);
+    surface->imp()->m_frameCallback = wl_resource_create(client, &wl_callback_interface, version, callback);
 }
 
 void Globals::Surface::destroy(wl_client *, wl_resource *resource)
@@ -137,14 +137,15 @@ void Globals::Surface::commit(wl_client *, wl_resource *resource)
 
 void Globals::Surface::apply_commit(LSurface *surface)
 {
-    surface->p_textureChanged = true;
+    surface->imp()->m_textureChanged = true;
+
     // Wait for parent commit if is subsurface in sync mode
     if(surface->roleType() == LSurface::Subsurface && surface->subsurface()->isSynced())
     {
-        if(!surface->subsurface()->p_parentIsCommiting)
+        if(!surface->subsurface()->m_parentIsCommiting)
             return;
         else
-            surface->subsurface()->p_parentIsCommiting = false;
+            surface->subsurface()->m_parentIsCommiting = false;
     }
 
     /*
@@ -152,91 +153,120 @@ void Globals::Surface::apply_commit(LSurface *surface)
     {
         if(surface->subsurface()->isSynced())
         {
-            if(!surface->subsurface()->p_parentIsCommiting)
+            if(!surface->subsurface()->m_parentIsCommiting)
                 return;
             else
-                surface->subsurface()->p_parentIsCommiting = false;
+                surface->subsurface()->m_parentIsCommiting = false;
         }
         else
         {
-            if(!surface->subsurface()->p_parentIsCommiting)
+            if(!surface->subsurface()->m_parentIsCommiting)
                 return;
         }
     }
 */
 
     // Makes the pending buffer the current buffer
-    surface->current.buffer = surface->pending.buffer;
-    surface->pending.buffer = nullptr;
+    surface->imp()->current.buffer = surface->imp()->pending.buffer;
+    surface->imp()->pending.buffer = nullptr;
 
     // If the buffer is empty
-    if(!surface->current.buffer)
+    if(!surface->imp()->current.buffer)
     {
-        if(surface->pending.type == LSurface::Toplevel)
+        if(surface->imp()->pending.type == LSurface::Toplevel)
         {
-            surface->p_role->p_roleId = surface->pending.type;
-            surface->pending.type = LSurface::Undefined;
+            surface->imp()->m_role->m_roleId = surface->imp()->pending.type;
+            surface->imp()->pending.type = LSurface::Undefined;
             surface->toplevel()->configureRequest();
         }
-        else if(surface->pending.type == LSurface::Popup)
+        else if(surface->imp()->pending.type == LSurface::Popup)
         {
-            surface->p_role->p_roleId = surface->pending.type;
-            surface->pending.type = LSurface::Undefined;
+            surface->imp()->m_role->m_roleId = surface->imp()->pending.type;
+            surface->imp()->pending.type = LSurface::Undefined;
             surface->popup()->configureRequest();
         }
-        else if(surface->pending.type == LSurface::Subsurface)
+        else if(surface->imp()->pending.type == LSurface::Subsurface)
         {
 
         }
         return;
     }
 
-
-    // Copy pending damages to current damages
-    surface->texture()->damages.clear();
-    std::copy(surface->texture()->pendingDamages.begin(),
-              surface->texture()->pendingDamages.end(),
-              std::back_inserter(surface->texture()->damages));
-    surface->texture()->pendingDamages.clear();
-
-    surface->p_isDamaged = true;
+    surface->imp()->m_isDamaged = true;
 
     // Convert the buffer to OpenGL texture
-    surface->applyDamages();
+    surface->imp()->m_bufferToTexture();
 
     // Notify that the cursor changed content
     if(surface->cursor())
     {
-        surface->cursor()->p_hotspot -= surface->cursor()->p_pendingHotspotOffset/surface->bufferScale();
+        surface->cursor()->m_hotspot -= surface->cursor()->m_pendingHotspotOffset/surface->bufferScale();
         surface->seat()->pointer()->setCursorRequest(surface,surface->cursor()->hotspot().x(),surface->cursor()->hotspot().y());
     }
 
     /************************************
      *********** SURFACE SIZE ***********
      ************************************/
-    surface->pending.size = surface->texture()->size()/surface->bufferScale();
-    if(surface->current.size != surface->pending.size)
+    surface->imp()->pending.size = surface->texture()->size()/surface->bufferScale();
+    if(surface->imp()->current.size != surface->imp()->pending.size)
     {
-        surface->current.size = surface->pending.size;
+        surface->imp()->current.size = surface->imp()->pending.size;
 
-        surface->texture()->damages.clear();
-        surface->texture()->damages.push_back(LRect(LPoint(),surface->texture()->size()));
+        //surface->texture()->damages.clear();
+        //surface->texture()->damages.push_back(LRect(LPoint(),surface->texture()->size()));
         surface->bufferSizeChangeRequest();
     }
 
-
-    // Input region
-    if(surface->pending.inputRegion.p_rects.empty())
+    /************************************
+     *********** DAMAGES ***********
+     ************************************/
+    if(surface->imp()->m_damagesChanged)
     {
-        surface->current.inputRegion.clear();
-        surface->current.inputRegion.addRect(LRect(LPoint(),surface->size()));
+        surface->imp()->m_currentDamages.clear();
+        for(LRect &rect : surface->imp()->pending.damages)
+            surface->imp()->m_currentDamages.addRect(rect);
+        for(LRect &rect : surface->imp()->pending.bufferDamages)
+            surface->imp()->m_currentDamages.addRect(rect/surface->bufferScale());
+        surface->imp()->pending.damages.clear();
+        surface->imp()->pending.bufferDamages.clear();
+        surface->imp()->m_currentDamages.clip(LRect(LPoint(),surface->size()));
+        surface->imp()->m_damagesChanged = false;
     }
-    else
-        surface->current.inputRegion.copy(surface->pending.inputRegion);
 
-    if(!surface->p_roleChangeNotified)
+    /************************************
+     *********** INPUT REGION ***********
+     ************************************/
+    if(surface->imp()->m_inputRegionChanged)
     {
-        surface->p_roleChangeNotified = true;
+        if(surface->imp()->pending.inputRegion.m_rects.empty())
+        {
+            surface->imp()->current.inputRegion.clear();
+            surface->imp()->current.inputRegion.addRect(LRect(LPoint(),surface->size()));
+        }
+        else
+        {
+            surface->imp()->current.inputRegion.copy(surface->imp()->pending.inputRegion);
+            surface->imp()->current.inputRegion.clip(LRect(LPoint(),surface->size()));
+        }
+
+        surface->inputRegionChanged();
+        surface->imp()->m_inputRegionChanged = false;
+    }
+
+    /************************************
+     ********** OPAQUE REGION ***********
+     ************************************/
+    if(surface->imp()->m_opaqueRegionChanged)
+    {
+        surface->imp()->current.opaqueRegion.copy(surface->imp()->pending.opaqueRegion);
+        surface->imp()->current.opaqueRegion.clip(LRect(LPoint(),surface->size()));
+        surface->imp()->m_opaqueRegionChanged = false;
+    }
+
+
+    if(!surface->imp()->m_roleChangeNotified)
+    {
+        surface->imp()->m_roleChangeNotified = true;
         surface->typeChangeRequest();
     }
 
@@ -245,28 +275,28 @@ void Globals::Surface::apply_commit(LSurface *surface)
     {
         LToplevelRole *lToplevel = surface->toplevel();
 
-        if(lToplevel->p_pendingConf.set)
+        if(lToplevel->m_pendingConf.set)
         {
-            UChar8 prevState = lToplevel->p_stateFlags;
-            lToplevel->p_stateFlags = lToplevel->p_sentConf.flags;
+            UChar8 prevState = lToplevel->m_stateFlags;
+            lToplevel->m_stateFlags = lToplevel->m_sentConf.flags;
 
-            if((prevState & LToplevelRole::Maximized) != (lToplevel->p_sentConf.flags & LToplevelRole::Maximized))
+            if((prevState & LToplevelRole::Maximized) != (lToplevel->m_sentConf.flags & LToplevelRole::Maximized))
                 lToplevel->maximizeChanged();
-            if((prevState & LToplevelRole::Fullscreen) != (lToplevel->p_sentConf.flags & LToplevelRole::Fullscreen))
+            if((prevState & LToplevelRole::Fullscreen) != (lToplevel->m_sentConf.flags & LToplevelRole::Fullscreen))
                 lToplevel->fullscreenChanged();
 
-            if(lToplevel->p_sentConf.flags & LToplevelRole::Activated)
+            if(lToplevel->m_sentConf.flags & LToplevelRole::Activated)
             {
                 if(lToplevel->seat()->activeTopLevel() && lToplevel->seat()->activeTopLevel() != lToplevel)
-                    lToplevel->seat()->activeTopLevel()->configure(lToplevel->seat()->activeTopLevel()->p_currentConf.flags & ~LToplevelRole::Activated);
+                    lToplevel->seat()->activeTopLevel()->configure(lToplevel->seat()->activeTopLevel()->m_currentConf.flags & ~LToplevelRole::Activated);
 
-                lToplevel->seat()->p_activeTopLevel = lToplevel;
+                lToplevel->seat()->m_activeTopLevel = lToplevel;
             }
 
-            if((prevState & LToplevelRole::Activated) != (lToplevel->p_sentConf.flags & LToplevelRole::Activated))
+            if((prevState & LToplevelRole::Activated) != (lToplevel->m_sentConf.flags & LToplevelRole::Activated))
                 lToplevel->activatedChanged();
 
-            lToplevel->p_pendingConf.set = false;
+            lToplevel->m_pendingConf.set = false;
         }
     }
 
@@ -274,11 +304,11 @@ void Globals::Surface::apply_commit(LSurface *surface)
 
 
     // Apply cached commit to subsurfaces
-    for(LSurface *s : surface->p_children)
+    for(LSurface *s : surface->children())
     {
         if(s->roleType() == LSurface::Subsurface && s->subsurface()->isSynced())
         {
-            s->subsurface()->p_parentIsCommiting = true;
+            s->subsurface()->m_parentIsCommiting = true;
             apply_commit(s);
         }
 
@@ -287,14 +317,14 @@ void Globals::Surface::apply_commit(LSurface *surface)
         {
             if(s->subsurface()->isSynced())
             {
-                s->subsurface()->p_parentIsCommiting = true;
+                s->subsurface()->m_parentIsCommiting = true;
                 apply_commit(s);
             }
             else
             {
-                if(!s->subsurface()->p_parentIsCommiting)
+                if(!s->subsurface()->m_parentIsCommiting)
                 {
-                    s->subsurface()->p_parentIsCommiting = true;
+                    s->subsurface()->m_parentIsCommiting = true;
                     apply_commit(s);
                 }
             }
@@ -307,34 +337,50 @@ void Globals::Surface::apply_commit(LSurface *surface)
 }
 
 
-void Globals::Surface::damage(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
+void Globals::Surface::damage(wl_client *, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {
-    (void)client;
-
-    /* The client tells the server that has updated a region of the current buffer */
-    //printf("DAMAGE (%i,%i,%i,%i)\n",x,y,width,height);
-    LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
-    surface->texture()->pendingDamages.push_back(LRect(x, y, width, height)*surface->bufferScale());
+    LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
+    lSurface->imp()->pending.damages.push_back(LRect(x, y, width, height));
+    //surface->texture()->pendingDamages.push_back(LRect(x, y, width, height)*surface->bufferScale());
+    lSurface->imp()->m_damagesChanged = true;
 }
 
-void Globals::Surface::set_opaque_region(wl_client *client, wl_resource *resource, wl_resource *region)
+void Globals::Surface::damage_buffer(wl_client *, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {
-    (void)client;(void)resource;(void)region;
+    LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
+    lSurface->imp()->pending.bufferDamages.push_back(LRect(x, y, width, height));
+    //surface->texture()->pendingDamages.push_back(LRect(x, y, width, height));
+    lSurface->imp()->m_damagesChanged = true;
 }
 
-void Globals::Surface::set_input_region(wl_client *client, wl_resource *resource, wl_resource *region)
+void Globals::Surface::set_opaque_region(wl_client *, wl_resource *resource, wl_resource *region)
 {
-    (void)client;
+    LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
 
-    LSurface *wSurface = (LSurface*)wl_resource_get_user_data(resource);
+    if(region)
+    {
+        LRegion *lRegion = (LRegion*)wl_resource_get_user_data(region);
+        lSurface->imp()->pending.opaqueRegion.copy(*lRegion);
+    }
+    else
+        lSurface->imp()->pending.opaqueRegion.clear();
+
+    lSurface->imp()->m_opaqueRegionChanged = true;
+}
+
+void Globals::Surface::set_input_region(wl_client *, wl_resource *resource, wl_resource *region)
+{
+    LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
 
     if(region == NULL)
-        wSurface->pending.inputRegion.clear();
+        lSurface->imp()->pending.inputRegion.clear();
     else
     {
         LRegion *lRegion = (LRegion*)wl_resource_get_user_data(region);
-        wSurface->pending.inputRegion.copy(*lRegion);
+        lSurface->imp()->pending.inputRegion.copy(*lRegion);
     }
+
+    lSurface->imp()->m_inputRegionChanged = true;
 }
 
 void Globals::Surface::set_buffer_transform(wl_client *client, wl_resource *resource, Int32 transform)
@@ -343,30 +389,19 @@ void Globals::Surface::set_buffer_transform(wl_client *client, wl_resource *reso
     printf("set_buffer_transform: transform %i\n",transform);
 }
 
-void Globals::Surface::damage_buffer(wl_client *client, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
-{
-    (void)client;
-    //printf("BUFFER DAMAGE (%i,%i,%i,%i)\n",x,y,width,height);
-    LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
-    surface->texture()->pendingDamages.push_back(LRect(x, y, width, height));
-}
-
 void Globals::Surface::set_buffer_scale(wl_client *client, wl_resource *resource, Int32 scale)
 {
     (void)client;
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
-    surface->setBufferScale(scale);
+    surface->imp()->m_bufferScale = scale;
 }
-
-
-
 
 void Globals::Surface::offset(wl_client *, wl_resource *resource, Int32 x, Int32 y)
 {
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
 
     if(lSurface->cursor())
-        lSurface->cursor()->p_pendingHotspotOffset = LPoint(x,y);
+        lSurface->cursor()->m_pendingHotspotOffset = LPoint(x,y);
 }
 
 

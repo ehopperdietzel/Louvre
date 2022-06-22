@@ -10,11 +10,13 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <LCompositor.h>
+#include <LCompositorPrivate.h>
 #include <LWayland.h>
 #include <LOpenGL.h>
 #include <LCursor.h>
 #include <LToplevelRole.h>
+
+#include <LRegion.h>
 
 using namespace Louvre;
 
@@ -26,23 +28,85 @@ LOutput::~LOutput()
     //delete []_devName;
 }
 
+
 void LOutput::initializeGL()
 {
     // Set clear screen color
     glClearColor(0.031f, 0.486f, 0.933f, 1.0f);
+
 }
+
 
 void LOutput::paintGL()
 {
 
     // Get the painter
     LOpenGL *GL = painter();
+    /*
+    GL->clearScreen();
 
+
+    LRegion region;
+
+    for(int i = 0; i < 5000; i++)
+    {
+        Int32 x = rand() % 1000;
+        Int32 y = rand() % 1000;
+        Int32 w = 10 + rand() % 1000;
+        Int32 h = 10 + rand() % 1000;
+        region.addRect(LRect(x,y,w,h));
+    }
+
+
+    for(int i = 0; i < 5; i++)
+    {
+        Int32 x = rand() % 1000;
+        Int32 y = rand() % 1000;
+        Int32 w = 10 + rand() % 1000;
+        Int32 h = 10 + rand() % 1000;
+        region.subtractRect(LRect(x,y,w,h));
+    }
+
+
+
+    region.clip(LRect(0,0,rect().w(),rect().h()));
+    //region.subtractRect(LRect(0,0,2000,600));
+
+
+    //region.addRect(LRect(0,0,100,100));
+    //region.subtractRect(LRect(0,0,100,20));
+    //region.subtractRect(LRect(0,80,20,20));
+
+
+    for(LRect &r : region.rects())
+    {
+        GL->drawColor(
+                    r,
+                    float(rand() % 1000)/1000.f,
+                    float(rand() % 1000)/1000.f,
+                    float(rand() % 1000)/1000.f,
+                    0.2);
+    }
+
+
+    for(LRect &r : region.rects())
+    {
+        GL->drawColor(
+                    r,
+                    1,//float(rand() % 1000)/1000.f,
+                    0,//float(rand() % 1000)/1000.f,
+                    0,//float(rand() % 1000)/1000.f,
+                    0.5);
+    }
+    return;
+
+    */
     for(LSurface *surface : compositor()->surfaces())
         if(surface->toplevel() && surface->toplevel()->fullscreen())
         {
             if(surface->textureChanged() || compositor()->cursor()->hasHardwareSupport())
             {
+                glDisable(GL_BLEND);
                 GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
                 /*
                 LRect r;
@@ -81,6 +145,18 @@ void LOutput::paintGL()
 
         // Draw the surface
         GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
+
+        // Input region
+        //for(const LRect &rect : surface->inputRegion().rects())
+            //GL->drawColor(LRect(surface->pos(true) + rect.topLeft(), rect.bottomRight()),1,0,1,0.2);
+
+        // Opaque region
+        //for(const LRect &rect : surface->opaqueRegion().rects())
+            //GL->drawColor(LRect(surface->pos(true) + rect.topLeft(), rect.bottomRight()),1,0,1,0.2);
+
+        // Damages
+        //for(const LRect &rect : surface->damages().rects())
+            //GL->drawColor(LRect(surface->pos(true) + rect.topLeft(), rect.bottomRight()),1,0,1,0.2);
 
         /*
         LRect r;
@@ -146,20 +222,20 @@ void LOutput::unplugged()
 
 LCompositor *LOutput::compositor()
 {
-    return p_compositor;
+    return m_compositor;
 }
 
 void LOutput::setCompositor(LCompositor *compositor)
 {
-    p_compositor = compositor;
-    p_renderThread = new std::thread(&LOutput::startRenderLoop,this);
+    m_compositor = compositor;
+    m_renderThread = new std::thread(&LOutput::startRenderLoop,this);
     //LOutput::startRenderLoop(this);
 }
 
 void LOutput::setOutputScale(Int32 scale)
 {
     _outputScale = scale;
-    p_rectScaled = p_rect/getOutputScale();
+    m_rectScaled = m_rect/getOutputScale();
 }
 
 Int32 LOutput::getOutputScale() const
@@ -170,7 +246,7 @@ Int32 LOutput::getOutputScale() const
 void LOutput::initialize()
 {
     // Initialize the backend
-    compositor()->p_backend->createGLContext(this);
+    compositor()->imp()->m_backend->createGLContext(this);
 
     // Repaint FD
     _renderFd = eventfd(0,EFD_SEMAPHORE);
@@ -182,13 +258,13 @@ void LOutput::initialize()
     timerPoll.events = POLLIN;
     timerPoll.fd = timerfd_create(CLOCK_MONOTONIC,0);
 
-    LWayland::bindEGLDisplay(compositor()->p_backend->getEGLDisplay(this));
+    LWayland::bindEGLDisplay(compositor()->imp()->m_backend->getEGLDisplay(this));
 
     setPainter(new LOpenGL());
 
     // Create cursor
     if(!compositor()->cursor())
-        compositor()->p_cursor = new LCursor(this);
+        compositor()->imp()->m_cursor = new LCursor(this);
 
     initializeGL();
 
@@ -221,14 +297,14 @@ void LOutput::startRenderLoop(void *data)
         eventfd_read(output->_renderFd,&output->_renderValue);
 
         // Let the user do his painting
-        output->p_compositor->renderMutex.lock();
+        output->m_compositor->imp()->m_renderMutex.lock();
 
         output->paintGL();
 
         if(!output->compositor()->cursor()->hasHardwareSupport())
             output->compositor()->cursor()->paint();
 
-        output->p_compositor->renderMutex.unlock();
+        output->m_compositor->imp()->m_renderMutex.unlock();
 
         // Tell the input loop to process events
         LWayland::forceUpdate();
@@ -241,7 +317,7 @@ void LOutput::startRenderLoop(void *data)
         //timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
 
         // Show buffer on screen
-        output->p_compositor->p_backend->flipPage(output);
+        output->m_compositor->imp()->m_backend->flipPage(output);
 
     }
 }
@@ -258,20 +334,20 @@ void LOutput::repaint()
 const LRect &LOutput::rect(bool scaled) const
 {
     if(scaled)
-        return p_rectScaled;
+        return m_rectScaled;
 
-    return p_rect;
+    return m_rect;
 }
 
 EGLDisplay LOutput::getDisplay()
 {
-    return compositor()->p_backend->getEGLDisplay(this);
+    return compositor()->imp()->m_backend->getEGLDisplay(this);
 }
 
 void LOutput::setPainter(LOpenGL *painter)
 {
-    p_painter = painter;
-    p_painter->p_output = this;
+    m_painter = painter;
+    m_painter->m_output = this;
 }
 
 

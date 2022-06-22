@@ -70,23 +70,23 @@ private:
     friend class Louvre::Extensions::XdgShell::Popup;
     friend class Louvre::Extensions::XdgShell::Positioner;
 
-    wl_resource *p_resource = nullptr;
-    LClient *p_client = nullptr;
+    wl_resource *m_resource = nullptr;
+    LClient *m_client = nullptr;
 
-    LSize p_size;
-    LRect p_anchorRect;
-    LPoint p_offset;
+    LSize m_size;
+    LRect m_anchorRect;
+    LPoint m_offset;
 
-    LAnchor p_anchor = LAnchor::LNone;
-    LGravity p_gravity = LGravity::LNone;
-    LConstraintAdjustment p_constraintAdjustment = LConstraintAdjustment::LNone;
+    LAnchor m_anchor = LAnchor::LNone;
+    LGravity m_gravity = LGravity::LNone;
+    LConstraintAdjustment m_constraintAdjustment = LConstraintAdjustment::LNone;
 
-    LSurface *p_linkedSurface = nullptr;
+    LSurface *m_linkedSurface = nullptr;
 
 #if LOUVRE_XDG_WM_BASE_VERSION >=3
-    bool p_isReactive = false;
-    LSize p_parentSize;
-    UInt32 p_parentConfigureSerial;
+    bool m_isReactive = false;
+    LSize m_parentSize;
+    UInt32 m_parentConfigureSerial;
 #endif
 
 };

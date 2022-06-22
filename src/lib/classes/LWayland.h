@@ -1,10 +1,7 @@
 #ifndef LWAYLAND_H
 #define LWAYLAND_H
 
-//#include <wayland-server.h>
 #include <LNamespaces.h>
-//#include <EGL/egl.h>
-
 
 class Louvre::LWayland
 {
@@ -13,10 +10,9 @@ public:
     static void setSeat(LSeat *seat);
     static int processSeat(int, unsigned int, void*userData);
 
-
     static UInt32 nextSerial();
 
-    static int initWayland(LCompositor *comp);//, int libinputFd, wl_event_loop_fd_func_t *libinputFunc);
+    static int initWayland(LCompositor *comp);
     static void terminateDisplay();
     static void dispatchEvents();
     static void flushClients();

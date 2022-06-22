@@ -52,18 +52,18 @@ private:
     friend class Extensions::XdgShell::Toplevel;
 
     // Wayland
-    LCompositor         *p_compositor               = nullptr;
-    LPointer            *p_pointer                  = nullptr;
-    LKeyboard           *p_keyboard                 = nullptr;
+    LCompositor         *m_compositor               = nullptr;
+    LPointer            *m_pointer                  = nullptr;
+    LKeyboard           *m_keyboard                 = nullptr;
 
-    LSurface            *p_touchFocusSurface        = nullptr;
-    LToplevelRole       *p_activeTopLevel           = nullptr;
-    UInt32               p_capabilities             = POINTER | KEYBOARD;
+    LSurface            *m_touchFocusSurface        = nullptr;
+    LToplevelRole       *m_activeTopLevel           = nullptr;
+    UInt32               m_capabilities             = POINTER | KEYBOARD;
 
     // Libinput
-    libinput            *p_li                       = nullptr;
-    udev                *p_udev                     = nullptr;
-    libinput_interface   p_libinputInterface;
+    libinput            *m_li                       = nullptr;
+    udev                *m_udev                     = nullptr;
+    libinput_interface   m_libinputInterface;
 
     void processInput();
     static int openRestricted(const char *path, int flags, void *userData);

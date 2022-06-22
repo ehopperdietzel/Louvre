@@ -47,15 +47,15 @@ public:
     //const drmModeModeInfo getCurrentMode();
     //const drmModeConnector getCurrentConnector();
 
-    InitializeResult initializeResult() const { return p_initializeResult; }
+    InitializeResult initializeResult() const { return m_initializeResult; }
 
     UInt32 refreshRate = 60;
 
-    void setUserData(void *userData){p_userData = userData;}
-    void *userData() const {return p_userData;}
+    void setUserData(void *userData){m_userData = userData;}
+    void *userData() const {return m_userData;}
 
     void setPainter(LOpenGL *painter);
-    LOpenGL *painter() const {return p_painter;}
+    LOpenGL *painter() const {return m_painter;}
 
     void *getData() const { return data; };
 
@@ -65,15 +65,15 @@ private:
     friend class LOutputManager;
     friend class LCompositor;
 
-    LRect p_rect;
-    LRect p_rectScaled;
+    LRect m_rect;
+    LRect m_rectScaled;
 
     // Painter
-    LOpenGL *p_painter = nullptr;
+    LOpenGL *m_painter = nullptr;
 
-    InitializeResult p_initializeResult = InitializeResult::Pending;
+    InitializeResult m_initializeResult = InitializeResult::Pending;
 
-    void *p_userData;
+    void *m_userData;
 
     wl_event_source *timer;
     timespec lastDrawTime;
@@ -90,7 +90,7 @@ private:
     static void startRenderLoop(void *data);
 
     // Compositor
-    LCompositor *p_compositor = nullptr;
+    LCompositor *m_compositor = nullptr;
 
    
     // Params
@@ -103,7 +103,7 @@ private:
     // Render thread
     int _renderFd;
     eventfd_t _renderValue = 0;
-    std::thread *p_renderThread;
+    std::thread *m_renderThread;
     pollfd _renderPoll;
 
     bool scheduledRepaint = false;

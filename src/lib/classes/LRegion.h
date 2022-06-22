@@ -18,21 +18,19 @@ public:
     void subtractRect(const LRect &rect);
     void multiply(double factor);
     bool containsPoint(const LPoint &point);
+    void simplify();
 
-    struct LRegionRect
-    {
-        LRect rect;
-        bool add = true;
-    };
+    /* Recorta las rectas */
+    void clip(const LRect &rect);
 
 
-    list<LRegionRect>&rects();
+    const list<LRect>&rects() const;
 private:
     friend class Louvre::Globals::Compositor;
     friend class Louvre::Globals::Region;
     friend class Louvre::Globals::Surface;
 
-    list<LRegionRect>p_rects;
+    list<LRect>m_rects;
 
 
 };

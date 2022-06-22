@@ -1,5 +1,5 @@
 #include "LWayland.h"
-#include <LCompositor.h>
+#include <LCompositorPrivate.h>
 #include <LTexture.h>
 #include <pthread.h>
 #include <xdg-shell.h>
@@ -42,7 +42,7 @@ EGLDisplay eglDpy;
 EGLContext sharedContext;
 EGLDisplay sharedDisplay;
 Int32 contextInitialized = 0;
-LOutput *p_mainOutput;
+LOutput *m_mainOutput;
 
 bool updated = false;
 
@@ -98,7 +98,7 @@ void LWayland::initGLContext()
 
     eglMakeCurrent(eglDpy, EGL_NO_SURFACE, EGL_NO_SURFACE, eglCtx);
 
-    compositor->p_painter = new LOpenGL();
+    compositor->imp()->m_painter = new LOpenGL();
     return;
 }
 
@@ -109,7 +109,7 @@ bool LWayland::isGlContextInitialized()
 
 void LWayland::setContext(LOutput *output, EGLDisplay sharedDisp, EGLContext sharedCont)
 {
-    p_mainOutput = output;
+    m_mainOutput = output;
     sharedDisplay = sharedDisp;
     sharedContext = sharedCont;
     contextInitialized = 1;
@@ -117,19 +117,19 @@ void LWayland::setContext(LOutput *output, EGLDisplay sharedDisp, EGLContext sha
 
 LOutput *LWayland::mainOutput()
 {
-    return p_mainOutput;
+    return m_mainOutput;
 }
 
 void LWayland::forceUpdate()
 {
     if(!updated)
-        eventfd_write(compositor->libinputFd,1);
+        eventfd_write(compositor->imp()->libinputFd,1);
 }
 
 void LWayland::setSeat(LSeat *seat)
 {
     // Create seat global
-    wl_global_create(display, &wl_seat_interface, LOUVRE_SEAT_VERSION, seat->p_compositor, &Globals::Seat::bind);
+    wl_global_create(display, &wl_seat_interface, LOUVRE_SEAT_VERSION, seat->m_compositor, &Globals::Seat::bind);
     wl_event_loop_add_fd(event_loop,seat->libinputFd(),WL_EVENT_READABLE,&LWayland::processSeat,seat);
 }
 
@@ -194,9 +194,9 @@ int LWayland::initWayland(LCompositor *comp)
     event_loop = wl_display_get_event_loop(display);
     wayland_fd = wl_event_loop_get_fd(event_loop);
 
-    wl_event_loop_add_fd(event_loop,comp->libinputFd,WL_EVENT_READABLE,&LWayland::readFd,comp);
+    wl_event_loop_add_fd(event_loop,comp->imp()->libinputFd,WL_EVENT_READABLE,&LWayland::readFd,comp);
 
-    comp->waylandFd = wl_event_loop_get_fd(event_loop);
+    comp->imp()->waylandFd = wl_event_loop_get_fd(event_loop);
 
     // Listen for client connections
     clientConnectedListener.notify = &clientConnectionEvent;
@@ -228,7 +228,7 @@ int LWayland::readFd(int, unsigned int, void *d)
     LCompositor *comp = (LCompositor*)d;
     comp->seat()->processInput();
     updated = false;
-    eventfd_read(comp->libinputFd,&comp->libinputVal);
+    eventfd_read(comp->imp()->libinputFd,&comp->imp()->libinputVal);
     return 0;
 }
 
@@ -257,7 +257,7 @@ void LWayland::runLoop()
     {
         poll(fds,1,-1);
 
-        compositor->renderMutex.lock();
+        compositor->imp()->m_renderMutex.lock();
 
         dispatchEvents();
 
@@ -269,7 +269,7 @@ void LWayland::runLoop()
 
         flushClients();
 
-        compositor->renderMutex.unlock();
+        compositor->imp()->m_renderMutex.unlock();
 
     }
     //wl_display_run(display);
@@ -291,7 +291,7 @@ void LWayland::clientConnectionEvent(wl_listener *listener, void *data)
     wl_client_get_destroy_listener(client,&LWayland::clientDisconnectionEvent);
 
     // Append client to the compositor list
-    compositor->p_clients.push_back(newClient);
+    compositor->imp()->m_clients.push_back(newClient);
 }
 
 wl_iterator_result iter(wl_resource *r,void*)
@@ -324,7 +324,7 @@ void LWayland::clientDisconnectionEvent(wl_listener *listener, void *data)
         return;
 
     compositor->destroyClientRequest(disconnectedClient);
-    compositor->p_clients.remove(disconnectedClient);
+    compositor->imp()->m_clients.remove(disconnectedClient);
 
     delete disconnectedClient;
 }

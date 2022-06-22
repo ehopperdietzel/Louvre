@@ -8,16 +8,18 @@
 #include <LTime.h>
 #include <LKeyboard.h>
 
+#include <LClientPrivate.h>
+
 using namespace Louvre;
 
 LPointer::LPointer(LSeat *seat)
 {
-    p_seat = seat;
+    m_seat = seat;
 }
 
 LSeat *LPointer::seat() const
 {
-    return p_seat;
+    return m_seat;
 }
 
 LCompositor *LPointer::compositor() const
@@ -55,10 +57,10 @@ void LPointer::setFocus(LSurface *surface, const LPoint &pos)
         {
             // Send focus event
             sendEnterEvent(surface, pos);
-            p_pointerFocusSurface = surface;
+            m_pointerFocusSurface = surface;
         }
         else
-            p_pointerFocusSurface = nullptr;
+            m_pointerFocusSurface = nullptr;
     }
 
     // If surface is nullptr
@@ -66,7 +68,7 @@ void LPointer::setFocus(LSurface *surface, const LPoint &pos)
     {
         // Remove focus from focused surface
         sendLeaveEvent(focusSurface());
-        p_pointerFocusSurface = nullptr;
+        m_pointerFocusSurface = nullptr;
     }
 }
 
@@ -106,8 +108,8 @@ void LPointer::sendButtonEvent(UInt32 button, UInt32 state)
         return;
 
     // Send pointer button event
-    focusSurface()->client()->p_lastPointerButtonEventSerial = LWayland::nextSerial();
-    wl_pointer_send_button(focusSurface()->client()->pointerResource(),focusSurface()->client()->p_lastPointerButtonEventSerial,LTime::ms(),button,state);
+    focusSurface()->client()->imp()->m_lastPointerButtonEventSerial = LWayland::nextSerial();
+    wl_pointer_send_button(focusSurface()->client()->pointerResource(),focusSurface()->client()->lastPointerButtonEventSerial(),LTime::ms(),button,state);
 
 #if LOUVRE_SEAT_VERSION >=5
     if(wl_resource_get_version(focusSurface()->client()->pointerResource()) >= 5)
@@ -118,12 +120,12 @@ void LPointer::sendButtonEvent(UInt32 button, UInt32 state)
 
 void LPointer::startResizingToplevel(LToplevelRole *toplevel, LToplevelRole::Edge edge)
 {
-    p_resizingToplevel = toplevel;
-    p_resizingToplevelEdge = edge;
-    p_resizingToplevelInitSize = toplevel->surface()->size();
-    p_resizingToplevelInitWindowSize = toplevel->windowGeometry().bottomRight();
-    p_resizingToplevelInitCursorPos = cursor()->position();
-    p_resizingToplevelInitPos = toplevel->surface()->pos();
+    m_resizingToplevel = toplevel;
+    m_resizingToplevelEdge = edge;
+    m_resizingToplevelInitSize = toplevel->surface()->size();
+    m_resizingToplevelInitWindowSize = toplevel->windowGeometry().bottomRight();
+    m_resizingToplevelInitCursorPos = cursor()->position();
+    m_resizingToplevelInitPos = toplevel->surface()->pos();
 }
 
 bool LPointer::updateResizingToplevelSize()
@@ -131,7 +133,7 @@ bool LPointer::updateResizingToplevelSize()
     if(resizingToplevel())
     {
         LSize newSize = resizingToplevel()->calculateResizeRect(resizingToplevelInitCursorPos()-cursor()->position(),
-                                                                p_resizingToplevelInitWindowSize,
+                                                                m_resizingToplevelInitWindowSize,
                                                                 resizingToplevelEdge());
 
         resizingToplevel()->configure(newSize ,LToplevelRole::Activated | LToplevelRole::Resizing);
@@ -161,14 +163,14 @@ void LPointer::stopResizingToplevel()
     if(resizingToplevel())
         resizingToplevel()->configure(LToplevelRole::Activated);
 
-    p_resizingToplevel = nullptr;
+    m_resizingToplevel = nullptr;
 }
 
 void LPointer::startMovingTopLevel(LToplevelRole *topLevel)
 {
-    p_movingTopLevelInitPos = topLevel->surface()->pos();
-    p_movingTopLevelInitCursorPos = cursor()->position();
-    p_movingTopLevel = topLevel;
+    m_movingTopLevelInitPos = topLevel->surface()->pos();
+    m_movingTopLevelInitCursorPos = cursor()->position();
+    m_movingTopLevel = topLevel;
 }
 
 bool LPointer::updateMovingTopLevelPos()
@@ -183,18 +185,18 @@ bool LPointer::updateMovingTopLevelPos()
 
 void LPointer::stopMovingTopLevel()
 {
-    p_movingTopLevel = nullptr;
+    m_movingTopLevel = nullptr;
 
 }
 
 void LPointer::setDragginSurface(LSurface *surface)
 {
-    p_draggingSurface = surface;
+    m_draggingSurface = surface;
 }
 
 void LPointer::setCursorSurface(LSurface *surface)
 {
-    p_cursorSurface = surface;
+    m_cursorSurface = surface;
 }
 
 void LPointer::dismissPopups()
@@ -209,52 +211,52 @@ void LPointer::dismissPopups()
 
 LSurface *LPointer::draggingSurface() const
 {
-    return p_draggingSurface;
+    return m_draggingSurface;
 }
 
 LSurface *LPointer::cursorSurface() const
 {
-    return p_cursorSurface;
+    return m_cursorSurface;
 }
 
 LToplevelRole *LPointer::resizingToplevel() const
 {
-    return p_resizingToplevel;
+    return m_resizingToplevel;
 }
 
 LToplevelRole *LPointer::movingTopLevel() const
 {
-    return p_movingTopLevel;
+    return m_movingTopLevel;
 }
 
 const LPoint &LPointer::movingTopLevelInitPos() const
 {
-    return p_movingTopLevelInitPos;
+    return m_movingTopLevelInitPos;
 }
 
 const LPoint &LPointer::movingTopLevelInitCursorPos() const
 {
-    return p_movingTopLevelInitCursorPos;
+    return m_movingTopLevelInitCursorPos;
 }
 
 const LPoint &LPointer::resizingToplevelInitPos() const
 {
-    return p_resizingToplevelInitPos;
+    return m_resizingToplevelInitPos;
 }
 
 const LPoint &LPointer::resizingToplevelInitCursorPos() const
 {
-    return p_resizingToplevelInitCursorPos;
+    return m_resizingToplevelInitCursorPos;
 }
 
 const LSize &LPointer::resizingToplevelInitSize() const
 {
-    return p_resizingToplevelInitSize;
+    return m_resizingToplevelInitSize;
 }
 
 LToplevelRole::Edge LPointer::resizingToplevelEdge() const
 {
-    return p_resizingToplevelEdge;
+    return m_resizingToplevelEdge;
 }
 
 #if LOUVRE_SEAT_VERSION >= 5
@@ -306,12 +308,12 @@ void LPointer::sendAxisEvent(double x, double y, UInt32 source)
 
 const LPoint &LPointer::scrollWheelStep() const
 {
-    return p_axisDiscreteStep;
+    return m_axisDiscreteStep;
 }
 
 void LPointer::setScrollWheelStep(const LPoint &step)
 {
-    p_axisDiscreteStep = step;
+    m_axisDiscreteStep = step;
 }
 
 #else
@@ -344,7 +346,7 @@ LSurface *LPointer::surfaceAt(const LPoint &point, bool useRolePos)
 
 LSurface *LPointer::focusSurface() const
 {
-    return p_pointerFocusSurface;
+    return m_pointerFocusSurface;
 }
 
 void LPointer::sendLeaveEvent(LSurface *surface)
@@ -358,8 +360,8 @@ void LPointer::sendLeaveEvent(LSurface *surface)
         return;
 
     // Send the unset focus event
-    surface->client()->p_lastPointerLeaveEventSerial = LWayland::nextSerial();
-    wl_pointer_send_leave(surface->client()->pointerResource(),surface->client()->p_lastPointerLeaveEventSerial,surface->resource());
+    surface->client()->imp()->m_lastPointerLeaveEventSerial = LWayland::nextSerial();
+    wl_pointer_send_leave(surface->client()->pointerResource(),surface->client()->lastPointerLeaveEventSerial(),surface->resource());
 
 #if LOUVRE_SEAT_VERSION >=5
     if(wl_resource_get_version(surface->client()->pointerResource()) >= 5)
@@ -379,9 +381,9 @@ void LPointer::sendEnterEvent(LSurface *surface, const LPoint &point)
         return;
 
     // Send focus event
-    surface->client()->p_lastPointerEnterEventSerial = LWayland::nextSerial();
+    surface->client()->imp()->m_lastPointerEnterEventSerial = LWayland::nextSerial();
     wl_pointer_send_enter(surface->client()->pointerResource(),
-                          surface->client()->p_lastPointerEnterEventSerial,
+                          surface->client()->lastPointerEnterEventSerial(),
                           surface->resource(),
                           wl_fixed_from_double(point.x()),
                           wl_fixed_from_double(point.y()));

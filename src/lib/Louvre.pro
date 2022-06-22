@@ -5,7 +5,7 @@ CONFIG += c++17
 
 DEFINES += Desk
 
-DESTDIR = $$PWD/build
+DESTDIR = $$PWD/../../build
 
 QMAKE_CXXFLAGS_DEBUG *= -O
 QMAKE_CXXFLAGS_RELEASE -= -O
@@ -14,7 +14,7 @@ QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE *= -O3
 
 LIBS += -L/usr/local/lib/x86_64-linux-gnu -lwayland-server -lEGL -lGL -lGLESv2 -linput -ludev -lpthread -lXcursor -lxkbcommon -lSOIL
-INCLUDEPATH += /usr/include/libdrm ./classes ./globals/Wayland ./globals/XdgShell /usr/local/include
+INCLUDEPATH += /usr/include/libdrm ./classes ./classes/private ./globals/Wayland ./globals/XdgShell /usr/local/include
 
 
 # Default rules for deployment.
@@ -54,6 +54,9 @@ HEADERS += \
     classes/LTime.h \
     classes/LToplevelRole.h \
     classes/LWayland.h \
+    classes/private/LClientPrivate.h \
+    classes/private/LCompositorPrivate.h \
+    classes/private/LSurfacePrivate.h \
     globals/Viewporter/Viewporter.h \
     globals/Viewporter/viewporter.h \
     globals/Wayland/Compositor.h \

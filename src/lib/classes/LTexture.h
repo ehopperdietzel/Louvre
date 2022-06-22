@@ -31,20 +31,16 @@ public:
     BufferType bufferroleType() const;
     GLenum bufferFormat() const;
 
-    //LPoint resizeDirection;
-    std::list<LRect>damages;
-    std::list<LRect>pendingDamages;
-
 private:
     friend class Louvre::Globals::Surface;
     friend class Louvre::LSurface;
 
-    LSize p_size = LSize();
-    GLuint p_id = 0;
-    GLuint p_unit = 0;
-    bool p_initialized = false;
-    BufferType p_bufferType = SHM;
-    GLenum p_bufferFormat = GL_BGRA;
+    LSize m_size = LSize();
+    GLuint m_id = 0;
+    GLuint m_unit = 0;
+    bool m_initialized = false;
+    BufferType m_bufferType = SHM;
+    GLenum m_bufferFormat = GL_BGRA;
 
 };
 

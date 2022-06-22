@@ -1,5 +1,4 @@
 #include "Pointer.h"
-#include <LClient.h>
 #include <stdio.h>
 #include <LCompositor.h>
 #include <LSeat.h>
@@ -7,13 +6,16 @@
 #include <LCursorRole.h>
 #include <LPointer.h>
 
+#include <LClientPrivate.h>
+#include <LSurfacePrivate.h>
+
 using namespace Louvre::Globals;
 
 void Pointer::resource_destroy(wl_resource *resource)
 {
     printf("POINTER DESTROYED.\n");
     LClient *client = (LClient*)wl_resource_get_user_data(resource);
-    client->p_pointerResource = nullptr;
+    client->imp()->m_pointerResource = nullptr;
 }
 
 void Pointer::set_cursor(wl_client *, wl_resource *resource, UInt32 serial, wl_resource *surface, Int32 hotspot_x, Int32 hotspot_y)
@@ -35,10 +37,10 @@ void Pointer::set_cursor(wl_client *, wl_resource *resource, UInt32 serial, wl_r
         }
 
         LCursorRole *lCursor = new LCursorRole(lSurface->resource(),lSurface);
-        lCursor->p_hotspot = LPoint(hotspot_x,hotspot_y)*lSurface->bufferScale();
-        lSurface->p_role = lCursor;
+        lCursor->m_hotspot = LPoint(hotspot_x,hotspot_y)*lSurface->bufferScale();
+        lSurface->imp()->m_role = lCursor;
         lSurface->typeChangeRequest();
-        lClient->compositor()->seat()->pointer()->setCursorRequest(lSurface,lCursor->p_hotspot.x(),lCursor->p_hotspot.y());
+        lClient->compositor()->seat()->pointer()->setCursorRequest(lSurface,lCursor->m_hotspot.x(),lCursor->m_hotspot.y());
     }
     else
     {

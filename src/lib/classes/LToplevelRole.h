@@ -96,21 +96,21 @@ private:
         UInt32 serial = 0;
     };
 
-    UChar8 p_stateFlags = Deactivated;
-    TopLevelConfiguration p_currentConf;
-    TopLevelConfiguration p_sentConf;
-    TopLevelConfiguration p_pendingConf;
+    UChar8 m_stateFlags = Deactivated;
+    TopLevelConfiguration m_currentConf;
+    TopLevelConfiguration m_sentConf;
+    TopLevelConfiguration m_pendingConf;
 
     void dispachLastConfiguration();
 
-    LSize p_minSize;
-    LSize p_maxSize;
-    LRect p_windowGeometry;
+    LSize m_minSize;
+    LSize m_maxSize;
+    LRect m_windowGeometry;
 
     void setAppId(const char *appId);
     void setTitle(const char *title);
-    char *p_appId = nullptr;
-    char *p_title = nullptr;
+    char *m_appId = nullptr;
+    char *m_title = nullptr;
 
 };
 
