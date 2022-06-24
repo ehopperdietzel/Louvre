@@ -7,14 +7,16 @@ class Louvre::LDataDevice
 {
 public:
     LDataDevice(wl_resource *resource, LClient *client);
+    ~LDataDevice();
     wl_resource *resource() const;
     LClient *client() const;
-    void sendDataOfferEvent();
+    LDataOffer *dataOffered() const;
+    UInt32 lastDataOfferId() const;
+    class LDataDevicePrivate;
+    LDataDevicePrivate *imp() const;
 
 private:
-    LClient *m_client = nullptr;
-    wl_resource *m_resource = nullptr;
-    LDataOffer *m_dataOffer = nullptr;
+    LDataDevicePrivate *m_imp = nullptr;
 };
 
 #endif // LDATADEVICE_H

@@ -72,7 +72,8 @@ public:
 
     LCursor *cursor() const;
     LSeat *seat() const;
-    LDataSource *dataSource() const;
+    LDataSource *dataSelection() const;
+    LDataSource *dataDrag() const;
 
     // Output
     void repaintAllOutputs();

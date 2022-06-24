@@ -30,12 +30,17 @@ public:
     int libinputFd, waylandFd;
     eventfd_t libinputVal, waylandVal = 1;
 
-    LDataSource *m_dataSource = nullptr;
+    LDataSource *m_dataSelection = nullptr;
+    LDataSource *m_dataDrag = nullptr;
+
     LOpenGL *m_painter;
 
     bool _started = false;
 
     LGraphicBackend *m_backend = nullptr;
+
+
+
 };
 
 #endif // LCOMPOSITORPRIVATE_H

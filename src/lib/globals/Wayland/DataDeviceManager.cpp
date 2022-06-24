@@ -42,9 +42,9 @@ void DataDeviceManager::create_data_source(wl_client *client, wl_resource *resou
     UInt32 version = wl_resource_get_version(resource);
     wl_resource *dataSource = wl_resource_create(client, &wl_data_source_interface, version, id);
     LDataSource *lDataSource = new LDataSource(dataSource,lClient);
-    wl_resource_set_implementation(dataSource, &dataDevice_implementation, lDataSource, &DataDevice::resource_destroy);
+    wl_resource_set_implementation(dataSource, &dataSource_implementation, lDataSource, &DataSource::resource_destroy);
 }
-void DataDeviceManager::get_data_device(wl_client *client, wl_resource *resource, UInt32 id, wl_resource *seat)
+void DataDeviceManager::get_data_device(wl_client *client, wl_resource *resource, UInt32 id, wl_resource */*seat*/)
 {
     LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
     UInt32 version = wl_resource_get_version(resource);

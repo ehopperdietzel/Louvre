@@ -216,10 +216,16 @@ LSeat *LCompositor::seat() const
     return m_imp->m_seat;
 }
 
-LDataSource *LCompositor::dataSource() const
+LDataSource *LCompositor::dataSelection() const
 {
-    return m_imp->m_dataSource;
+    return m_imp->m_dataSelection;
 }
+
+LDataSource *LCompositor::dataDrag() const
+{
+    return m_imp->m_dataDrag;
+}
+
 
 void LCompositor::repaintAllOutputs()
 {

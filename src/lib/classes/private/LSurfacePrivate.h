@@ -26,6 +26,7 @@ public:
     State current,pending;
 
     LRegion m_currentDamages;
+    LRegion m_translucentRegion;
 
     // Roles
     LBaseSurfaceRole *m_role = nullptr;

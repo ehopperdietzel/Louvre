@@ -12,8 +12,21 @@
 
 #include <LClient.h>
 #include <LClientPrivate.h>
+#include <LDataDevicePrivate.h>
+#include <LDataOfferPrivate.h>
+#include <DataOffer.h>
+#include <LDataSourcePrivate.h>
 
 using namespace Louvre;
+
+struct wl_data_offer_interface dataOffer_implementation =
+{
+   .accept = &Globals::DataOffer::accept,
+   .receive = &Globals::DataOffer::receive,
+   .destroy = &Globals::DataOffer::destroy,
+   .finish = &Globals::DataOffer::finish,
+   .set_actions = &Globals::DataOffer::set_actions
+};
 
 LKeyboard::LKeyboard(LSeat *seat)
 {
@@ -141,6 +154,33 @@ void LKeyboard::setFocus(LSurface *surface)
 
             if(surface->client()->keyboardResource())
             {
+                // Send data device selection first
+                if(compositor()->dataSelection() && surface->client()->dataDevice())
+                {
+                    LDataDevice *lDevice = surface->client()->dataDevice();
+                    wl_resource *dataOffer = wl_resource_create(surface->client()->client(),&wl_data_offer_interface,1,0);
+
+                    if(dataOffer != NULL)
+                    {
+                        LDataOffer *lDataOffer = new LDataOffer(dataOffer,lDevice);
+                        lDataOffer->imp()->m_dataSource = compositor()->dataSelection();
+                        wl_resource_set_implementation(dataOffer, &dataOffer_implementation, lDataOffer, &Globals::DataOffer::resource_destroy);
+
+                        // Save the data offer reference to que data selection
+                        compositor()->dataSelection()->imp()->m_dataOffers.push_back(lDataOffer);
+
+                        wl_data_device_send_data_offer(lDevice->resource(),dataOffer);
+
+                        for(const char *mime : compositor()->dataSelection()->imp()->m_mimeTypes)
+                        {
+                            printf("SEND MIME %s\n",mime);
+                            wl_data_offer_send_offer(dataOffer,mime);
+                        }
+
+                        wl_data_device_send_selection(lDevice->resource(),dataOffer);
+                    }
+                }
+
                 surface->client()->imp()->m_lastKeyboardEnterEventSerial = LWayland::nextSerial();
                 wl_keyboard_send_enter(surface->client()->keyboardResource(),surface->client()->lastKeyboardKeyEventSerial(),surface->resource(),&m_keys);
                 m_keyboardFocusSurface = surface;
@@ -313,8 +353,11 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
             if(focusSurface() && focusSurface()->toplevel() && focusSurface()->toplevel()->fullscreen())
                 focusSurface()->toplevel()->configure(focusSurface()->toplevel()->state() & ~LToplevelRole::Fullscreen);
         }
-        else if(sym == XKB_KEY_Down)
+        else if(sym == XKB_KEY_F8)
         {
+            for(LSurface *surface : compositor()->surfaces())
+                surface->setMinimized(false);
+
             compositor()->repaintAllOutputs();
         }
     }

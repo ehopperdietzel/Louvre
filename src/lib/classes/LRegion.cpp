@@ -297,6 +297,9 @@ void LRegion::addRect(const LRect &rect)
 
 void LRegion::subtractRect(const LRect &rect)
 {
+    if(m_rects.empty())
+        return;
+
     Int32 x0 = rect.x();
     Int32 y0 = rect.y();
     Int32 x1 = x0 + rect.w();
@@ -647,6 +650,15 @@ void LRegion::simplify()
             }
 
         }
+    }
+}
+
+void LRegion::offset(const LPoint &offset)
+{
+    for(LRect &r : m_rects)
+    {
+        r.setX(r.x()+offset.x());
+        r.setY(r.y()+offset.y());
     }
 }
 

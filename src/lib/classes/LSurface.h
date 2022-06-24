@@ -22,6 +22,10 @@ class Louvre::LSurface
 {
 public:
 
+    LRegion damage[2];
+    LRegion globalDamage;
+    LRect rect[2];
+
     /* Roles */
     LCursorRole *cursor() const;
     LToplevelRole *toplevel() const;
@@ -66,6 +70,7 @@ public:
     const LSize &size(bool useBufferSize = false) const;
     const LRegion &inputRegion() const;
     const LRegion &opaqueRegion() const;
+    const LRegion &translucentRegion() const;
     const LRegion &damages() const;
     bool inputRegionContainsPoint(const LPoint &surfacePos,const LPoint &point);
     LPoint mapToLocal(const LPoint &point);

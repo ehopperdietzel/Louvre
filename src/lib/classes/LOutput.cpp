@@ -28,108 +28,51 @@ LOutput::~LOutput()
     //delete []_devName;
 }
 
+LTexture *background;
 
 void LOutput::initializeGL()
 {
     // Set clear screen color
     glClearColor(0.031f, 0.486f, 0.933f, 1.0f);
 
+    damage[0].addRect(rect());
+    damage[1].addRect(rect());
+
+    background = LOpenGL::loadTexture("wallpaper.png");
 }
 
-
-void LOutput::paintGL()
+int it = 0;
+void LOutput::paintGL(Int32 currentBuffer)
 {
 
     // Get the painter
     LOpenGL *GL = painter();
+
     /*
-    GL->clearScreen();
-
-
-    LRegion region;
-
-    for(int i = 0; i < 5000; i++)
-    {
-        Int32 x = rand() % 1000;
-        Int32 y = rand() % 1000;
-        Int32 w = 10 + rand() % 1000;
-        Int32 h = 10 + rand() % 1000;
-        region.addRect(LRect(x,y,w,h));
-    }
-
-
-    for(int i = 0; i < 5; i++)
-    {
-        Int32 x = rand() % 1000;
-        Int32 y = rand() % 1000;
-        Int32 w = 10 + rand() % 1000;
-        Int32 h = 10 + rand() % 1000;
-        region.subtractRect(LRect(x,y,w,h));
-    }
-
-
-
-    region.clip(LRect(0,0,rect().w(),rect().h()));
-    //region.subtractRect(LRect(0,0,2000,600));
-
-
-    //region.addRect(LRect(0,0,100,100));
-    //region.subtractRect(LRect(0,0,100,20));
-    //region.subtractRect(LRect(0,80,20,20));
-
-
-    for(LRect &r : region.rects())
-    {
-        GL->drawColor(
-                    r,
-                    float(rand() % 1000)/1000.f,
-                    float(rand() % 1000)/1000.f,
-                    float(rand() % 1000)/1000.f,
-                    0.2);
-    }
-
-
-    for(LRect &r : region.rects())
-    {
-        GL->drawColor(
-                    r,
-                    1,//float(rand() % 1000)/1000.f,
-                    0,//float(rand() % 1000)/1000.f,
-                    0,//float(rand() % 1000)/1000.f,
-                    0.5);
-    }
-    return;
-
-    */
     for(LSurface *surface : compositor()->surfaces())
+    {
         if(surface->toplevel() && surface->toplevel()->fullscreen())
         {
-            if(surface->textureChanged() || compositor()->cursor()->hasHardwareSupport())
-            {
-                glDisable(GL_BLEND);
-                GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
-                /*
-                LRect r;
-                for(const LRect &rect : surface->texture()->damages)
-                {
-                    r = LRect(surface->pos(true)+rect.topLeft()/surface->bufferScale(),rect.bottomRight()/surface->bufferScale());
-                    //GL->drawColor(r,1.0,0.0,0.0,0.3);
-                    GL->drawTexture(surface->texture(),rect,r);
-                }
-                */
-                surface->requestNextFrame();
-            }
+            glDisable(GL_BLEND);
+
+            // Draw surface
+            GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
+
+            glEnable(GL_BLEND);
+
+            // Ask the client to render the next frame
+            surface->requestNextFrame();
+
             return;
         }
+    }
 
-
-    // Clear screen
-    GL->clearScreen();
+    //GL->clearScreen();
+    GL->drawTexture(background,LRect(LPoint(),background->size()),rect());
 
     // Store minimized surfaces
     list<LSurface*>minimized;
 
-    // Draw surfaces
     for(LSurface *surface : compositor()->surfaces())
     {
         // Skip some types surfaces
@@ -143,54 +86,314 @@ void LOutput::paintGL()
             continue;
         }
 
-        // Draw the surface
+        // Draw surface
         GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
 
-        // Input region
-        //for(const LRect &rect : surface->inputRegion().rects())
-            //GL->drawColor(LRect(surface->pos(true) + rect.topLeft(), rect.bottomRight()),1,0,1,0.2);
+        // Ask the client to render the next frame
+        surface->requestNextFrame();
+    }
+    */
 
-        // Opaque region
-        //for(const LRect &rect : surface->opaqueRegion().rects())
-            //GL->drawColor(LRect(surface->pos(true) + rect.topLeft(), rect.bottomRight()),1,0,1,0.2);
-
-        // Damages
-        //for(const LRect &rect : surface->damages().rects())
-            //GL->drawColor(LRect(surface->pos(true) + rect.topLeft(), rect.bottomRight()),1,0,1,0.2);
-
-        /*
-        LRect r;
-        for(const LRect &rect : surface->texture()->damages)
+    for(LSurface *surface : compositor()->surfaces())
+    {
+        if(surface->toplevel() && surface->toplevel()->fullscreen())
         {
-            r = LRect(surface->pos(true)+rect.topLeft()/surface->bufferScale(),rect.bottomRight()/surface->bufferScale());
-            GL->drawColor(r,1.0,0.0,0.0,0.3);
-            //GL->drawTexture(surface->texture(),rect,r);
-        }
-        */
+            glDisable(GL_BLEND);
 
-        /*
-        for(LRect &r : surface->texture()->damages)
+            // Draw surface
+            GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
+
+            glEnable(GL_BLEND);
+
+            // Ask the client to render the next frame
+            surface->requestNextFrame();
+
+            return;
+        }
+    }
+
+
+    // Store minimized surfaces
+    list<LSurface*>minimized;
+
+    LRegion backgroundDamage;
+    backgroundDamage.addRect(rect());
+
+    // Background damage
+    for(LSurface *surface : compositor()->surfaces())
+    {
+        // Skip some types surfaces
+        if( surface->roleType() == LSurface::Undefined || surface->roleType() == LSurface::Cursor || surface->minimized())
+            continue;
+
+        for(const LRect &r : surface->opaqueRegion().rects())
+            backgroundDamage.subtractRect(LRect(surface->pos(true)+r.topLeft(),r.bottomRight()));
+    }
+
+
+    // Draw opaque region
+    glDisable(GL_BLEND);
+
+    for(const LRect &r : backgroundDamage.rects())
+        GL->drawTexture(background,r*getOutputScale(),r);
+
+
+    //glDisable(GL_BLEND);
+    //GL->clearScreen();
+
+
+    // Step 1: Calculates convert prev and new surface damages to global
+    for(list<LSurface*>::const_iterator s = compositor()->surfaces().cbegin(); s != compositor()->surfaces().cend(); s++)
+    {
+        LSurface *surface = *s;
+
+        // Skip some types surfaces
+        if( surface->roleType() == LSurface::Undefined || surface->roleType() == LSurface::Cursor)
+            continue;
+
+        // Skip if minimized
+        if(surface->minimized())
         {
-            printf("%i %i\n",surface->size(true).h(),surface->size(true).w());
-            printf("%i %i %i %i\n",r.x(),r.y(),r.w(),r.h());
-            LRect rect = r/surface->bufferScale();
+            minimized.push_back(surface);
+            continue;
+        }
 
+        LRegion opa;
+        opa.copy(surface->opaqueRegion());
+        opa.offset(surface->pos(true));
+        LRegion tra;
+        tra.copy(surface->translucentRegion());
+        tra.offset(surface->pos(true));
 
-            GL->drawTexture(
-                        surface->texture(),
-                        r,
-                        LRect(surface->pos(LSurface::SubRole)+rect.topLeft(),rect.bottomRight()));
+        for(list<LSurface*>::const_iterator p = std::next(s, 1); p != compositor()->surfaces().cend(); p++)
+        {
+            LSurface *after = *p;
 
-            //GL->drawColor(LRect(surface->pos(LSurface::SubRole)+rect.topLeft(),rect.bottomRight()),1,0,0,0.3);
+            // Skip some types surfaces
+            if( after->roleType() == LSurface::Undefined || after->roleType() == LSurface::Cursor || after->minimized())
+                continue;
 
+            for(const LRect &r : after->opaqueRegion().rects())
+            {
+                LRect sub = LRect(after->pos(true)+r.topLeft(),r.bottomRight());
+                opa.subtractRect(sub);
+                tra.subtractRect(sub);
+            }
 
         }
-        */
 
-        // Tell the surface to render the next frame
+
+        // Draw opaque region
+        glDisable(GL_BLEND);
+
+        for(const LRect &r : opa.rects())
+        {
+            GL->drawTexture(surface->texture(),
+                            LRect(r.topLeft()-surface->pos(true),r.bottomRight())*surface->bufferScale(),
+                            r);
+        }
+
+        // Draw translucen region
+        glEnable(GL_BLEND);
+
+        for(const LRect &r : tra.rects())
+        {
+            GL->drawTexture(surface->texture(),
+                            LRect(r.topLeft()-surface->pos(true),r.bottomRight())*surface->bufferScale(),
+                            r);
+        }
+
+        // Ask the client to render the next frame
         surface->requestNextFrame();
     }
 
+
+    // Draw top bar
+    UInt32 topbarHeight = LOUVRE_TB_H/getOutputScale();
+    GL->drawColor(LRect(0,0,rect().w(),topbarHeight), 1.f, 1.f, 1.f, 0.9f);
+
+    // Draw minimized surfaces
+    Int32 xOffset = 4;
+    LSize thumbnailSize;
+    for(LSurface *surface : minimized)
+    {
+        thumbnailSize = surface->size(true).constrainedToHeight(topbarHeight-8);
+        GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(LPoint(xOffset,4),thumbnailSize));
+        xOffset += thumbnailSize.w() + 4;
+    }
+
+    /*
+    // Get the painter
+    LOpenGL *GL = painter();
+
+    Int32 prevBuffer = 1 - currentBuffer;
+
+    // Store minimized surfaces
+    list<LSurface*>minimized;
+
+    LRegion backgroundDamage;
+
+    if(it < 2)
+    {
+        backgroundDamage.addRect(rect());
+        it++;
+    }
+
+
+    // Step 1: Calculates convert prev and new surface damages to global
+    for(list<LSurface*>::const_iterator s = compositor()->surfaces().cbegin(); s != compositor()->surfaces().cend(); s++)
+    {
+        LSurface *surface = *s;
+
+        // Skip some types surfaces
+        if( surface->roleType() == LSurface::Undefined || surface->roleType() == LSurface::Cursor)
+            continue;
+
+        // Skip if minimized
+        if(surface->minimized())
+        {
+            minimized.push_back(surface);
+            continue;
+        }
+
+        // Current rect of the surface
+        LRect currentRect = LRect(surface->pos(true),surface->size());
+
+        // If pos changed damages the entire surface
+        if(surface->rect[prevBuffer] != currentRect || surface->rect[currentBuffer] != currentRect)
+        {
+            surface->damage[currentBuffer].clear();
+            surface->damage[currentBuffer].addRect(LRect(LPoint(),surface->size()));
+        }
+        else
+        {
+            // Else use damages of this frame
+            surface->damage[currentBuffer].copy(surface->damages());
+        }
+
+        // Prev local damages to global
+        for(const LRect &r : surface->damage[prevBuffer].rects())
+            surface->globalDamage.addRect(LRect(surface->pos(true)+r.topLeft(),r.bottomRight()));
+
+        // Local damages to global
+        for(const LRect &r : surface->damage[currentBuffer].rects())
+            surface->globalDamage.addRect(LRect(surface->pos(true)+r.topLeft(),r.bottomRight()));
+
+    }
+
+    // Step 2: Calculate damage with respect to other surfaces
+    for(list<LSurface*>::const_iterator s = compositor()->surfaces().cbegin(); s != compositor()->surfaces().cend(); s++)
+    {
+        LSurface *surface = *s;
+
+        // Skip some types surfaces
+        if( surface->roleType() == LSurface::Undefined || surface->roleType() == LSurface::Cursor || surface->minimized())
+            continue;
+
+        for(list<LSurface*>::const_iterator p = std::next(s, 1); p != compositor()->surfaces().cend(); p++)
+        {
+            LSurface *after = *p;
+
+            // Current rect of the surface
+            LRect currentRect = LRect(after->pos(true),after->size());
+
+            // Skip some types surfaces
+            if( after->roleType() == LSurface::Undefined || after->roleType() == LSurface::Cursor || after->minimized())
+                continue;
+
+            // If surface in front changed pos or size
+            if(currentRect != after->rect[prevBuffer] || currentRect != after->rect[currentBuffer])
+            {
+                surface->globalDamage.addRect(currentRect);
+                surface->globalDamage.addRect(after->rect[prevBuffer]);
+                surface->globalDamage.addRect(after->rect[currentBuffer]);
+            }
+            else
+            {
+                for(const LRect &r : after->globalDamage.rects())
+                    surface->globalDamage.addRect(r);
+            }
+
+            // Remove opaque areas
+            for(const LRect &r : after->opaqueRegion().rects())
+                surface->globalDamage.subtractRect(LRect(after->pos(true)+r.topLeft(),r.bottomRight()));
+
+
+            // Add the damage to the surface after (to force it to repaint transparent areas)
+            for(const LRect &r : surface->globalDamage.rects())
+                after->globalDamage.addRect(r);
+        }
+
+    }
+
+    // Step 3: calculate background damage
+    for(LSurface *surface : compositor()->surfaces())
+    {
+        // Skip some types surfaces
+        if( surface->roleType() == LSurface::Undefined || surface->roleType() == LSurface::Cursor || surface->minimized())
+            continue;
+
+        // Current rect of the surface
+        LRect currentRect = LRect(surface->pos(true),surface->size());
+
+        // Clip to surface size
+        surface->globalDamage.clip(currentRect);
+
+        // Clip to screen rect
+        surface->globalDamage.clip(rect());
+
+        // If pos changed damages the entire surface
+        if(surface->rect[prevBuffer] != currentRect || surface->rect[currentBuffer] != currentRect)
+        {
+            backgroundDamage.addRect(currentRect);
+            backgroundDamage.addRect(surface->rect[prevBuffer]);
+            backgroundDamage.addRect(surface->rect[currentBuffer]);
+        }
+        else
+        {
+            for(const LRect &r : surface->globalDamage.rects())
+                backgroundDamage.addRect(r);
+        }
+
+        for(const LRect &r : surface->opaqueRegion().rects())
+            backgroundDamage.subtractRect(LRect(surface->pos(true)+r.topLeft(),r.bottomRight()));
+    }
+
+    // Draw background
+    for(const LRect &r : backgroundDamage.rects())
+        GL->drawColor(r,0.5,0.5,0,1);
+
+    // Draw the surfaces
+    for(LSurface *surface : compositor()->surfaces())
+    {
+        // Skip some types surfaces
+        if( surface->roleType() == LSurface::Undefined || surface->roleType() == LSurface::Cursor || surface->minimized())
+            continue;
+
+        // Current rect of the surface
+        LRect currentRect = LRect(surface->pos(true),surface->size());
+
+        // Save current rect
+        surface->rect[currentBuffer] = currentRect;
+
+        // Draw the surface
+        for(const LRect &r : surface->globalDamage.rects())
+        {
+            GL->drawTexture(
+                        surface->texture(),
+                        LRect(r.topLeft()-surface->pos(true),r.bottomRight())*surface->bufferScale(),
+                        r);
+        }
+
+
+        // Clear damages of prev frame
+        surface->globalDamage.clear();
+
+        // Ask the client to render the next frame
+        surface->requestNextFrame();
+    }
+
+    return;
     // Draw top bar
     UInt32 topbarHeight = LOUVRE_TB_H/getOutputScale();
     GL->drawColor(LRect(0,0,rect().w(),topbarHeight), 1.f, 1.f, 1.f, 0.7f);
@@ -204,7 +407,7 @@ void LOutput::paintGL()
         GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(LPoint(xOffset,4),thumbnailSize));
         xOffset += thumbnailSize.w() + 4;
     }
-
+    */
 }
 
 void LOutput::plugged()
@@ -286,6 +489,8 @@ void LOutput::startRenderLoop(void *data)
     ts.it_value.tv_nsec = 1000000000/output->refreshRate;
     timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
 
+    Int32 currentBuffer = 0;
+
     while(true)
     {
 
@@ -299,7 +504,8 @@ void LOutput::startRenderLoop(void *data)
         // Let the user do his painting
         output->m_compositor->imp()->m_renderMutex.lock();
 
-        output->paintGL();
+        output->paintGL(currentBuffer);
+        currentBuffer = 1 - currentBuffer;
 
         if(!output->compositor()->cursor()->hasHardwareSupport())
             output->compositor()->cursor()->paint();

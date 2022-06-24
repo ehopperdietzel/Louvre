@@ -13,11 +13,14 @@
 #include <sys/poll.h>
 #include <LSize.h>
 #include <LRect.h>
+#include <LRegion.h>
 
 class Louvre::LOutput
 {
 
 public:
+
+    LRegion damage[3];
 
     enum InitializeResult
     {
@@ -26,12 +29,18 @@ public:
         Failed = 2
     };
 
+    enum LCurrentBuffer : UInt32
+    {
+        Front = 0,
+        Back = 1
+    };
+
     LOutput();
     virtual ~LOutput();
 
 
     virtual void initializeGL();
-    virtual void paintGL();
+    virtual void paintGL(Int32 currentBuffer);
     virtual void plugged();
     virtual void unplugged();
 

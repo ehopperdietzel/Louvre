@@ -263,6 +263,14 @@ void Globals::Surface::apply_commit(LSurface *surface)
         surface->imp()->m_opaqueRegionChanged = false;
     }
 
+    /*****************************************
+     ********** TRANSLUCENT REGION ***********
+     *****************************************/
+    surface->imp()->m_translucentRegion.clear();
+    surface->imp()->m_translucentRegion.addRect(LRect(LPoint(),surface->size()));
+    for(const LRect &r : surface->opaqueRegion().rects())
+        surface->imp()->m_translucentRegion.subtractRect(r);
+
 
     if(!surface->imp()->m_roleChangeNotified)
     {

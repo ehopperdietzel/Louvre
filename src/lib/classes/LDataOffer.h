@@ -6,10 +6,16 @@
 class Louvre::LDataOffer
 {
 public:
-    LDataOffer(wl_resource *resource);
+    LDataOffer(wl_resource *resource,LDataDevice *dataDevice);
+    ~LDataOffer();
     wl_resource *resource() const;
+    LDataSource *dataSource() const;
+    LDataDevice *dataDevice() const;
+
+    class LDataOfferPrivate;
+    LDataOfferPrivate *imp() const;
 private:
-    wl_resource *m_resource = nullptr;
+    LDataOfferPrivate *m_imp = nullptr;
 };
 
 #endif // LDATAOFFER_H

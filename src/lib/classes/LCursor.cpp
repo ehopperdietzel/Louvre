@@ -112,7 +112,7 @@ void LCursor::paint()
         return;
 
     LPointF hotspot = (m_hotspot*m_size)/m_texture->size();
-
+    glEnable(GL_BLEND);
     m_output->painter()->drawTexture(m_texture,LRect(LPoint(),m_texture->size()),LRect(m_pos-hotspot,m_size));
 }
 

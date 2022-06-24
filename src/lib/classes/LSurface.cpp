@@ -162,6 +162,11 @@ const LRegion &LSurface::opaqueRegion() const
     return m_imp->current.opaqueRegion;
 }
 
+const LRegion &LSurface::translucentRegion() const
+{
+    return m_imp->m_translucentRegion;
+}
+
 const LRegion &LSurface::damages() const
 {
     return m_imp->m_currentDamages;

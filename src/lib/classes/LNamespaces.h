@@ -5,7 +5,7 @@
 #include <libinput.h>
 #include <list>
 
-#define LOUVRE_TB_H 60
+#define LOUVRE_TB_H 44
 #define LOUBRE_DEBUG 0
 
 

@@ -6,10 +6,14 @@
 class Louvre::LDataSource
 {
 public:   
+
     LDataSource(wl_resource *resource, LClient *client);
+    ~LDataSource();
     wl_resource *resource() const;
     LClient *client() const;
     const std::list<const char*>&mimeTypes() const;
+    UChar8 action() const;
+    const std::list<LDataOffer*>&dataOffers() const;
 
 #if LOUVRE_DATA_DEVICE_MANAGER_VERSION >= 3
 
@@ -23,16 +27,10 @@ public:
 
     UInt32 dndActions() const;
 #endif
-
+    class LDataSourcePrivate;
+    LDataSourcePrivate *imp();
 private:
-    friend class Globals::DataSource;
-    LClient *m_client = nullptr;
-    wl_resource *m_resource = nullptr;
-    std::list<const char*>m_mimeTypes;
-
-#if LOUVRE_DATA_DEVICE_MANAGER_VERSION >= 3
-    UInt32 m_dndActions = 0;
-#endif
+    LDataSourcePrivate *m_imp = nullptr;
 };
 
 #endif // LDATASOURCE_H

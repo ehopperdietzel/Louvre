@@ -19,6 +19,7 @@ public:
     void multiply(double factor);
     bool containsPoint(const LPoint &point);
     void simplify();
+    void offset(const LPoint &offset);
 
     /* Recorta las rectas */
     void clip(const LRect &rect);
