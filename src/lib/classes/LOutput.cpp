@@ -15,7 +15,7 @@
 #include <LOpenGL.h>
 #include <LCursor.h>
 #include <LToplevelRole.h>
-
+#include <SOIL/SOIL.h>
 #include <LRegion.h>
 
 using namespace Louvre;
@@ -121,9 +121,9 @@ void LOutput::paintGL(Int32 currentBuffer)
 
     LRegion backgroundDamage;
     backgroundDamage.addRect(rect());
-    LPoint backgroundPos = rect(false).topLeft();
+    LPoint backgroundPos = rect().topLeft();
 
-    /*
+
     // Background damage
     for(LSurface *surface : compositor()->surfaces())
     {
@@ -140,11 +140,11 @@ void LOutput::paintGL(Int32 currentBuffer)
     glDisable(GL_BLEND);
 
     for(const LRect &r : backgroundDamage.rects())
-        GL->drawTexture(background,LRect(LPoint(),r.bottomRight())*getOutputScale(),LRect(LPoint(),r.bottomRight()));
-    */
+        GL->drawTexture(background,r*getOutputScale(),r);
+
 
     //glDisable(GL_BLEND);
-    GL->clearScreen();
+    //GL->clearScreen();
 
 
     // Step 1: Calculates convert prev and new surface damages to global
@@ -413,6 +413,18 @@ void LOutput::paintGL(Int32 currentBuffer)
         xOffset += thumbnailSize.w() + 4;
     }
     */
+
+
+    if(sc)
+    {
+        sc = false;
+        UChar8 *pix = new UChar8[2880*1800*4];
+        glReadPixels(0,0,2880,1800,GL_RGBA,GL_UNSIGNED_BYTE,pix);
+
+        SOIL_save_image("/home/eduardo/Desktop/sh.bmp",SOIL_SAVE_TYPE_BMP,2880,1800,4,pix);
+
+        delete []pix;
+    }
 }
 
 void LOutput::plugged()

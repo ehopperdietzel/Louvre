@@ -34,7 +34,7 @@ $ ./Minimal
 ```
 4. Press F1 to launch weston-terminal.
 
-![Example](screenshots/Screenshot-01.png)
+![Example](screenshots/Screenshot-02.jpg)
 
 5. Press F7 to quit.
 

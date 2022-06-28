@@ -19,6 +19,7 @@ class Louvre::LOutput
 {
 
 public:
+    bool sc = false;
 
     LRegion damage[3];
 

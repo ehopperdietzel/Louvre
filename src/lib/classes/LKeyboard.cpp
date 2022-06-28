@@ -16,6 +16,8 @@
 #include <LDataOfferPrivate.h>
 #include <DataOffer.h>
 #include <LDataSourcePrivate.h>
+#include <LCursor.h>
+#include <LOutput.h>
 
 using namespace Louvre;
 
@@ -359,6 +361,10 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
                 surface->setMinimized(false);
 
             compositor()->repaintAllOutputs();
+        }
+        else if(sym == XKB_KEY_F9)
+        {
+            compositor()->cursor()->output()->sc = true;
         }
     }
 }
