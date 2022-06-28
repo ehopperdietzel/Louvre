@@ -210,6 +210,7 @@ void Globals::Surface::apply_commit(LSurface *surface)
     surface->imp()->pending.size = surface->texture()->size()/surface->bufferScale();
     if(surface->imp()->current.size != surface->imp()->pending.size)
     {
+        surface->imp()->m_inputRegionChanged = true;
         surface->imp()->current.size = surface->imp()->pending.size;
 
         //surface->texture()->damages.clear();

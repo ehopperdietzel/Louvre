@@ -1,4 +1,4 @@
-#include "LOutput.h"
+#include <LOutputPrivate.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -20,12 +20,15 @@
 
 using namespace Louvre;
 
-LOutput::LOutput(){}
+LOutput::LOutput()
+{
+    m_imp = new LOutputPrivate();
+    m_imp->m_output = this;
+}
 
 LOutput::~LOutput()
 {
-    //drmModeFreeConnector(_connector);
-    //delete []_devName;
+    delete m_imp;
 }
 
 LTexture *background;
@@ -118,7 +121,9 @@ void LOutput::paintGL(Int32 currentBuffer)
 
     LRegion backgroundDamage;
     backgroundDamage.addRect(rect());
+    LPoint backgroundPos = rect(false).topLeft();
 
+    /*
     // Background damage
     for(LSurface *surface : compositor()->surfaces())
     {
@@ -127,7 +132,7 @@ void LOutput::paintGL(Int32 currentBuffer)
             continue;
 
         for(const LRect &r : surface->opaqueRegion().rects())
-            backgroundDamage.subtractRect(LRect(surface->pos(true)+r.topLeft(),r.bottomRight()));
+            backgroundDamage.subtractRect(LRect(surface->pos(true)+r.topLeft()-backgroundPos,r.bottomRight()));
     }
 
 
@@ -135,11 +140,11 @@ void LOutput::paintGL(Int32 currentBuffer)
     glDisable(GL_BLEND);
 
     for(const LRect &r : backgroundDamage.rects())
-        GL->drawTexture(background,r*getOutputScale(),r);
-
+        GL->drawTexture(background,LRect(LPoint(),r.bottomRight())*getOutputScale(),LRect(LPoint(),r.bottomRight()));
+    */
 
     //glDisable(GL_BLEND);
-    //GL->clearScreen();
+    GL->clearScreen();
 
 
     // Step 1: Calculates convert prev and new surface damages to global
@@ -190,7 +195,7 @@ void LOutput::paintGL(Int32 currentBuffer)
         {
             GL->drawTexture(surface->texture(),
                             LRect(r.topLeft()-surface->pos(true),r.bottomRight())*surface->bufferScale(),
-                            r);
+                            r-LRect(backgroundPos,LSize()));
         }
 
         // Draw translucen region
@@ -200,7 +205,7 @@ void LOutput::paintGL(Int32 currentBuffer)
         {
             GL->drawTexture(surface->texture(),
                             LRect(r.topLeft()-surface->pos(true),r.bottomRight())*surface->bufferScale(),
-                            r);
+                             r-LRect(backgroundPos,LSize()));
         }
 
         // Ask the client to render the next frame
@@ -425,31 +430,31 @@ void LOutput::unplugged()
 
 LCompositor *LOutput::compositor()
 {
-    return m_compositor;
+    return m_imp->m_compositor;
 }
 
-void LOutput::setCompositor(LCompositor *compositor)
+void LOutput::LOutputPrivate::setCompositor(LCompositor *compositor)
 {
     m_compositor = compositor;
-    m_renderThread = new std::thread(&LOutput::startRenderLoop,this);
+    m_renderThread = new std::thread(&LOutputPrivate::startRenderLoop,m_output);
     //LOutput::startRenderLoop(this);
 }
 
 void LOutput::setOutputScale(Int32 scale)
 {
-    _outputScale = scale;
-    m_rectScaled = m_rect/getOutputScale();
+    m_imp->_outputScale = scale;
+    m_imp->m_rectScaled = LRect(m_imp->m_rect.topLeft(),m_imp->m_rect.bottomRight()/getOutputScale());
 }
 
 Int32 LOutput::getOutputScale() const
 {
-    return _outputScale;
+    return m_imp->_outputScale;
 }
 
-void LOutput::initialize()
+void LOutput::LOutputPrivate::initialize()
 {
     // Initialize the backend
-    compositor()->imp()->m_backend->createGLContext(this);
+    m_compositor->imp()->m_backend->createGLContext(m_output);
 
     // Repaint FD
     _renderFd = eventfd(0,EFD_SEMAPHORE);
@@ -461,23 +466,23 @@ void LOutput::initialize()
     timerPoll.events = POLLIN;
     timerPoll.fd = timerfd_create(CLOCK_MONOTONIC,0);
 
-    LWayland::bindEGLDisplay(compositor()->imp()->m_backend->getEGLDisplay(this));
+    LWayland::bindEGLDisplay(m_compositor->imp()->m_backend->getEGLDisplay(m_output));
 
-    setPainter(new LOpenGL());
+    m_output->setPainter(new LOpenGL());
 
     // Create cursor
-    if(!compositor()->cursor())
-        compositor()->imp()->m_cursor = new LCursor(this);
+    if(!m_compositor->cursor())
+        m_compositor->imp()->m_cursor = new LCursor(m_output);
 
-    initializeGL();
+    m_output->initializeGL();
 
 }
 
-void LOutput::startRenderLoop(void *data)
+void LOutput::LOutputPrivate::startRenderLoop(void *data)
 {
     LOutput *output = (LOutput*)data;
 
-    output->initialize();
+    output->m_imp->initialize();
     output->repaint();
 
     uint64_t res;
@@ -487,7 +492,7 @@ void LOutput::startRenderLoop(void *data)
     ts.it_value.tv_sec = 0;
 
     ts.it_value.tv_nsec = 1000000000/output->refreshRate;
-    timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
+    timerfd_settime(output->m_imp->timerPoll.fd, 0, &ts, NULL);
 
     Int32 currentBuffer = 0;
 
@@ -495,14 +500,21 @@ void LOutput::startRenderLoop(void *data)
     {
 
         // Wait for a repaint request
-        poll(&output->_renderPoll,1,-1);
+        poll(&output->m_imp->_renderPoll,1,-1);
+
+        // Check if disconnected
+        if(output->imp()->m_initializeResult == LOutput::Pending)
+        {
+            output->imp()->m_initializeResult = LOutput::Stopped;
+            return;
+        }
 
         // Block the render
-        output->scheduledRepaint = false;
-        eventfd_read(output->_renderFd,&output->_renderValue);
+        output->m_imp->scheduledRepaint = false;
+        eventfd_read(output->m_imp->_renderFd,&output->m_imp->_renderValue);
 
         // Let the user do his painting
-        output->m_compositor->imp()->m_renderMutex.lock();
+        output->m_imp->m_compositor->imp()->m_renderMutex.lock();
 
         output->paintGL(currentBuffer);
         currentBuffer = 1 - currentBuffer;
@@ -510,39 +522,39 @@ void LOutput::startRenderLoop(void *data)
         if(!output->compositor()->cursor()->hasHardwareSupport())
             output->compositor()->cursor()->paint();
 
-        output->m_compositor->imp()->m_renderMutex.unlock();
+        output->m_imp->m_compositor->imp()->m_renderMutex.unlock();
 
         // Tell the input loop to process events
         LWayland::forceUpdate();
 
         // Wait for the next frame
-        //poll(&output->timerPoll,1,-1);
+        poll(&output->imp()->timerPoll,1,-1);
 
-        //(void)read(output->timerPoll.fd, &res, sizeof(res));
+        (void)read(output->imp()->timerPoll.fd, &res, sizeof(res));
 
-        //timerfd_settime(output->timerPoll.fd, 0, &ts, NULL);
+        timerfd_settime(output->imp()->timerPoll.fd, 0, &ts, NULL);
 
         // Show buffer on screen
-        output->m_compositor->imp()->m_backend->flipPage(output);
+        output->m_imp->m_compositor->imp()->m_backend->flipPage(output);
 
     }
 }
 
 void LOutput::repaint()
 {
-    if(!scheduledRepaint)
+    if(!m_imp->scheduledRepaint)
     {
-        scheduledRepaint = true;
-        eventfd_write(_renderFd,1);
+        m_imp->scheduledRepaint = true;
+        eventfd_write(m_imp->_renderFd,1);
     }
 }
 
 const LRect &LOutput::rect(bool scaled) const
 {
     if(scaled)
-        return m_rectScaled;
+        return m_imp->m_rectScaled;
 
-    return m_rect;
+    return m_imp->m_rect;
 }
 
 EGLDisplay LOutput::getDisplay()
@@ -550,10 +562,50 @@ EGLDisplay LOutput::getDisplay()
     return compositor()->imp()->m_backend->getEGLDisplay(this);
 }
 
+LOutput::InitializeResult LOutput::initializeResult() const
+{
+    return m_imp->m_initializeResult;
+}
+
+void LOutput::setPos(const LPoint &pos)
+{
+    m_imp->m_rect.setX(pos.x());
+    m_imp->m_rect.setY(pos.y());
+
+    m_imp->m_rectScaled.setX(pos.x());
+    m_imp->m_rectScaled.setY(pos.y());
+}
+
+
+void LOutput::setUserData(void *userData)
+{
+    m_imp->m_userData = userData;
+}
+
+void *LOutput::userData() const
+{
+    return m_imp->m_userData;
+}
+
 void LOutput::setPainter(LOpenGL *painter)
 {
-    m_painter = painter;
-    m_painter->m_output = this;
+    m_imp->m_painter = painter;
+    m_imp->m_painter->m_output = this;
+}
+
+LOpenGL *LOutput::painter() const
+{
+    return m_imp->m_painter;
+}
+
+void *LOutput::getData() const
+{
+    return m_imp->data;
+}
+
+LOutput::LOutputPrivate *LOutput::imp() const
+{
+    return m_imp;
 }
 
 

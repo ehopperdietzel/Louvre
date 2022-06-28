@@ -74,7 +74,13 @@ void LCursor::setTexture(LTexture *texture, const LPointF &hotspot)
 
 void LCursor::setOutput(LOutput *output)
 {
+    if(output == m_output)
+        return;
+
+    if(m_output)
+        setVisible(false);
     m_output = output;
+    setVisible(true);
 }
 
 void LCursor::move(float x, float y)
@@ -85,17 +91,27 @@ void LCursor::move(float x, float y)
 
 void Louvre::LCursor::setPosition(const LPointF &position)
 {
+    if(!m_output)
+        return;
+
+    for(LOutput *output : compositor()->outputs())
+    {
+        if(output->rect().containsPoint(position) && output)
+            setOutput(output);
+    }
+
     m_pos = position;
 
-    if(m_pos.x() > m_output->rect().w())
-        m_pos.setX(m_output->rect().w());
-    if(m_pos.x() < m_output->rect().x())
-        m_pos.setX(m_output->rect().x());
+    LRect area = m_output->rect();
+    if(m_pos.x() > area.x() + area.w())
+        m_pos.setX(area.x() + area.w());
+    if(m_pos.x() < area.x())
+        m_pos.setX(area.x());
 
-    if(m_pos.y() > m_output->rect().h())
-        m_pos.setY(m_output->rect().h());
-    if(m_pos.y() < m_output->rect().y())
-        m_pos.setY(m_output->rect().y());
+    if(m_pos.y() > area.y() + area.h())
+        m_pos.setY(area.y() + area.h());
+    if(m_pos.y() < area.y())
+        m_pos.setY(area.y());
 
     update();
 }
@@ -164,6 +180,11 @@ LCompositor *LCursor::compositor() const
     return m_output->compositor();
 }
 
+LOutput *LCursor::output() const
+{
+    return m_output;
+}
+
 void LCursor::loadDefaultCursors()
 {
     XcursorImage *cursor =  XcursorLibraryLoadImage("arrow",m_cursorTheme,64);
@@ -183,7 +204,7 @@ void LCursor::update()
     LPoint hotspot;
     hotspot = (m_hotspot*m_size)/m_texture->size();
 
-    LPoint pos = (m_pos- hotspot)*m_output->getOutputScale();
+    LPoint pos = (m_pos- hotspot - m_output->rect().topLeft())*m_output->getOutputScale();
 
     if(pos != m_prevPos)
     {

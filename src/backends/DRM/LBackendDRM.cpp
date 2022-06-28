@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include <fcntl.h>
 #include <xf86drm.h>
@@ -12,7 +13,8 @@
 
 #include <LBackend.h>
 #include <LCompositorPrivate.h>
-#include <LOutput.h>
+#include <LOutputPrivate.h>
+#include <LOutputManagerPrivate.h>
 #include <LWayland.h>
 #include <LOpenGL.h>
 #include <LSizeF.h>
@@ -72,6 +74,15 @@ struct FB_DATA
     drm_fb *fb;
     DRM *data;
 };
+
+struct LDevice
+{
+    LCompositor *lCompositor;
+    int fd;
+    struct udev *udev;
+    udev_monitor *monitor;
+    udev_device *dev = nullptr;
+}lDevice;
 
 static int init_gbm(DRM *data)
 {
@@ -243,13 +254,6 @@ static struct FB_DATA * drm_fb_get_from_bo(gbm_bo *bo, DRM *data)
     return fb_data;
 }
 
-
-EGLDisplay LBackend::getEGLDisplay(LOutput *output)
-{
-    DRM *data = (DRM*)output->data;
-    return data->gl.display;
-}
-
 static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data)
 {
     (void)fd;(void)frame;(void)sec;(void)usec;
@@ -258,11 +262,355 @@ static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsi
     *waiting_for_flip = 0;
 }
 
+static uint32_t find_crtc_for_encoder(const drmModeRes *resources, const drmModeEncoder *encoder)
+{
+    for (int i = 0; i < resources->count_crtcs; i++)
+    {
+        const uint32_t crtc_mask = 1 << i;
+        const uint32_t crtc_id = resources->crtcs[i];
+
+        bool encoderIsFree = true;
+
+
+        for(LOutput *output : outputs)
+        {
+            DRM *data = (DRM*)output->imp()->data;
+            if(crtc_id == data->crtc_id)
+            {
+                encoderIsFree = false;
+                break;
+            }
+        }
+
+        if (encoder->possible_crtcs & crtc_mask && encoderIsFree)
+            return crtc_id;
+    }
+    return -1;
+}
+
+static uint32_t find_crtc_for_connector(int fd, const drmModeRes *resources, const drmModeConnector *connector)
+{
+    for (int i = 0; i < connector->count_encoders; i++)
+    {
+        const uint32_t encoder_id = connector->encoders[i];
+        drmModeEncoder *encoder = drmModeGetEncoder(fd, encoder_id);
+        if (encoder)
+        {
+            const uint32_t crtc_id = find_crtc_for_encoder(resources, encoder);
+
+            drmModeFreeEncoder(encoder);
+            if (crtc_id != 0)
+                return crtc_id;
+        }
+    }
+    return -1;
+}
+
+void destroyOutput(LOutput *output)
+{
+    // Destoy output
+    DRM *data = (DRM*)output->imp()->data;
+    drmModeFreeModeInfo(data->mode);
+    gbm_bo_destroy(data->bo);
+    gbm_bo_destroy(data->cursor_bo);
+    drmModeFreeEncoder(data->encoder);
+    free(data->fb);
+    gbm_surface_destroy(data->gbm.surface);
+
+    delete data;
+    delete output;
+}
+
+void manageOutputs(bool notify)
+{
+
+    drmModeRes *resources;
+    drmModeConnector *connector = NULL;
+    drmModeEncoder *encoder = NULL;
+    drmModeModeInfo *defaultMode = NULL;
+    uint32_t crtc_id;
+    int area;
+
+    resources = drmModeGetResources(lDevice.fd);
+
+    // Find connected connectors
+    for (int i = 0; i < resources->count_connectors; i++)
+    {
+        connector = drmModeGetConnector(lDevice.fd, resources->connectors[i]);
+
+        // Check if connected
+        if (connector->connection == DRM_MODE_CONNECTED)
+        {
+            bool wasConnected = false;
+
+            // Check if the output was already connected
+            for(LOutput *output : outputs)
+            {
+                DRM *data = (DRM*)output->imp()->data;
+                if(data->connector->connector_id == connector->connector_id)
+                {
+                    wasConnected = true;
+                    break;
+                }
+            }
+
+            if(wasConnected)
+            {
+                drmModeFreeConnector(connector);
+                continue;
+            }
+
+
+            // Get the default mode
+            area = 0;
+            for (int j = 0; j < connector->count_modes; j++)
+            {
+                drmModeModeInfo *current_mode = &connector->modes[j];
+
+                if (current_mode->type & DRM_MODE_TYPE_PREFERRED)
+                {
+                    defaultMode = current_mode;
+                    break;
+                }
+
+                int current_area = current_mode->hdisplay * current_mode->vdisplay;
+
+                if (current_area > area)
+                {
+                    defaultMode = current_mode;
+                    area = current_area;
+                }
+            }
+
+            if (!defaultMode)
+            {
+                printf("could not find mode!\n");
+                drmModeFreeConnector(connector);
+                continue;
+            }
+
+
+            // Find default encoder
+            for (int j = 0; j < resources->count_encoders; j++)
+            {
+                encoder = drmModeGetEncoder(lDevice.fd, resources->encoders[j]);
+
+                bool encoderIsFree = true;
+
+                for(LOutput *output : outputs)
+                {
+                    DRM *data = (DRM*)output->imp()->data;
+                    if(encoder->crtc_id == data->crtc_id)
+                    {
+                        encoderIsFree = false;
+                        break;
+                    }
+                }
+
+                if(encoderIsFree && encoder->encoder_id == connector->encoder_id)
+                {
+                    break;
+                }
+                drmModeFreeEncoder(encoder);
+                encoder = NULL;
+            }
+
+            printf("CHECKPOINT!!\n");
+
+
+            if(encoder)
+            {
+                crtc_id = encoder->crtc_id;
+            }
+            else
+            {
+                uint32_t _crtc_id = find_crtc_for_connector(lDevice.fd,resources, connector);
+
+                if (_crtc_id == 0)
+                {
+                    printf("No crtc found!\n");
+                    drmModeFreeConnector(connector);
+                    continue;
+                }
+
+                crtc_id = _crtc_id;
+            }
+
+            //connector_id = connector->connector_id;
+
+            // SUCCESS! NEW AVALAIBLE OUTPUT!
+            LOutput *newOutput = lDevice.lCompositor->createOutputRequest();
+
+            newOutput->imp()->data = malloc(sizeof(DRM));
+            DRM *data = (DRM*)newOutput->imp()->data;
+
+            data->deviceFd = lDevice.fd;
+            data->connector = connector;
+            data->crtc_id = crtc_id;
+            data->encoder = encoder;
+            data->mode = defaultMode;
+
+
+            newOutput->imp()->m_rect.setW(defaultMode->hdisplay);
+            newOutput->imp()->m_rect.setH(defaultMode->vdisplay);
+            newOutput->imp()->m_rectScaled = newOutput->imp()->m_rect/newOutput->getOutputScale();
+
+            newOutput->refreshRate = defaultMode->vrefresh;
+            outputs.push_front(newOutput);
+            printf("New output with id: %i and vrefresh: %i, w: %i h: %i \n",crtc_id,defaultMode->vrefresh,defaultMode->hdisplay,defaultMode->vdisplay);
+
+            if(notify)
+                lDevice.lCompositor->outputManager()->connectedOutputRequest(newOutput);
+
+        }
+        else
+        {
+            // Check if the output was connected
+            for(list<LOutput*>::iterator it = outputs.begin(); it != outputs.end(); it++)
+            {
+                LOutput *output = *it;
+                DRM *data = (DRM*)output->imp()->data;
+                if(data->connector->connector_id == connector->connector_id)
+                {
+                    printf("OUTPUT DISCONNECTED.\n");
+                    outputs.erase(it);
+                    lDevice.lCompositor->outputManager()->disonnectedOutputRequest(output);
+                    destroyOutput(output);
+                    break;
+                }
+            }
+
+            drmModeFreeConnector(connector);
+            connector = NULL;
+        }
+    }
+
+    drmModeFreeResources(resources);
+
+}
+
+int hotplugEvent(int, unsigned int, void*)
+{
+    udev_device* monitorDev = udev_monitor_receive_device(lDevice.monitor);
+
+    if(monitorDev)
+    {
+        if(udev_device_get_devnum(lDevice.dev) == udev_device_get_devnum(monitorDev))
+        {
+            printf("HOTPLUG EVENT.\n");
+            manageOutputs(true);
+        }
+    }
+
+    udev_device_unref(monitorDev);
+
+    return 0;
+}
+
+void LBackend::initialize(LCompositor *compositor)
+{
+    lDevice.lCompositor = compositor;
+    lDevice.udev = udev_new();
+
+    if (!lDevice.udev)
+    {
+        printf("Can't create udev.\n");
+        exit(1);
+    }
+
+    udev_enumerate *enumerate;
+    udev_list_entry *devices;
+
+    enumerate = udev_enumerate_new(lDevice.udev);
+    udev_enumerate_add_match_subsystem(enumerate, "drm");
+    udev_enumerate_add_match_property(enumerate, "DEVTYPE", "drm_minor");
+    udev_enumerate_scan_devices(enumerate);
+    devices = udev_enumerate_get_list_entry(enumerate);
+    udev_list_entry *entry;
+
+    // Find the first useful device (GPU)
+    udev_list_entry_foreach(entry, devices)
+    {
+        // Path where device is mounted
+        const char *path = udev_list_entry_get_name(entry);
+
+        // Get the device
+        lDevice.dev = udev_device_new_from_syspath(lDevice.udev, path);
+
+        // Get the device name (Ej:/dev/dri/card0)
+        const char *devName = udev_device_get_property_value(lDevice.dev, "DEVNAME");
+
+        drmModeRes *resources;
+
+        lDevice.fd = open(devName, O_RDWR);
+
+        if (lDevice.fd < 0)
+        {
+            printf("Could not open drm device\n");
+            udev_device_unref(lDevice.dev);
+            lDevice.dev = nullptr;
+            continue;
+        }
+
+        resources = drmModeGetResources(lDevice.fd);
+
+        if (!resources)
+        {
+            printf("drmModeGetResources failed: %s\n", strerror(errno));
+            drmModeFreeResources(resources);
+            udev_device_unref(lDevice.dev);
+            lDevice.dev = nullptr;
+            close(lDevice.fd);
+            continue;
+        }
+
+        printf("Using GPU: %s\n",devName);
+        drmModeFreeResources(resources);
+        break;
+    }
+
+    udev_enumerate_unref(enumerate);
+
+    if(!lDevice.dev)
+    {
+        printf("No GPU card found.\n");
+        exit(1);
+    }
+
+
+    /******* SUCCESS CARD FOUND ! *******/
+
+    // Add a monitor to detect connectors hotplug
+    lDevice.monitor = udev_monitor_new_from_netlink(lDevice.udev,"udev");
+    udev_monitor_filter_add_match_subsystem_devtype(lDevice.monitor, "drm", "drm_minor");
+
+    udev_list_entry *tags = udev_device_get_tags_list_entry(lDevice.dev);
+
+    // Add tag filters to the monitor
+    udev_list_entry_foreach(entry, tags)
+    {
+        const char *tag = udev_list_entry_get_name(entry);
+        udev_monitor_filter_add_match_tag(lDevice.monitor,tag);
+    }
+
+    udev_monitor_enable_receiving(lDevice.monitor);
+
+    // Add the FD to the wayland event loop
+    LWayland::addFdListener(udev_monitor_get_fd(lDevice.monitor), nullptr, &hotplugEvent);
+
+    // Check current avaliable outputs
+    manageOutputs(false);
+}
+
+std::list<LOutput *> *LBackend::getAvaliableOutputs(LCompositor *compositor)
+{
+    return &outputs;
+}
 
 void LBackend::createGLContext(LOutput *output)
 {
 
-    DRM *data = (DRM*)output->data;
+    DRM *data = (DRM*)output->imp()->data;
 
     data->evctx =
     {
@@ -301,17 +649,16 @@ void LBackend::createGLContext(LOutput *output)
         return;
     }
 
-    output->m_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
+    output->imp()->m_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
     printf("DRM backend initialized.\n");
 
     return;
 }
 
-
 void LBackend::flipPage(LOutput *output)
 {
 
-    DRM *data = (DRM*)output->data;
+    DRM *data = (DRM*)output->imp()->data;
     gbm_bo *next_bo;
     int waiting_for_flip = 1;
 
@@ -319,252 +666,35 @@ void LBackend::flipPage(LOutput *output)
     next_bo = gbm_surface_lock_front_buffer(data->gbm.surface);
     data->fb = drm_fb_get_from_bo(next_bo,data)->fb;
 
-
-    data->ret = drmModePageFlip(data->deviceFd, data->crtc_id, data->fb->fb_id, DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
-    if (data->ret)
+    if(!lDevice.lCompositor->outputs().empty() && lDevice.lCompositor->outputs().front() == output)
     {
-        printf("Failed to queue page flip: %s\n", strerror(errno));
-        return;
-    }
-    while (waiting_for_flip)
-    {
-        data->ret = select(data->deviceFd + 1, &data->fds, NULL, NULL, NULL);
-
-        /*
-        if (data->ret < 0)
+        data->ret = drmModePageFlip(data->deviceFd, data->crtc_id, data->fb->fb_id, DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
+        if (data->ret)
         {
-            printf("Select err: %s\n", strerror(errno));
+            printf("Failed to queue page flip: %s\n", strerror(errno));
             return;
         }
-        else if (data->ret == 0)
+        while (waiting_for_flip)
         {
-            printf("Select timeout!\n");
-            return;
+            data->ret = select(data->deviceFd + 1, &data->fds, NULL, NULL, NULL);
+            drmHandleEvent(data->deviceFd, &data->evctx);
         }
-        else if (FD_ISSET(0, &data->fds))
-        {
-            printf("User interrupted!\n");
-            break;
-        }
-        */
-
-        drmHandleEvent(data->deviceFd, &data->evctx);
     }
+    else
+    {
+        drmModeSetCrtc(data->deviceFd, data->crtc_id, data->fb->fb_id, 0, 0, &data->connector->connector_id, 1, data->mode);
+    }
+
     // release last buffer to render on again:
     gbm_surface_release_buffer(data->gbm.surface, data->bo);
     data->bo = next_bo;
 
-
-
-    /*
-
-    DRM *data = (DRM*)output->data;
-
-    gbm_bo *next_bo;
-
-    eglSwapBuffers(data->gl.display, data->gl.surface);
-    next_bo = gbm_surface_lock_front_buffer(data->gbm.surface);
-    data->fb = drm_fb_get_from_bo(next_bo,data)->fb;
-
-    // Here you could also update drm plane layers if you want
-    // hw composition
-
-    data->ret = drmModeSetCrtc(data->deviceFd, data->crtc_id, data->fb->fb_id, 0, 0, &data->connector->connector_id, 1, data->mode);
-
-
-    // release last buffer to render on again:
-    gbm_surface_release_buffer(data->gbm.surface, data->bo);
-    data->bo = next_bo;
-    */
 }
 
-
-
-static uint32_t find_crtc_for_encoder(const drmModeRes *resources, const drmModeEncoder *encoder)
+EGLDisplay LBackend::getEGLDisplay(LOutput *output)
 {
-    for (int i = 0; i < resources->count_crtcs; i++)
-    {
-        const uint32_t crtc_mask = 1 << i;
-        const uint32_t crtc_id = resources->crtcs[i];
-        if (encoder->possible_crtcs & crtc_mask)
-            return crtc_id;
-    }
-    return -1;
-}
-
-static uint32_t find_crtc_for_connector(int fd, const drmModeRes *resources, const drmModeConnector *connector)
-{
-    for (int i = 0; i < connector->count_encoders; i++)
-    {
-        const uint32_t encoder_id = connector->encoders[i];
-        drmModeEncoder *encoder = drmModeGetEncoder(fd, encoder_id);
-        if (encoder)
-        {
-            const uint32_t crtc_id = find_crtc_for_encoder(resources, encoder);
-
-            drmModeFreeEncoder(encoder);
-            if (crtc_id != 0)
-                return crtc_id;
-        }
-    }
-    return -1;
-}
-
-std::list<LOutput *> &LBackend::getAvaliableOutputs(LCompositor *compositor)
-{
-
-    struct udev *udev;
-    struct udev_enumerate *enumerate;
-    struct udev_list_entry *devices;
-
-    udev = udev_new();
-    if (!udev)
-    {
-        printf("Can't create udev.\n");
-        exit(1);
-    }
-
-    enumerate = udev_enumerate_new(udev);
-    udev_enumerate_add_match_subsystem(enumerate, "drm");
-    udev_enumerate_add_match_property(enumerate, "DEVTYPE", "drm_minor");
-    udev_enumerate_scan_devices(enumerate);
-    devices = udev_enumerate_get_list_entry(enumerate);
-    udev_list_entry *entry;
-
-    // Loop every DRM device and create a LOutput for each avaliable connector
-    udev_list_entry_foreach(entry, devices)
-    {
-        // Path where device is mounted
-        const char *path = udev_list_entry_get_name(entry);
-
-        // Get the device
-        udev_device *dev = udev_device_new_from_syspath(udev, path);
-
-        // We need the DEVNAME property (Ej:/dev/dri/card0)
-        const char *devName = udev_device_get_property_value(dev, "DEVNAME");
-        printf("DEVNAME: %s\n",devName);
-
-        drmModeRes *resources;
-        drmModeConnector *connector = NULL; // Y
-        drmModeEncoder *encoder = NULL; // N
-        drmModeModeInfo *defaultMode = NULL; // N
-        uint32_t crtc_id; // Y
-        //uint32_t connector_id; // Y
-        int area, drmDeviceFd;
-
-        drmDeviceFd = open(devName, O_RDWR);
-
-        if (drmDeviceFd < 0)
-        {
-            printf("Could not open drm device\n");
-            continue;
-        }
-
-        resources = drmModeGetResources(drmDeviceFd);
-
-        if (!resources)
-        {
-            printf("drmModeGetResources failed: %s\n", strerror(errno));
-            continue;
-        }
-
-        // Find connected connectors
-        for (int i = 0; i < resources->count_connectors; i++)
-        {
-            connector = drmModeGetConnector(drmDeviceFd, resources->connectors[i]);
-
-            // Check if connected
-            if (connector->connection == DRM_MODE_CONNECTED)
-            {
-                // Get the default mode
-                area = 0;
-                for (int j = 0; j < connector->count_modes; j++)
-                {
-                    drmModeModeInfo *current_mode = &connector->modes[j];
-
-                    if (current_mode->type & DRM_MODE_TYPE_PREFERRED)
-                    {
-                        defaultMode = current_mode;
-                        break;
-                    }
-
-                    int current_area = current_mode->hdisplay * current_mode->vdisplay;
-
-                    if (current_area > area)
-                    {
-                        defaultMode = current_mode;
-                        area = current_area;
-                    }
-                }
-
-                if (!defaultMode)
-                {
-                    printf("could not find mode!\n");
-                    drmModeFreeConnector(connector);
-                    continue;
-                }
-
-                // Find default encoder
-                for (int j = 0; j < resources->count_encoders; j++)
-                {
-                    encoder = drmModeGetEncoder(drmDeviceFd, resources->encoders[j]);
-                    if (encoder->encoder_id == connector->encoder_id)
-                        break;
-                    drmModeFreeEncoder(encoder);
-                    encoder = NULL;
-                }
-
-                if (encoder)
-                    crtc_id = encoder->crtc_id;
-                else
-                {
-                    uint32_t _crtc_id = find_crtc_for_connector(drmDeviceFd,resources, connector);
-
-                    if (_crtc_id == 0)
-                    {
-                        printf("No crtc found!\n");
-                        drmModeFreeConnector(connector);
-                        continue;
-                    }
-
-                    crtc_id = _crtc_id;
-                }
-
-                //connector_id = connector->connector_id;
-
-                // SUCCESS! NEW AVALAIBLE OUTPUT!
-                LOutput *newOutput = new LOutput();
-
-                newOutput->data = malloc(sizeof(DRM));
-                DRM *data = (DRM*)newOutput->data;
-
-                data->deviceFd = drmDeviceFd;
-                data->deviceName = devName;
-                data->connector = connector;
-                data->crtc_id = crtc_id;
-                data->encoder = encoder;
-                data->mode = defaultMode;
-
-                newOutput->m_rect.setW(defaultMode->hdisplay);
-                newOutput->m_rect.setH(defaultMode->vdisplay);
-                newOutput->m_rectScaled = newOutput->m_rect/newOutput->getOutputScale();
-
-                newOutput->refreshRate = defaultMode->vrefresh;
-                outputs.push_front(newOutput);
-                printf("New output with id: %i and vrefresh: %i, w: %i h: %i \n",crtc_id,defaultMode->vrefresh,defaultMode->hdisplay,defaultMode->vdisplay);
-            }
-            else
-            {
-                drmModeFreeConnector(connector);
-                connector = NULL;
-            }
-        }
-
-        udev_device_unref(dev);
-        //close(drmDeviceFd);
-    }
-    udev_enumerate_unref(enumerate);
-    return outputs;
+    DRM *data = (DRM*)output->imp()->data;
+    return data->gl.display;
 }
 
 bool LBackend::hasHardwareCursorSupport()
@@ -575,7 +705,7 @@ bool LBackend::hasHardwareCursorSupport()
 void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
 {
 
-    DRM *data = (DRM*)output->data;
+    DRM *data = (DRM*)output->imp()->data;
 
     if(!texture)
     {
@@ -620,7 +750,7 @@ void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
 
 void LBackend::setCursorPosition(LOutput *output, const LPoint &position)
 {
-    DRM *data = (DRM*)output->data;
+    DRM *data = (DRM*)output->imp()->data;
     drmModeMoveCursor(data->deviceFd, data->crtc_id,position.x(),position.y());
 }
 
@@ -630,6 +760,7 @@ LGraphicBackend LBackendAPI;
 extern "C" LGraphicBackend *getAPI()
 {
    printf("Louvre DRM backend loaded.\n");
+   LBackendAPI.initialize               = &LBackend::initialize;
    LBackendAPI.getAvaliableOutputs      = &LBackend::getAvaliableOutputs;
    LBackendAPI.getEGLDisplay            = &LBackend::getEGLDisplay,
    LBackendAPI.createGLContext          = &LBackend::createGLContext;

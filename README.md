@@ -85,6 +85,7 @@ $ ./Minimal
 
 ## 🔨 TODO
 * Implement wl_data_device
+* Free output resources
 * Check wl_keyboard v7 keymap MAP_PRIVATE & MAP_SHARED
 * Implement wl_touch
 * Implement zxdg_output_manager_v1

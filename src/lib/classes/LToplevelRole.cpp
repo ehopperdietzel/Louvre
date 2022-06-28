@@ -64,21 +64,21 @@ void LToplevelRole::startMoveRequest()
     if(maximized())
     {
         // Get the main output
-        LOutput *output = compositor()->outputs().front();
+        LOutput *output = compositor()->cursor()->output();
 
         // Topbar height
         Int32 topbarHeight = (LOUVRE_TB_H+2)/output->getOutputScale();
 
         // Dest size
-        LSize destSize = (output->rect(false).bottomRight() - LSize(0,topbarHeight)) / 2 / output->getOutputScale();
+        LSize destSize = (output->rect().topLeft() + output->rect(false).bottomRight() - LSize(0,topbarHeight)) / 2 / output->getOutputScale();
 
         // Tell the toplevel to maximize
         configure(destSize, state() &~ Maximized);
 
         if(compositor()->cursor()->position().x() >= destSize.x())
-            surface()->setPos(destSize.w(), topbarHeight);
+            surface()->setPos(LPoint(destSize.w(), topbarHeight)+output->rect().topLeft());
         else
-            surface()->setPos(0, topbarHeight);
+            surface()->setPos(LPoint(0, topbarHeight)+output->rect().topLeft());
     }
     
     seat()->pointer()->startMovingTopLevel(this);
@@ -122,7 +122,7 @@ void LToplevelRole::ping(UInt32 serial)
 void LToplevelRole::setMaximizedRequest()
 {
     // Get the main output
-    LOutput *output = compositor()->outputs().front();
+    LOutput *output = compositor()->cursor()->output();
 
     // Topbar height
     Int32 topbarHeight = (LOUVRE_TB_H+2)/output->getOutputScale();
@@ -136,7 +136,7 @@ void LToplevelRole::setMaximizedRequest()
 void LToplevelRole::unsetMaximizedRequest()
 {
     // Get the main output
-    LOutput *output = compositor()->outputs().front();
+    LOutput *output = compositor()->cursor()->output();
 
     // Topbar height
     Int32 topbarHeight = (LOUVRE_TB_H+2)/output->getOutputScale();
@@ -155,27 +155,27 @@ void LToplevelRole::unsetMaximizedRequest()
 
 void LToplevelRole::maximizeChanged()
 {
+    // Get the main output
+    LOutput *output = compositor()->cursor()->output();
 
     // Topbar height
-    Int32 topbarHeight = (LOUVRE_TB_H+2)/compositor()->outputs().front()->getOutputScale();
+    Int32 topbarHeight = (LOUVRE_TB_H+2)/output->getOutputScale();
 
     if(maximized())
     {
         compositor()->riseSurface(surface());
-        surface()->setPos(0,topbarHeight);
+        surface()->setPos(output->rect().x(),output->rect().y()+topbarHeight);
         surface()->setMinimized(false);
     }
     else
     {
         if(seat()->pointer()->movingTopLevel() != this)
         {
-            // Get the main output
-            LOutput *output = compositor()->outputs().front();
 
             // Dest size
             LSize destSize = (output->rect(false).bottomRight() - LSize(0,topbarHeight)) / 2 / output->getOutputScale();
 
-            surface()->setPos(destSize/2);
+            surface()->setPos(output->rect().topLeft() + destSize/2);
         }
     }
 }
@@ -215,7 +215,7 @@ void LToplevelRole::setFullscreenRequest(LOutput *destOutput)
     LOutput *output;
 
     if(destOutput == nullptr)
-        output = compositor()->outputs().front();
+        output = compositor()->cursor()->output();
     else
         output = destOutput;
 

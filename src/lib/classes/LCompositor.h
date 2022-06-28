@@ -29,6 +29,7 @@ public:
     virtual void initialize(){};
 
     /* Create requests */
+    virtual LOutputManager *createOutputManagerRequest();
     virtual LOutput *createOutputRequest();
     virtual LClient *createClientRequest(wl_client *client);
     virtual LSurface *createSurfaceRequest(wl_resource *surface, LClient *client);
@@ -79,6 +80,7 @@ public:
     void repaintAllOutputs();
     void addOutput(LOutput *output);
     void removeOutput(LOutput *output);
+    LOutputManager *outputManager() const;
     const list<LSurface*>&surfaces() const;
     const list<LOutput*>&outputs() const;
     const list<LClient*>&clients() const;

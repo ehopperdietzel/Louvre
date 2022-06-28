@@ -1,7 +1,8 @@
 #include <LCompositorPrivate.h>
+#include <LOutputManager.h>
 #include <LNamespaces.h>
 #include <LWayland.h>
-#include <LOutput.h>
+#include <LOutputPrivate.h>
 #include <LSeat.h>
 #include <LPopupRole.h>
 
@@ -30,12 +31,16 @@ LCompositor::LCompositor(const char *backendPath)
 
     m_imp->libinputFd = eventfd(0,EFD_SEMAPHORE);
 
-    LWayland::initWayland(this);
 }
 
 LCompositor::~LCompositor()
 {
     delete m_imp;
+}
+
+LOutputManager *LCompositor::createOutputManagerRequest()
+{
+    return new LOutputManager(this);
 }
 
 LOutput *LCompositor::createOutputRequest()
@@ -85,9 +90,9 @@ LSubsurfaceRole *LCompositor::createSubsurfaceRequest(wl_resource *subsurface, L
     return new LSubsurfaceRole(subsurface,surface);
 }
 
-void LCompositor::destroyOutputRequest(LOutput *output)
+void LCompositor::destroyOutputRequest(LOutput */*output*/)
 {
-
+    printf("Default Output Destroy Event.\n");
 }
 
 void LCompositor::destroyClientRequest(LClient *client)
@@ -125,6 +130,12 @@ void LCompositor::start()
 {    
     if(m_imp->_started)
         return;
+
+    LWayland::initWayland(this);
+
+    m_imp->m_backend->initialize(this);
+
+    m_imp->m_outputManager = createOutputManagerRequest();
 
     // Ask the developer to return a LSeat
     m_imp->m_seat = createSeatRequest();
@@ -239,7 +250,7 @@ void LCompositor::addOutput(LOutput *output)
     m_imp->m_outputs.push_back(output);
 
     // This method inits the Output rendering thread and its OpenGL context
-    output->setCompositor(this);
+    output->imp()->setCompositor(this);
 
     // If the main thread has no OpenGL context yet
     if(!LWayland::isGlContextInitialized())
@@ -254,13 +265,33 @@ void LCompositor::addOutput(LOutput *output)
          * immediatly to allow them to reuse it.
          * This fix the Qt clients decoration bug while resizing. */
         LWayland::initGLContext();
-
     }
+
 }
 
 void LCompositor::removeOutput(LOutput *output)
 {
+    for(list<LOutput*>::iterator it = m_imp->m_outputs.begin(); it != m_imp->m_outputs.end(); it++)
+    {
+        LOutput *o = *it;
+        if(o == output)
+        {
+            output->imp()->m_initializeResult = LOutput::Pending;
+            output->repaint();
 
+            while(output->initializeResult() != LOutput::Stopped)
+                usleep(1);
+
+            destroyOutputRequest(output);
+            m_imp->m_outputs.erase(it);
+            return;
+        }
+    }
+}
+
+LOutputManager *LCompositor::outputManager() const
+{
+    return m_imp->m_outputManager;
 }
 
 const list<LSurface *> &LCompositor::surfaces() const

@@ -4,7 +4,6 @@
 #include <LOutputManager.h>
 #include <LOutput.h>
 
-
 Compositor::Compositor(const char *backendPath):LCompositor(backendPath){}
 
 void Compositor::initialize()
@@ -12,17 +11,25 @@ void Compositor::initialize()
     // Override the default keymap
     seat()->keyboard()->setKeymap(NULL,NULL,"latam");
 
-    // Use the output manager to get connected displays
-    LOutputManager *outputManager = new LOutputManager(this);
+    // Add avaliable outputs to the compositor
 
-    // Use the first avaliable display
-    LOutput *output = outputManager->getOutputsList()->front();
+    Int32 xOffset = 0; // The x position of each output
+    for(LOutput *output : *outputManager()->outputs())
+    {
+        // If output resolution is > 1360 we consider it highDPI
+        if(output->rect(false).w() > 1360)
+            output->setOutputScale(2);
 
-    // Set the output scale (2 for HiDPI displays)
-    output->setOutputScale(2);
+        // Set the output position
+        output->setPos(LPoint(xOffset,0));
 
-    // Add the output to the compositor (this inits the output thread, OpenGL context and render loop)
-    addOutput(output);
+        // Add the output to the compositor (initializes its render context)
+        addOutput(output);
+
+        // Increase the x offset for the next output
+        xOffset += output->rect(false).w();
+    }
+
 }
 
 

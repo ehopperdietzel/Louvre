@@ -6,6 +6,7 @@
 class Louvre::LWayland
 {
 public:
+    static void addFdListener(int fd, void *userData, int(*callback)(int,unsigned int,void*));
 
     static void setSeat(LSeat *seat);
     static int processSeat(int, unsigned int, void*userData);

@@ -34,6 +34,7 @@ public:
     const LPointF &hotspot()  const {return m_hotspot;}
     LTexture *texture()       const {return m_texture;}
     LCompositor *compositor() const;
+    LOutput *output() const;
 
 private:
 

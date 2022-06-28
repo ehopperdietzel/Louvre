@@ -11,7 +11,8 @@
 class Louvre::LBackend
 {
 public:
-    static std::list<LOutput*>&getAvaliableOutputs(LCompositor *compositor);
+    static void initialize(LCompositor *compositor);
+    static std::list<LOutput*>*getAvaliableOutputs(LCompositor *compositor);
     static EGLDisplay getEGLDisplay(LOutput *output);
     static void createGLContext(LOutput *output);
     static void flipPage(LOutput *output);

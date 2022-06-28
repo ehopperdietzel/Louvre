@@ -15,7 +15,7 @@
 
 #include <LBackend.h>
 #include <LCompositor.h>
-#include <LOutput.h>
+#include <LOutputPrivate.h>
 #include <LWayland.h>
 #include <LSizeF.h>
 #include <LCursor.h>
@@ -24,7 +24,8 @@ using namespace Louvre;
 
 std::list<LOutput*>outputs;
 
-struct X11_Window{
+struct X11_Window
+{
     Window window;
     EGLContext context;
     EGLSurface surface;
@@ -165,13 +166,18 @@ static void create_window(LOutput *output)
 
 
 
-std::list<LOutput *> &LBackend::getAvaliableOutputs(LCompositor *compositor)
+void LBackend::initialize(LCompositor *compositor)
+{
+
+}
+
+std::list<LOutput *> *LBackend::getAvaliableOutputs(LCompositor *compositor)
 {
 
     LOutput *output = compositor->createOutputRequest();
-    output->data = malloc(sizeof(X11));
+    output->imp()->data = malloc(sizeof(X11));
     output->refreshRate = 55;
-    X11 *data = (X11*)output->data;
+    X11 *data = (X11*)output->imp()->data;
     data->x_display = XOpenDisplay(NULL);
     data->egl_display = eglGetDisplay(data->x_display);
     data->windowNumber = 0;
@@ -189,12 +195,12 @@ std::list<LOutput *> &LBackend::getAvaliableOutputs(LCompositor *compositor)
     outputs.push_back(output1);
     */
 
-    return outputs;
+    return &outputs;
 }
 
 EGLDisplay LBackend::getEGLDisplay(LOutput *output)
 {
-    X11 *data = (X11*)output->data;
+    X11 *data = (X11*)output->imp()->data;
     return data->egl_display;
 }
 
@@ -202,18 +208,18 @@ void LBackend::createGLContext(LOutput *output)
 {
     //XInitThreads();
     create_window(output);
-    X11 *data = (X11*)output->data;
-    output->m_rect.setW(data->window.width);
-    output->m_rect.setH(data->window.height);
+    X11 *data = (X11*)output->imp()->data;
+    output->imp()->m_rect.setW(data->window.width);
+    output->imp()->m_rect.setH(data->window.height);
 
-    output->m_rectScaled = output->m_rect/output->getOutputScale();
-    output->m_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
+    output->imp()->m_rectScaled = output->imp()->m_rect/output->getOutputScale();
+    output->imp()->m_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
     printf("X11 backend initialized.\n");
 }
 
 void LBackend::flipPage(LOutput *output)
 {
-    X11 *data = (X11*)output->data;
+    X11 *data = (X11*)output->imp()->data;
     eglSwapBuffers(data->egl_display, data->window.surface);
 }
 
@@ -239,7 +245,8 @@ LGraphicBackend LBackendAPI;
 
 extern "C" LGraphicBackend *getAPI()
 {
-   printf("Louvre X11 backend loaded.\n");
+   printf("Using Louvre X11 backend.\n");
+   LBackendAPI.initialize               = &LBackend::initialize;
    LBackendAPI.getAvaliableOutputs      = &LBackend::getAvaliableOutputs;
    LBackendAPI.getEGLDisplay            = &LBackend::getEGLDisplay,
    LBackendAPI.createGLContext          = &LBackend::createGLContext;

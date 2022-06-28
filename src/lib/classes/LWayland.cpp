@@ -126,6 +126,12 @@ void LWayland::forceUpdate()
         eventfd_write(compositor->imp()->libinputFd,1);
 }
 
+
+void LWayland::addFdListener(int fd, void *userData, int (*callback)(int, unsigned int, void *))
+{
+    wl_event_loop_add_fd(event_loop,fd,WL_EVENT_READABLE,callback,userData);
+}
+
 void LWayland::setSeat(LSeat *seat)
 {
     // Create seat global
@@ -243,15 +249,6 @@ void LWayland::runLoop()
 {
     fds[0].events = WL_EVENT_READABLE | WL_EVENT_WRITABLE;
     fds[0].fd = wayland_fd;
-
-    /*
-    fds[1].events = POLLIN;
-    fds[1].fd = compositor->libinputFd;
-
-
-    fds[2].events = POLLIN;
-    fds[2].fd = WInput::getLibinputFd();
-    */
 
     while(true)
     {

@@ -75,7 +75,8 @@ namespace Louvre
 
     struct LGraphicBackend
     {
-        std::list<LOutput*>&(*getAvaliableOutputs)(LCompositor*lCompositor);
+        void (*initialize)(LCompositor *lCompositor);
+        std::list<LOutput*>*(*getAvaliableOutputs)(LCompositor*lCompositor);
         EGLDisplay (*getEGLDisplay)(LOutput *lOutput);
         void (*createGLContext)(LOutput *lOutput);
         void (*flipPage)(LOutput *lOutput);

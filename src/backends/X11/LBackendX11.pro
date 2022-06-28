@@ -14,7 +14,7 @@ QMAKE_CXXFLAGS_RELEASE *= -O2
 QMAKE_CXXFLAGS_RELEASE -= -O3
 
 LIBS += -L/usr/local/lib/x86_64-linux-gnu -lX11 -lXfixes
-INCLUDEPATH += /usr/include/libdrm ../../lib/classes ../../lib/clsses/private ../ /usr/local/include
+INCLUDEPATH += /usr/include/libdrm ../../lib/classes ../../lib/classes/private ../../lib/clsses/private ../ /usr/local/include
 
 
 # Default rules for deployment.

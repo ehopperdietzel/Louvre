@@ -10,12 +10,17 @@ class Louvre::LOutputManager
 {
 public:
     LOutputManager(LCompositor *compositor);
-    LCompositor *getCompositor() const;
-    const list<LOutput*>*getOutputsList();
+    virtual ~LOutputManager();
 
+    virtual void connectedOutputRequest(LOutput *connectedOutput);
+    virtual void disonnectedOutputRequest(LOutput *disconnectedOutput);
+
+    LCompositor *compositor() const;
+    const list<LOutput*>*outputs() const;
+    class LOutputManagerPrivate;
+    LOutputManagerPrivate *imp() const;
 private:
-    LCompositor *m_compositor = nullptr;
-    list<LOutput*>m_outputs;
+    LOutputManagerPrivate *m_imp = nullptr;
 };
 
 #endif // LOUTPUTMANAGER_H

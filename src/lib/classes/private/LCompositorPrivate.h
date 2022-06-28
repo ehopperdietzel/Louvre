@@ -24,8 +24,8 @@ public:
     // Surfaces
     list<LSurface*>m_surfaces;
 
-    // Destroyed clients
-    list<LClient*>m_destroyedClients;
+    // Output Manager
+    LOutputManager *m_outputManager = nullptr;
 
     int libinputFd, waylandFd;
     eventfd_t libinputVal, waylandVal = 1;
