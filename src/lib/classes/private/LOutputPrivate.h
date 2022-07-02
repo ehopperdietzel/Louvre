@@ -38,7 +38,6 @@ public:
     // Compositor
     LCompositor *m_compositor = nullptr;
 
-
     // Params
     char *_devName = nullptr;
     //drmModeConnector *_connector = nullptr;
@@ -47,14 +46,12 @@ public:
 
 
     // Render thread
-    int _renderFd;
-    eventfd_t _renderValue = 0;
+    Int32 m_renderFd;
+    eventfd_t m_renderValue = 1;
     std::thread *m_renderThread;
-    pollfd _renderPoll;
+    pollfd m_poll[1];
 
     bool scheduledRepaint = false;
-
-    // Setup
 
 };
 

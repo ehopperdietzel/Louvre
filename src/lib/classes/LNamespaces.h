@@ -81,6 +81,7 @@ namespace Louvre
         void (*createGLContext)(LOutput *lOutput);
         void (*flipPage)(LOutput *lOutput);
         bool (*hasHardwareCursorSupport)();
+        void (*initializeCursor)(LOutput *output);
         void (*setCursor)(LOutput *lOutput, LTexture *lTexture, const LSizeF &lSize);
         void (*setCursorPosition)(LOutput *output, const LPoint &position);
     };

@@ -18,6 +18,7 @@
 #include <LWayland.h>
 #include <LOpenGL.h>
 #include <LSizeF.h>
+#include <LTime.h>
 
 using namespace Louvre;
 
@@ -66,7 +67,12 @@ struct DRM
     GL_CONF gl;
 
     gbm_bo *cursor_bo = nullptr;
-    unsigned char cursor_pixels[4*64*64];
+    uint32_t cursorBoHandleU32;
+    EGLImage cursorEGLImage;
+    GLuint cursorTexture;
+    GLuint cursoFramebuffer = 0;
+    bool cursorVisible = false;
+    bool cursorInitialized = false;
 };
 
 struct FB_DATA
@@ -108,9 +114,6 @@ static int init_gbm(DRM *data)
         return -1;
     }
 
-    // Create cursor bo
-    data->cursor_bo = gbm_bo_create(data->gbm.dev, 64, 64, GBM_FORMAT_ARGB8888, GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE);
-
     return 0;
 }
 
@@ -133,6 +136,7 @@ static int init_gl(DRM *data, LOutput *output)
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
+
 
     PFNEGLGETPLATFORMDISPLAYEXTPROC get_platform_display = NULL;
     get_platform_display =(void *(*)(unsigned int,void*,const int*)) eglGetProcAddress("eglGetPlatformDisplayEXT");
@@ -180,6 +184,7 @@ static int init_gl(DRM *data, LOutput *output)
     }
 
     data->gl.surface = eglCreateWindowSurface(data->gl.display, data->gl.config, data->gbm.surface, NULL);
+
     if (data->gl.surface == EGL_NO_SURFACE)
     {
         printf("Failed to create EGL surface.\n");
@@ -655,9 +660,9 @@ void LBackend::createGLContext(LOutput *output)
     return;
 }
 
+long t = 0;
 void LBackend::flipPage(LOutput *output)
 {
-
     DRM *data = (DRM*)output->imp()->data;
     gbm_bo *next_bo;
     int waiting_for_flip = 1;
@@ -666,19 +671,49 @@ void LBackend::flipPage(LOutput *output)
     next_bo = gbm_surface_lock_front_buffer(data->gbm.surface);
     data->fb = drm_fb_get_from_bo(next_bo,data)->fb;
 
-    if(!lDevice.lCompositor->outputs().empty() && lDevice.lCompositor->outputs().front() == output)
+    drmVBlank vbl;
+    vbl.request.sequence = 0;
+    vbl.request.signal = 0,
+    vbl.request.type =  DRM_VBLANK_RELATIVE;
+
+
+    if(true || lDevice.lCompositor->outputs().size() == 1)
     {
-        data->ret = drmModePageFlip(data->deviceFd, data->crtc_id, data->fb->fb_id, DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
-        if (data->ret)
+        //t = LTime::us().tv_nsec;
+        data->ret = drmWaitVBlank(lDevice.fd,&vbl);
+        //printf("LAPSE: %lu\n",(LTime::us().tv_nsec - t));
+        if (data->ret != 0)
         {
-            printf("Failed to queue page flip: %s\n", strerror(errno));
-            return;
+            printf("FAILED WAIT VBLANK\n");
         }
+
+        drmModeSetCrtc(data->deviceFd, data->crtc_id, data->fb->fb_id, 0, 0, &data->connector->connector_id, 1, data->mode);
+
+
+        /*
+        data->ret = drmModePageFlip(data->deviceFd, data->crtc_id, data->fb->fb_id, DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
+
+        if(data->ret)
+        {
+            drmModeSetCrtc(data->deviceFd, data->crtc_id, data->fb->fb_id, 0, 0, &data->connector->connector_id, 1, data->mode);
+            //printf("Failed to queue page flip: %s\n", strerror(errno));
+            //return;
+        }
+        */
+
+        /*
+        int w = 0;
         while (waiting_for_flip)
         {
-            data->ret = select(data->deviceFd + 1, &data->fds, NULL, NULL, NULL);
+            printf("WAITING %i\n",w);
             drmHandleEvent(data->deviceFd, &data->evctx);
+            w++;
         }
+        */
+
+            //data->ret = select(data->deviceFd + 1, &data->fds, NULL, NULL, NULL);
+
+
     }
     else
     {
@@ -702,46 +737,64 @@ bool LBackend::hasHardwareCursorSupport()
     return true;
 }
 
+void LBackend::initializeCursor(LOutput *output)
+{
+    DRM *data = (DRM*)output->imp()->data;
+
+    if(data->cursorInitialized)
+        return;
+
+    data->cursorInitialized = true;
+
+    // Create cursor bo
+    data->cursor_bo = gbm_bo_create(data->gbm.dev, 64, 64, GBM_FORMAT_ARGB8888, GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_RENDERING); //GBM_BO_USE_WRITE |
+
+    // Cursor
+    PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress ("eglCreateImageKHR");
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress ("glEGLImageTargetTexture2DOES");
+    EGLImage image = eglCreateImageKHR(data->gl.display,data->gl.context,EGL_NATIVE_PIXMAP_KHR,data->cursor_bo,NULL);
+
+    glGenFramebuffers(1, &data->cursoFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, data->cursoFramebuffer);
+
+    glGenTextures(1, &data->cursorTexture);
+    glBindTexture (GL_TEXTURE_2D, data->cursorTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D,image);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data->cursorTexture, 0);
+
+    data->cursorBoHandleU32 = gbm_bo_get_handle(data->cursor_bo).u32;
+
+}
+
 void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
 {
-
     DRM *data = (DRM*)output->imp()->data;
 
     if(!texture)
     {
         drmModeSetCursor(data->deviceFd, data->crtc_id, 0, 0, 0);
+        data->cursorVisible = false;
         return;
     }
 
     LOpenGL *GL;
+
 
     if(std::this_thread::get_id() == output->compositor()->mainThreadId())
         GL = output->compositor()->imp()->m_painter;
     else
         GL = output->painter();
 
-    // Create framebuffer to scale cursor
-    unsigned int fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    // Create render buffer
-    unsigned int rbo;
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, 64, 64);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
-
+    glBindFramebuffer(GL_FRAMEBUFFER, data->cursoFramebuffer);
     GL->scaleCursor(texture,LRect(0,0,texture->size().w(),-texture->size().h()),LRect(0,0,size.w(),size.h()));
+    glFlush();
 
-    glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,&data->cursor_pixels);
-
-    gbm_bo_write(data->cursor_bo,data->cursor_pixels, 4*64*64);
-
-    uint32_t handle = gbm_bo_get_handle(data->cursor_bo).u32;
-    drmModeSetCursor(data->deviceFd, data->crtc_id, handle, 64, 64);
-    glDeleteFramebuffers(1,&fbo);
-    glDeleteRenderbuffers(1,&rbo);
+    if(!data->cursorVisible)
+        drmModeSetCursor(data->deviceFd, data->crtc_id, data->cursorBoHandleU32, 64, 64);
 
     // Goes back to main framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -766,6 +819,7 @@ extern "C" LGraphicBackend *getAPI()
    LBackendAPI.createGLContext          = &LBackend::createGLContext;
    LBackendAPI.flipPage                 = &LBackend::flipPage;
    LBackendAPI.hasHardwareCursorSupport = &LBackend::hasHardwareCursorSupport;
+   LBackendAPI.initializeCursor         = &LBackend::initializeCursor;
    LBackendAPI.setCursor                = &LBackend::setCursor;
    LBackendAPI.setCursorPosition        = &LBackend::setCursorPosition;
 

@@ -19,6 +19,7 @@ public:
     void drawColor(const LRect &dst, Float32 r, Float32 g, Float32 b, Float32 a);
     void setViewport(const LRect &rect);
     void clearScreen();
+
 private:
 
     friend class LOutput;

@@ -39,8 +39,6 @@ public:
 
     LGraphicBackend *m_backend = nullptr;
 
-
-
 };
 
 #endif // LCOMPOSITORPRIVATE_H

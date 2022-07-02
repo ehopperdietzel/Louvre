@@ -1,5 +1,5 @@
 #include "LCursor.h"
-#include <LOutput.h>
+#include <LOutputPrivate.h>
 #include <LTexture.h>
 #include <LPointF.h>
 #include <LRect.h>
@@ -15,6 +15,7 @@ using namespace Louvre;
 LCursor::LCursor(LOutput *output)
 {
     setOutput(output);
+    compositor()->imp()->m_backend->initializeCursor(output);
     m_x11Texture = new LTexture();
     setSize(LPoint(24,24));
     loadDefaultCursors();
@@ -68,8 +69,8 @@ void LCursor::setTexture(LTexture *texture, const LPointF &hotspot)
     lastCursor.type = LLastCursorType::Texture;
     m_texture = texture;
     m_hotspot = hotspot;
-    compositor()->imp()->m_backend->setCursor(m_output,m_texture,m_size*m_output->getOutputScale());
     update();
+    compositor()->imp()->m_backend->setCursor(m_output,m_texture,m_size*m_output->getOutputScale());
 }
 
 void LCursor::setOutput(LOutput *output)
@@ -156,11 +157,11 @@ void LCursor::setVisible(bool state)
     m_isVisible = state;
 
     if(!m_isVisible)
-        compositor()->imp()->m_backend->setCursor(m_output,nullptr,LPoint());
+        compositor()->imp()->m_backend->setCursor(m_output,nullptr,m_size);
     else if(m_texture)
     {
-        compositor()->imp()->m_backend->setCursor(m_output,m_texture,m_size*m_output->getOutputScale());
         update();
+        compositor()->imp()->m_backend->setCursor(m_output,m_texture,m_size*m_output->getOutputScale());
     }
 
 }
@@ -177,7 +178,9 @@ bool LCursor::hasHardwareSupport() const
 
 LCompositor *LCursor::compositor() const
 {
-    return m_output->compositor();
+    if(m_output)
+        return m_output->compositor();
+    return nullptr;
 }
 
 LOutput *LCursor::output() const
@@ -215,3 +218,4 @@ void LCursor::update()
     if(!hasHardwareSupport())
         m_output->repaint();
 }
+

@@ -126,6 +126,11 @@ void LWayland::forceUpdate()
         eventfd_write(compositor->imp()->libinputFd,1);
 }
 
+LCompositor *LWayland::bindedCompositor()
+{
+    return compositor;
+}
+
 
 void LWayland::addFdListener(int fd, void *userData, int (*callback)(int, unsigned int, void *))
 {

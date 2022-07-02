@@ -352,8 +352,8 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
         }
         else if(sym == XKB_KEY_Escape)
         {
-            if(focusSurface() && focusSurface()->toplevel() && focusSurface()->toplevel()->fullscreen())
-                focusSurface()->toplevel()->configure(focusSurface()->toplevel()->state() & ~LToplevelRole::Fullscreen);
+            //if(focusSurface() && focusSurface()->toplevel() && focusSurface()->toplevel()->fullscreen())
+                //focusSurface()->toplevel()->configure(focusSurface()->toplevel()->state() & ~LToplevelRole::Fullscreen);
         }
         else if(sym == XKB_KEY_F8)
         {

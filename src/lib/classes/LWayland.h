@@ -40,6 +40,8 @@ public:
 
     static void forceUpdate();
 
+    static LCompositor *bindedCompositor();
+
 
 };
 

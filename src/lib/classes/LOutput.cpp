@@ -42,11 +42,14 @@ void LOutput::initializeGL()
     damage[1].addRect(rect());
 
     background = LOpenGL::loadTexture("wallpaper.png");
+
 }
 
 int it = 0;
 void LOutput::paintGL(Int32 currentBuffer)
 {
+
+    //compositor()->cursor()->setCursor(LCursor::Arrow);
 
     // Get the painter
     LOpenGL *GL = painter();
@@ -101,10 +104,19 @@ void LOutput::paintGL(Int32 currentBuffer)
     {
         if(surface->toplevel() && surface->toplevel()->fullscreen())
         {
+            if(!rect().containsPoint(surface->pos(true)))
+                break;
+
             glDisable(GL_BLEND);
 
             // Draw surface
-            GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),LRect(surface->pos(true),surface->size()));
+            GL->drawTexture(surface->texture(),LRect(LPoint(),surface->size(true)),rect());
+
+            for(LSurface *child : surface->children())
+            {
+                GL->drawTexture(child->texture(),LRect(LPoint(),child->size(true)),LRect(child->pos(true),child->size()));
+                child->requestNextFrame();
+            }
 
             glEnable(GL_BLEND);
 
@@ -119,6 +131,7 @@ void LOutput::paintGL(Int32 currentBuffer)
     // Store minimized surfaces
     list<LSurface*>minimized;
 
+
     LRegion backgroundDamage;
     backgroundDamage.addRect(rect());
     LPoint backgroundPos = rect().topLeft();
@@ -132,7 +145,7 @@ void LOutput::paintGL(Int32 currentBuffer)
             continue;
 
         for(const LRect &r : surface->opaqueRegion().rects())
-            backgroundDamage.subtractRect(LRect(surface->pos(true)+r.topLeft()-backgroundPos,r.bottomRight()));
+            backgroundDamage.subtractRect(LRect(surface->pos(true)+r.topLeft(),r.bottomRight()));
     }
 
 
@@ -140,11 +153,12 @@ void LOutput::paintGL(Int32 currentBuffer)
     glDisable(GL_BLEND);
 
     for(const LRect &r : backgroundDamage.rects())
-        GL->drawTexture(background,r*getOutputScale(),r);
+        GL->drawTexture(background,LRect(r.topLeft()-backgroundPos,r.bottomRight())*getOutputScale(),LRect(r.topLeft()-backgroundPos,r.bottomRight()));
 
 
     //glDisable(GL_BLEND);
     //GL->clearScreen();
+    //GL->drawTexture(background,LRect(LPoint(),background->size()),LRect(LPoint(),rect().bottomRight()));
 
 
     // Step 1: Calculates convert prev and new surface damages to global
@@ -469,10 +483,11 @@ void LOutput::LOutputPrivate::initialize()
     m_compositor->imp()->m_backend->createGLContext(m_output);
 
     // Repaint FD
-    _renderFd = eventfd(0,EFD_SEMAPHORE);
-    _renderPoll.fd = _renderFd;
-    _renderPoll.revents = 0;
-    _renderPoll.events = POLLIN;
+    m_renderFd = eventfd(0,EFD_SEMAPHORE);
+
+    m_poll[0].fd = m_renderFd;
+    m_poll[0].revents = 0;
+    m_poll[0].events = POLLIN;
 
     // Timer FD
     timerPoll.events = POLLIN;
@@ -497,7 +512,6 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
     output->m_imp->initialize();
     output->repaint();
 
-    uint64_t res;
     itimerspec ts;
     ts.it_interval.tv_sec = 0;
     ts.it_interval.tv_nsec = 0;
@@ -512,7 +526,8 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
     {
 
         // Wait for a repaint request
-        poll(&output->m_imp->_renderPoll,1,-1);
+        poll(output->m_imp->m_poll,1,-1);
+
 
         // Check if disconnected
         if(output->imp()->m_initializeResult == LOutput::Pending)
@@ -523,7 +538,7 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
 
         // Block the render
         output->m_imp->scheduledRepaint = false;
-        eventfd_read(output->m_imp->_renderFd,&output->m_imp->_renderValue);
+        eventfd_read(output->m_imp->m_renderFd,&output->m_imp->m_renderValue);
 
         // Let the user do his painting
         output->m_imp->m_compositor->imp()->m_renderMutex.lock();
@@ -539,15 +554,18 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
         // Tell the input loop to process events
         LWayland::forceUpdate();
 
+
         // Wait for the next frame
-        poll(&output->imp()->timerPoll,1,-1);
+        //poll(&output->imp()->timerPoll,1,-1);
 
-        (void)read(output->imp()->timerPoll.fd, &res, sizeof(res));
+        //(void)read(output->imp()->timerPoll.fd, &res, sizeof(res));
 
-        timerfd_settime(output->imp()->timerPoll.fd, 0, &ts, NULL);
+        //timerfd_settime(output->imp()->timerPoll.fd, 0, &ts, NULL);
 
         // Show buffer on screen
         output->m_imp->m_compositor->imp()->m_backend->flipPage(output);
+
+
 
     }
 }
@@ -557,7 +575,7 @@ void LOutput::repaint()
     if(!m_imp->scheduledRepaint)
     {
         m_imp->scheduledRepaint = true;
-        eventfd_write(m_imp->_renderFd,1);
+        eventfd_write(m_imp->m_renderFd,1);
     }
 }
 

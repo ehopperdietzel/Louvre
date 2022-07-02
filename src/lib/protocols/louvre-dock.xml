@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="louvre_dock">
+
+  <copyright>
+    Copyright © 2013-2016 Collabora, Ltd.
+  </copyright>
+
+  <interface name="dock" version="1">
+  
+    <description summary="Bla bla bla...">
+      Bla bla bla...
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="Bla bla bla...">
+	Bla bla bla...
+      </description>
+    </request>
+
+
+    <request name="test">
+      <description summary="Bla bla bla...">
+	Bla bla bla...
+      </description>
+      <arg name="x" type="fixed" summary="x"/>
+      <arg name="y" type="fixed" summary="y"/>
+      <arg name="width" type="fixed" summary="width"/>
+      <arg name="height" type="fixed" summary="height"/>
+    </request>
+    
+  </interface>
+
+</protocol>
+

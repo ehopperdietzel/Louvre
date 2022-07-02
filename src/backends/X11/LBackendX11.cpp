@@ -228,6 +228,11 @@ bool LBackend::hasHardwareCursorSupport()
     return false;
 }
 
+void LBackend::initializeCursor(LOutput *output)
+{
+
+}
+
 void LBackend::setCursor(LOutput *, LTexture *, const LSizeF&)
 {
 
@@ -252,6 +257,7 @@ extern "C" LGraphicBackend *getAPI()
    LBackendAPI.createGLContext          = &LBackend::createGLContext;
    LBackendAPI.flipPage                 = &LBackend::flipPage;
    LBackendAPI.hasHardwareCursorSupport = &LBackend::hasHardwareCursorSupport;
+   LBackendAPI.initializeCursor         = &LBackend::initializeCursor;
    LBackendAPI.setCursor                = &LBackend::setCursor;
    LBackendAPI.setCursorPosition        = &LBackend::setCursorPosition;
 

@@ -4,7 +4,6 @@
 #include <LRect.h>
 #include <GLES2/gl2.h>
 
-
 using namespace Louvre;
 using namespace std;
 

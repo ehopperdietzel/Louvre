@@ -128,7 +128,7 @@ void LToplevelRole::setMaximizedRequest()
     Int32 topbarHeight = (LOUVRE_TB_H+2)/output->getOutputScale();
 
     // Tell the toplevel to maximize
-    configure(output->rect(false).bottomRight() / output->getOutputScale() - LSize(0,topbarHeight), Activated | Maximized);
+    configure(output->rect().bottomRight() - LSize(0,topbarHeight), Activated | Maximized);
 
     // We now wait for the maximizeChanged() event to move it to the top left corner
 }
