@@ -43,6 +43,8 @@ void LOutput::initializeGL()
 
     background = LOpenGL::loadTexture("wallpaper.png");
 
+    //compositor()->cursor()->setCursor(LCursor::Arrow);
+
 }
 
 int it = 0;
@@ -595,6 +597,11 @@ EGLDisplay LOutput::getDisplay()
 LOutput::InitializeResult LOutput::initializeResult() const
 {
     return m_imp->m_initializeResult;
+}
+
+const char *LOutput::name() const
+{
+    return m_imp->m_name;
 }
 
 void LOutput::setPos(const LPoint &pos)

@@ -30,8 +30,12 @@ DISTFILES += \
     res/shaders/Vertex.glsl
 
 HEADERS += \
-    Compositor.h
+    Compositor.h \
+    Output.h \
+    Surface.h
 
 SOURCES += \
     Compositor.cpp \
+    Output.cpp \
+    Surface.cpp \
     main.cpp

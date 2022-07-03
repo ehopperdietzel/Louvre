@@ -4,6 +4,9 @@
 #include <LOutputManager.h>
 #include <LOutput.h>
 
+#include <Output.h>
+#include <Surface.h>
+
 Compositor::Compositor(const char *backendPath):LCompositor(backendPath){}
 
 void Compositor::initialize()
@@ -17,8 +20,8 @@ void Compositor::initialize()
     for(LOutput *output : *outputManager()->outputs())
     {
         // If output resolution is > 1360 we consider it highDPI
-        if(output->rect(false).w() > 1360)
-            output->setOutputScale(2);
+        //if(output->rect(false).w() > 1360)
+        output->setOutputScale(2);
 
         // Set the output position
         output->setPos(LPoint(xOffset,0));
@@ -30,6 +33,33 @@ void Compositor::initialize()
         xOffset += output->rect(false).w();
     }
 
+}
+
+LOutput *Compositor::createOutputRequest()
+{
+    return new Output();
+}
+
+LSurface *Compositor::createSurfaceRequest(wl_resource *surface, LClient *client)
+{
+    Surface *newSurface = new Surface(surface, client);
+    newSurface->changedOrder[0] = true;
+    newSurface->changedOrder[1] = true;
+
+    return newSurface;
+}
+
+void Compositor::destroySurfaceRequest(LSurface *s)
+{
+
+    if(s->roleType() == LSurface::Cursor || s->minimized())
+        return;
+
+    for(Output *o : (list<Output*>&)outputs())
+    {
+        o->fullRefresh = true;
+        o->repaint();
+    }
 }
 
 

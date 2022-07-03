@@ -11,6 +11,11 @@ public:
     Compositor(const char *backendPath);
 
     void initialize() override;
+
+    LOutput *createOutputRequest() override;
+    LSurface *createSurfaceRequest(wl_resource *surface, LClient *client) override;
+
+    void destroySurfaceRequest(LSurface *surface) override;
 };
 
 #endif // COMPOSITOR_H

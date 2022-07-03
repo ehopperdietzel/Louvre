@@ -234,6 +234,7 @@ void LSurface::requestNextFrame()
         wl_callback_send_done(m_imp->m_frameCallback,LTime::ms());
         wl_resource_destroy(m_imp->m_frameCallback);
         m_imp->m_frameCallback = nullptr;
+        wl_client_flush(client()->client());
     }
 }
 

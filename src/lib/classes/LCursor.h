@@ -73,7 +73,6 @@ private:
     LPointF m_pos;
     LPointF m_hotspot;
     LSizeF m_size = LSizeF(64.f,64.f);
-    LPoint m_prevPos;
 
     bool m_isVisible = true;
 };

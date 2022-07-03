@@ -15,11 +15,10 @@ using namespace Louvre;
 LCursor::LCursor(LOutput *output)
 {
     setOutput(output);
-    compositor()->imp()->m_backend->initializeCursor(output);
+    //compositor()->imp()->m_backend->initializeCursor(output);
     m_x11Texture = new LTexture();
     setSize(LPoint(24,24));
     loadDefaultCursors();
-    setCursor(LCursor::Arrow);
 }
 
 void LCursor::setCursorTheme(const char *themeName)
@@ -209,13 +208,10 @@ void LCursor::update()
 
     LPoint pos = (m_pos- hotspot - m_output->rect().topLeft())*m_output->getOutputScale();
 
-    if(pos != m_prevPos)
-    {
-        m_prevPos = pos;
-        compositor()->imp()->m_backend->setCursorPosition(m_output,pos);
-    }
 
-    if(!hasHardwareSupport())
+    if(hasHardwareSupport())
+        compositor()->imp()->m_backend->setCursorPosition(m_output,pos);
+    else
         m_output->repaint();
 }
 

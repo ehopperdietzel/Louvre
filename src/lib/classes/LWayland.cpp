@@ -59,9 +59,9 @@ void LWayland::initGLContext()
 
     static const EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 1,
-        EGL_GREEN_SIZE, 1,
-        EGL_BLUE_SIZE, 1,
+        EGL_RED_SIZE, 0,
+        EGL_GREEN_SIZE, 0,
+        EGL_BLUE_SIZE, 0,
         EGL_ALPHA_SIZE, 0,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE

@@ -7,22 +7,7 @@ void intHandler(int) {}
 int main(int, char *[])
 {
     // Prevent kill with ctrl+c
-    signal(SIGINT,intHandler);
-
-    /*
-    eventfd_t v = 10;
-    Int32 fd = eventfd(0,EFD_SEMAPHORE);
-
-    eventfd_write(fd,1);
-    eventfd_write(fd,1);
-    eventfd_write(fd,1);
-
-    while(v > 0)
-    {
-        eventfd_read(fd,&v);
-        printf("%" PRId64 "\n",v);
-    }
-    */
+    //signal(SIGINT,intHandler);
 
     // Backend
     const char *backendPath = "./libLBackendDRM.so";

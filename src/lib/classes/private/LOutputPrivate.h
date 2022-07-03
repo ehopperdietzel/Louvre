@@ -39,7 +39,7 @@ public:
     LCompositor *m_compositor = nullptr;
 
     // Params
-    char *_devName = nullptr;
+    char *m_name = nullptr;
     //drmModeConnector *_connector = nullptr;
     UInt32 _crtc_id = 0;
     Int32 _outputScale = 1;

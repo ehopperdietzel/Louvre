@@ -326,6 +326,44 @@ void destroyOutput(LOutput *output)
     delete output;
 }
 
+void getPlanes()
+{
+    drmModePlaneResPtr planes = drmModeGetPlaneResources(lDevice.fd);
+    for(UInt32 i = 0; i < planes->count_planes; i++)
+    {
+        drmModePlanePtr plane = drmModeGetPlane(lDevice.fd,planes->planes[i]);
+        printf("Plane found: %i\n",plane->plane_id);
+        drmModeFreePlane(plane);
+    }
+    drmModeFreePlaneResources(planes);
+}
+
+static const char *conn_name(uint32_t type)
+{
+    switch (type) {
+    case DRM_MODE_CONNECTOR_Unknown:     return "unknown";
+    case DRM_MODE_CONNECTOR_VGA:         return "VGA";
+    case DRM_MODE_CONNECTOR_DVII:        return "DVI-I";
+    case DRM_MODE_CONNECTOR_DVID:        return "DVI-D";
+    case DRM_MODE_CONNECTOR_DVIA:        return "DVI-A";
+    case DRM_MODE_CONNECTOR_Composite:   return "composite";
+    case DRM_MODE_CONNECTOR_SVIDEO:      return "S-VIDEO";
+    case DRM_MODE_CONNECTOR_LVDS:        return "LVDS";
+    case DRM_MODE_CONNECTOR_Component:   return "component";
+    case DRM_MODE_CONNECTOR_9PinDIN:     return "DIN";
+    case DRM_MODE_CONNECTOR_DisplayPort: return "DisplayPort";
+    case DRM_MODE_CONNECTOR_HDMIA:       return "HDMI-A";
+    case DRM_MODE_CONNECTOR_HDMIB:       return "HDMI-B";
+    case DRM_MODE_CONNECTOR_TV:          return "TV";
+    case DRM_MODE_CONNECTOR_eDP:         return "eDP";
+    case DRM_MODE_CONNECTOR_VIRTUAL:     return "virtual";
+    case DRM_MODE_CONNECTOR_DSI:         return "DSI";
+    case DRM_MODE_CONNECTOR_DPI:         return "DPI";
+    case DRM_MODE_CONNECTOR_WRITEBACK:   return "writeback";
+    default:                             return "unknown";
+    }
+}
+
 void manageOutputs(bool notify)
 {
 
@@ -337,6 +375,7 @@ void manageOutputs(bool notify)
     int area;
 
     resources = drmModeGetResources(lDevice.fd);
+    getPlanes();
 
     // Find connected connectors
     for (int i = 0; i < resources->count_connectors; i++)
@@ -455,7 +494,8 @@ void manageOutputs(bool notify)
             data->encoder = encoder;
             data->mode = defaultMode;
 
-
+            newOutput->imp()->m_name = (char*)conn_name(connector->connector_type);
+            printf("NAME:%s\n",newOutput->name());
             newOutput->imp()->m_rect.setW(defaultMode->hdisplay);
             newOutput->imp()->m_rect.setH(defaultMode->vdisplay);
             newOutput->imp()->m_rectScaled = newOutput->imp()->m_rect/newOutput->getOutputScale();
@@ -654,6 +694,7 @@ void LBackend::createGLContext(LOutput *output)
         return;
     }
 
+    initializeCursor(output);
     output->imp()->m_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
     printf("DRM backend initialized.\n");
 
@@ -689,7 +730,6 @@ void LBackend::flipPage(LOutput *output)
 
         drmModeSetCrtc(data->deviceFd, data->crtc_id, data->fb->fb_id, 0, 0, &data->connector->connector_id, 1, data->mode);
 
-
         /*
         data->ret = drmModePageFlip(data->deviceFd, data->crtc_id, data->fb->fb_id, DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
 
@@ -723,7 +763,6 @@ void LBackend::flipPage(LOutput *output)
     // release last buffer to render on again:
     gbm_surface_release_buffer(data->gbm.surface, data->bo);
     data->bo = next_bo;
-
 }
 
 EGLDisplay LBackend::getEGLDisplay(LOutput *output)
@@ -747,7 +786,7 @@ void LBackend::initializeCursor(LOutput *output)
     data->cursorInitialized = true;
 
     // Create cursor bo
-    data->cursor_bo = gbm_bo_create(data->gbm.dev, 64, 64, GBM_FORMAT_ARGB8888, GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_RENDERING); //GBM_BO_USE_WRITE |
+    data->cursor_bo = gbm_bo_create(data->gbm.dev, 64, 64, GBM_FORMAT_ARGB8888, GBM_BO_USE_CURSOR | GBM_BO_USE_RENDERING); //GBM_BO_USE_WRITE |
 
     // Cursor
     PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress ("eglCreateImageKHR");
@@ -757,16 +796,15 @@ void LBackend::initializeCursor(LOutput *output)
     glGenFramebuffers(1, &data->cursoFramebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, data->cursoFramebuffer);
 
+    glActiveTexture(GL_TEXTURE0+1);
     glGenTextures(1, &data->cursorTexture);
-    glBindTexture (GL_TEXTURE_2D, data->cursorTexture);
+    glBindTexture(GL_TEXTURE_2D, data->cursorTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glEGLImageTargetTexture2DOES(GL_TEXTURE_2D,image);
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data->cursorTexture, 0);
-
     data->cursorBoHandleU32 = gbm_bo_get_handle(data->cursor_bo).u32;
-
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
@@ -780,31 +818,24 @@ void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
         return;
     }
 
-    LOpenGL *GL;
-
-
-    if(std::this_thread::get_id() == output->compositor()->mainThreadId())
-        GL = output->compositor()->imp()->m_painter;
-    else
-        GL = output->painter();
-
-
     glBindFramebuffer(GL_FRAMEBUFFER, data->cursoFramebuffer);
-    GL->scaleCursor(texture,LRect(0,0,texture->size().w(),-texture->size().h()),LRect(0,0,size.w(),size.h()));
-    glFlush();
+    output->painter()->scaleCursor(texture,LRect(0,0,texture->size().w(),-texture->size().h()),LRect(0,0,size.w(),size.h()));
 
     if(!data->cursorVisible)
         drmModeSetCursor(data->deviceFd, data->crtc_id, data->cursorBoHandleU32, 64, 64);
 
     // Goes back to main framebuffer
+    //if(std::this_thread::get_id() != output->compositor()->mainThreadId())
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glFlush();
 
 }
 
 void LBackend::setCursorPosition(LOutput *output, const LPoint &position)
 {
     DRM *data = (DRM*)output->imp()->data;
-    drmModeMoveCursor(data->deviceFd, data->crtc_id,position.x(),position.y());
+    drmModeMoveCursor(data->deviceFd, data->crtc_id, position.x(), position.y());
 }
 
 

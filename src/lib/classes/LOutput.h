@@ -54,10 +54,8 @@ public:
     const LRect &rect(bool scaled = true) const;
 
     EGLDisplay getDisplay();
-    //const drmModeModeInfo getCurrentMode();
-    //const drmModeConnector getCurrentConnector();
-
     InitializeResult initializeResult() const;
+    const char *name() const;
 
     UInt32 refreshRate = 60;
 

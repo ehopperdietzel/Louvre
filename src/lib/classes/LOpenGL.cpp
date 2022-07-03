@@ -202,11 +202,8 @@ void LOpenGL::scaleCursor(LTexture *texture, const LRect &src, const LRect &dst)
     glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    LRect r = dst;
-    //r.setY(64-r.y()-r.h());
-
-    glScissor(r.x(),r.y(),r.w(),r.h());
-    glViewport(r.x(),r.y(),r.w(),r.h());
+    glScissor(dst.x(),dst.y(),dst.w(),dst.h());
+    glViewport(dst.x(),dst.y(),dst.w(),dst.h());
 
     glActiveTexture(GL_TEXTURE0 + texture->unit());
     glUniform1i(modeUniform,0);
