@@ -32,8 +32,9 @@ void Output::paintGL(Int32 currentBuffer)
         exposedRegion[1].addRect(rect(true));
     }
 
-    printf("CURRENT BUFFER %i\n",currentBuffer);
+    //printf("CURRENT BUFFER %i\n",currentBuffer);
     LOpenGL *p = painter();
+
     //p->clearScreen();
 
     /*
@@ -69,6 +70,7 @@ void Output::paintGL(Int32 currentBuffer)
         if(s->toplevel() && s->toplevel()->fullscreen())
         {
             fullScreen = s;
+            s->requestNextFrame();
             break;
         }
     }
@@ -121,7 +123,7 @@ void Output::paintGL(Int32 currentBuffer)
             // If only changed from prev to current
             if(s->chg[currentBuffer] && !s->chg[prevBuffer])
             {
-                printf("A\n");
+                //printf("A\n");
                 // Store current damages for next frame
                 s->dmg[currentBuffer] = s->damages();
 
@@ -132,7 +134,7 @@ void Output::paintGL(Int32 currentBuffer)
             // If changed from prev to current but also from (prev prev) to prev
             else if(s->chg[currentBuffer] && s->chg[prevBuffer])
             {
-                printf("B\n");
+                //printf("B\n");
 
                 // Store current damages for next frame
                 s->dmg[currentBuffer] = s->damages();
@@ -149,7 +151,7 @@ void Output::paintGL(Int32 currentBuffer)
             // If nothing has changed
             else if(!s->chg[currentBuffer] && !s->chg[prevBuffer])
             {
-                printf("C\n");
+                //printf("C\n");
 
                 // Empty damages for next frame
                 s->dmg[currentBuffer].clear();
@@ -158,7 +160,7 @@ void Output::paintGL(Int32 currentBuffer)
             // If nothing has changed since last frame but from (prev prev) to prev
             else if(!s->chg[currentBuffer] && s->chg[prevBuffer])
             {
-                printf("D\n");
+                //printf("D\n");
                 // Empty damages for next frame
                 s->dmg[currentBuffer].clear();
 
@@ -168,16 +170,14 @@ void Output::paintGL(Int32 currentBuffer)
             }
 
         }
-
-        s->requestNextFrame();
     }
 
     // Add cursor to exposed
     if(!compositor()->cursor()->hasHardwareSupport())
     {
-        cursorRect[currentBuffer] = compositor()->cursor()->rect();
         exposedRegion[currentBuffer].addRect(cursorRect[currentBuffer]);
-        exposedRegion[currentBuffer].addRect(cursorRect[prevBuffer]);
+        exposedRegion[currentBuffer].addRect(compositor()->cursor()->rect());
+        cursorRect[currentBuffer] = compositor()->cursor()->rect();
     }
 
     LRegion opaqueDamages;
@@ -206,9 +206,19 @@ void Output::paintGL(Int32 currentBuffer)
         // Current surface rect
         LRect &r = s->rct[currentBuffer];
 
-        // Subtract opaqueDamages (sub opaque regions from surfaces above
+        LRegion hidden;
+        hidden.addRect(LRect(s->pos(true),s->size()));
+
+        // Subtract opaqueDamages (sub opaque regions from surfaces above)
         for(const LRect &d : opaqueDamages.rects())
+        {
             s->opaqueT.subtractRect(d);
+            hidden.subtractRect(d);
+        }
+
+        if(!hidden.rects().empty())
+            s->requestNextFrame();
+
 
         // Add exposed regions
         for(const LRect &d : exposedRegion[currentBuffer].rects())
@@ -227,11 +237,13 @@ void Output::paintGL(Int32 currentBuffer)
             exposedRegion[currentBuffer].subtractRect(d);
         }
 
+
+
         // Subtract transparent region
         for(const LRect &d : s->transR.rects())
             s->opaqueT.subtractRect(d);
 
-        s->opaqueT.clip(rect());
+        //s->opaqueT.clip(rect());
 
         // Add damaged transparency to exposed
         for(const LRect &d : s->transT.rects())
@@ -297,6 +309,9 @@ void Output::paintGL(Int32 currentBuffer)
 
         for(const LRect &d : s->opaqueT.rects())
             totalRendered.addRect(d);
+
+        //if(!s->transT.rects().empty() || !s->opaqueT.rects().empty())
+
 
     }
 

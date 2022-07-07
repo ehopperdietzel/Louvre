@@ -3,7 +3,7 @@
 int main(int, char *[])
 {
     // Backend
-    const char *backendPath = "./libLBackendDRM.so";
+    const char *backendPath = "./libLBackendX11.so";
 
     // Start the compositor
     Compositor compositor(backendPath);

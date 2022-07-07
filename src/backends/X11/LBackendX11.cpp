@@ -134,15 +134,14 @@ static void create_window(LOutput *output)
         exit(-1);
     }
 
-    /*
-    static const EGLint surf_attribute_list[] = {
-       //EGL_RENDER_BUFFER, EGL_SINGLE_BUFFER,
-        EGL_SWAP_BEHAVIOR,  EGL_BUFFER_PRESERVED,
-        EGL_NONE // attribute list is termintated with EGL_NONE
-    };
-    */
 
-    data->window.surface = eglCreateWindowSurface(data->egl_display, config, data->window.window, NULL);// surf_attribute_list);
+    static const EGLint surf_attribute_list[] = {
+        EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
+        EGL_NONE
+    };
+
+
+    data->window.surface = eglCreateWindowSurface(data->egl_display, config, data->window.window, surf_attribute_list);
 
     if(data->window.surface == EGL_NO_SURFACE)
     {

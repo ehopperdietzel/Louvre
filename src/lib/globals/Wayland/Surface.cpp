@@ -111,11 +111,15 @@ void Globals::Surface::frame(wl_client *client, wl_resource *resource, UInt32 ca
     Int32 version = wl_resource_get_version(resource);
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
 
+
     if(surface->imp()->m_frameCallback)
     {
-        wl_callback_send_done(surface->imp()->m_frameCallback,LTime::ms());
-        wl_resource_destroy(surface->imp()->m_frameCallback);
+        wl_resource *dumb_callback = wl_resource_create(client, &wl_callback_interface, version, callback);
+        wl_callback_send_done(dumb_callback,LTime::ms());
+        wl_resource_destroy(dumb_callback);
+        return;
     }
+
 
     surface->imp()->m_frameCallback = wl_resource_create(client, &wl_callback_interface, version, callback);
 }
@@ -137,7 +141,6 @@ void Globals::Surface::commit(wl_client *, wl_resource *resource)
 
 void Globals::Surface::apply_commit(LSurface *surface)
 {
-    surface->imp()->m_textureChanged = true;
 
     // Wait for parent commit if is subsurface in sync mode
     if(surface->roleType() == LSurface::Subsurface && surface->subsurface()->isSynced())
@@ -221,9 +224,10 @@ void Globals::Surface::apply_commit(LSurface *surface)
     /************************************
      *********** DAMAGES ***********
      ************************************/
-    //if(surface->imp()->m_damagesChanged)
-    //{
-        surface->imp()->m_currentDamages.clear();
+    if(surface->imp()->m_damagesChanged)
+    {
+        if(!surface->imp()->m_textureChanged)
+            surface->imp()->m_currentDamages.clear();
 
         for(LRect &rect : surface->imp()->pending.damages)
             surface->imp()->m_currentDamages.addRect(rect);
@@ -234,7 +238,7 @@ void Globals::Surface::apply_commit(LSurface *surface)
         surface->imp()->pending.bufferDamages.clear();
         surface->imp()->m_currentDamages.clip(LRect(LPoint(),surface->size()));
         surface->imp()->m_damagesChanged = false;
-    //}
+    }
 
     /************************************
      *********** INPUT REGION ***********
@@ -345,7 +349,11 @@ void Globals::Surface::apply_commit(LSurface *surface)
 
 
     // FALTA ENVIAR EVENTO
-    surface->compositor()->repaintAllOutputs();
+    if(!surface->imp()->m_textureChanged)
+    {
+        surface->imp()->m_textureChanged = true;
+        surface->compositor()->repaintAllOutputs();
+    }
 }
 
 

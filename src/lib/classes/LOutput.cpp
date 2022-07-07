@@ -503,15 +503,14 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
     output->m_imp->initialize();
     output->repaint();
 
-    /*
+    uint64_t res;
     itimerspec ts;
     ts.it_interval.tv_sec = 0;
     ts.it_interval.tv_nsec = 0;
     ts.it_value.tv_sec = 0;
 
     ts.it_value.tv_nsec = 1000000000/output->refreshRate;
-    timerfd_settime(output->m_imp->timerPoll.fd, 0, &ts, NULL);
-    */
+    timerfd_settime(output->imp()->timerPoll.fd, 0, &ts, NULL);
 
     output->imp()->m_currentBuffer = 0;
 
@@ -545,14 +544,18 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
         output->m_imp->m_compositor->imp()->m_renderMutex.unlock();
 
         // Tell the input loop to process events
-        //LWayland::forceUpdate();
+        LWayland::forceUpdate();
 
-        // Wait for the next frame
-        //poll(&output->imp()->timerPoll,1,-1);
+        if(!output->compositor()->cursor()->hasHardwareSupport())
+        {
 
-        //(void)read(output->imp()->timerPoll.fd, &res, sizeof(res));
+            // Wait for the next frame
+            poll(&output->imp()->timerPoll,1,-1);
 
-        //timerfd_settime(output->imp()->timerPoll.fd, 0, &ts, NULL);
+            (void)read(output->imp()->timerPoll.fd, &res, sizeof(res));
+
+            timerfd_settime(output->imp()->timerPoll.fd, 0, &ts, NULL);
+        }
 
         // Show buffer on screen
         output->m_imp->m_compositor->imp()->m_backend->flipPage(output);
