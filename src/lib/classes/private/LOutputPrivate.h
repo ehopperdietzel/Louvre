@@ -43,6 +43,7 @@ public:
     //drmModeConnector *_connector = nullptr;
     UInt32 _crtc_id = 0;
     Int32 _outputScale = 1;
+    Int32 m_currentBuffer = 0;
 
 
     // Render thread

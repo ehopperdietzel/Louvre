@@ -80,7 +80,7 @@ LSurface::~LSurface()
     delete m_imp;
 }
 
-void LSurface::typeChangeRequest()
+void LSurface::roleChanged()
 {
     if(toplevel() && parent())
     {
@@ -89,12 +89,17 @@ void LSurface::typeChangeRequest()
     }
 }
 
-void LSurface::parentChangeRequest()
+void LSurface::parentChanged()
 {
 
 }
 
-void LSurface::bufferSizeChangeRequest()
+void LSurface::bufferScaleChanged()
+{
+
+}
+
+void LSurface::bufferSizeChanged()
 {
     if(roleType() == Toplevel && toplevel() == seat()->pointer()->resizingToplevel())
         seat()->pointer()->updateResizingToplevelPos();

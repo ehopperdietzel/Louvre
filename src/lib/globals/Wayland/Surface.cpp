@@ -66,7 +66,7 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     for(LSurface *child : surface->children())
     {
         child->imp()->m_parent = nullptr;
-        child->parentChangeRequest();
+        child->parentChanged();
     }
 
     // Parent
@@ -198,7 +198,7 @@ void Globals::Surface::apply_commit(LSurface *surface)
     surface->imp()->m_bufferToTexture();
 
     // Notify that the cursor changed content
-    if(surface->cursor())
+    if(surface->cursor() && surface->compositor()->cursor()->texture() == surface->texture())
     {
         surface->cursor()->m_hotspot -= surface->cursor()->m_pendingHotspotOffset/surface->bufferScale();
         surface->seat()->pointer()->setCursorRequest(surface,surface->cursor()->hotspot().x(),surface->cursor()->hotspot().y());
@@ -215,24 +215,26 @@ void Globals::Surface::apply_commit(LSurface *surface)
 
         //surface->texture()->damages.clear();
         //surface->texture()->damages.push_back(LRect(LPoint(),surface->texture()->size()));
-        surface->bufferSizeChangeRequest();
+        surface->bufferSizeChanged();
     }
 
     /************************************
      *********** DAMAGES ***********
      ************************************/
-    if(surface->imp()->m_damagesChanged)
-    {
+    //if(surface->imp()->m_damagesChanged)
+    //{
         surface->imp()->m_currentDamages.clear();
+
         for(LRect &rect : surface->imp()->pending.damages)
             surface->imp()->m_currentDamages.addRect(rect);
         for(LRect &rect : surface->imp()->pending.bufferDamages)
             surface->imp()->m_currentDamages.addRect(rect/surface->bufferScale());
+
         surface->imp()->pending.damages.clear();
         surface->imp()->pending.bufferDamages.clear();
         surface->imp()->m_currentDamages.clip(LRect(LPoint(),surface->size()));
         surface->imp()->m_damagesChanged = false;
-    }
+    //}
 
     /************************************
      *********** INPUT REGION ***********
@@ -259,9 +261,10 @@ void Globals::Surface::apply_commit(LSurface *surface)
      ************************************/
     if(surface->imp()->m_opaqueRegionChanged)
     {
-        surface->imp()->current.opaqueRegion.copy(surface->imp()->pending.opaqueRegion);
+        surface->imp()->current.opaqueRegion = surface->imp()->pending.opaqueRegion;
         surface->imp()->current.opaqueRegion.clip(LRect(LPoint(),surface->size()));
         surface->imp()->m_opaqueRegionChanged = false;
+        surface->imp()->pending.opaqueRegion.clear();
     }
 
     /*****************************************
@@ -276,7 +279,7 @@ void Globals::Surface::apply_commit(LSurface *surface)
     if(!surface->imp()->m_roleChangeNotified)
     {
         surface->imp()->m_roleChangeNotified = true;
-        surface->typeChangeRequest();
+        surface->roleChanged();
     }
 
     // Toplevel configure

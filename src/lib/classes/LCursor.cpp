@@ -206,7 +206,13 @@ void LCursor::update()
     LPoint hotspot;
     hotspot = (m_hotspot*m_size)/m_texture->size();
 
-    LPoint pos = (m_pos- hotspot - m_output->rect().topLeft())*m_output->getOutputScale();
+    LPoint pos = (m_pos- hotspot - m_output->rect().topLeft());
+    m_rect.setX(pos.x());
+    m_rect.setY(pos.y());
+    m_rect.setW(m_size.w());
+    m_rect.setH(m_size.h());
+
+    pos*=m_output->getOutputScale();
 
 
     if(hasHardwareSupport())

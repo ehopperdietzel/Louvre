@@ -22,7 +22,7 @@ void Pointer::set_cursor(wl_client *, wl_resource *resource, UInt32 serial, wl_r
 {
     LClient *lClient = (LClient*)wl_resource_get_user_data(resource);
 
-    if(serial != lClient->lastPointerEnterEventSerial())
+    if(serial != lClient->seat()->pointer()->lastPointerEnterEventSerial())
         return;
 
     if(surface)
@@ -39,7 +39,7 @@ void Pointer::set_cursor(wl_client *, wl_resource *resource, UInt32 serial, wl_r
         LCursorRole *lCursor = new LCursorRole(lSurface->resource(),lSurface);
         lCursor->m_hotspot = LPoint(hotspot_x,hotspot_y)*lSurface->bufferScale();
         lSurface->imp()->m_role = lCursor;
-        lSurface->typeChangeRequest();
+        lSurface->roleChanged();
         lClient->compositor()->seat()->pointer()->setCursorRequest(lSurface,lCursor->m_hotspot.x(),lCursor->m_hotspot.y());
     }
     else

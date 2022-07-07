@@ -26,7 +26,7 @@ public:
 
     virtual ~LCompositor();
 
-    virtual void initialize(){};
+    virtual void initialize();
 
     /* Create requests */
     virtual LOutputManager *createOutputManagerRequest();

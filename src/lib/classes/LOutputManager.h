@@ -12,8 +12,8 @@ public:
     LOutputManager(LCompositor *compositor);
     virtual ~LOutputManager();
 
-    virtual void connectedOutputRequest(LOutput *connectedOutput);
-    virtual void disonnectedOutputRequest(LOutput *disconnectedOutput);
+    virtual void pluggedOutputRequest(LOutput *output);
+    virtual void unpluggedOutputRequest(LOutput *output);
 
     LCompositor *compositor() const;
     const list<LOutput*>*outputs() const;

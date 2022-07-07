@@ -27,12 +27,20 @@ public:
     Int32 height()  const   {return m_bottomRight.m_y;}
     Int32 area()    const   {return m_bottomRight.m_x*m_bottomRight.m_y;}
 
-    bool containsPoint(const LPoint &point) const
+    bool containsPoint(const LPoint &point, bool inclusive = true) const
     {
-        return point.m_x >= m_topLeft.m_x &&
-               point.m_x <= m_topLeft.m_x + m_bottomRight.m_x &&
-               point.m_y >= m_topLeft.m_y &&
-               point.m_y <= m_topLeft.m_y + m_bottomRight.m_y;
+        if(inclusive)
+        {
+            return point.m_x >= m_topLeft.m_x &&
+                   point.m_x <= m_topLeft.m_x + m_bottomRight.m_x &&
+                   point.m_y >= m_topLeft.m_y &&
+                   point.m_y <= m_topLeft.m_y + m_bottomRight.m_y;
+        }
+
+        return point.m_x > m_topLeft.m_x &&
+               point.m_x < m_topLeft.m_x + m_bottomRight.m_x &&
+               point.m_y > m_topLeft.m_y &&
+               point.m_y < m_topLeft.m_y + m_bottomRight.m_y;
     }
 
     LPoint topLeft()    const   {return m_topLeft;}

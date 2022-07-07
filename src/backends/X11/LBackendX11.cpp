@@ -42,7 +42,6 @@ struct X11
 };
 
 
-
 static void create_window(LOutput *output)
 {
 
@@ -135,7 +134,15 @@ static void create_window(LOutput *output)
         exit(-1);
     }
 
-    data->window.surface = eglCreateWindowSurface(data->egl_display, config, data->window.window, NULL);
+    /*
+    static const EGLint surf_attribute_list[] = {
+       //EGL_RENDER_BUFFER, EGL_SINGLE_BUFFER,
+        EGL_SWAP_BEHAVIOR,  EGL_BUFFER_PRESERVED,
+        EGL_NONE // attribute list is termintated with EGL_NONE
+    };
+    */
+
+    data->window.surface = eglCreateWindowSurface(data->egl_display, config, data->window.window, NULL);// surf_attribute_list);
 
     if(data->window.surface == EGL_NO_SURFACE)
     {
@@ -162,6 +169,7 @@ static void create_window(LOutput *output)
     if(!LWayland::isGlContextInitialized())
         LWayland::setContext(output,data->egl_display,data->window.context);
 
+    //eglSwapBuffers(data->egl_display, data->window.surface);
 }
 
 
@@ -182,18 +190,6 @@ std::list<LOutput *> *LBackend::getAvaliableOutputs(LCompositor *compositor)
     data->egl_display = eglGetDisplay(data->x_display);
     data->windowNumber = 0;
     outputs.push_back(output);
-
-
-    /*
-    LOutput *output1 = new LOutput();
-    output1->refreshRate = 10;
-    output1->data = malloc(sizeof(X11));
-    X11 *data1 = (X11*)output1->data;
-    data1->x_display = data->x_display;
-    data1->egl_display = data->egl_display;
-    data1->windowNumber = 1;
-    outputs.push_back(output1);
-    */
 
     return &outputs;
 }
@@ -216,6 +212,7 @@ void LBackend::createGLContext(LOutput *output)
     output->imp()->m_initializeResult = Louvre::LOutput::InitializeResult::Initialized;
     printf("X11 backend initialized.\n");
 }
+
 
 void LBackend::flipPage(LOutput *output)
 {

@@ -3,6 +3,9 @@
 #include <LOpenGL.h>
 #include <Surface.h>
 #include <LToplevelRole.h>
+#include <unistd.h>
+#include <LTime.h>
+#include <LCursor.h>
 
 Output::Output():LOutput(){}
 
@@ -11,8 +14,17 @@ void Output::initializeGL()
     backgroundTexture = LOpenGL::loadTexture("wallpaper.png");
 }
 
+void paintRandom(const LRect &r,LOpenGL *p)
+{
+    float R = float(rand()%1000)/1000.f;
+    float G = float(rand()%1000)/1000.f;
+    float B = float(rand()%1000)/1000.f;
+    p->drawColor(r,R,G,B,0.5);
+}
 void Output::paintGL(Int32 currentBuffer)
 {
+    //Int32 t = LTime::ms();
+
     if(fullRefresh)
     {
         fullRefresh = false;
@@ -20,7 +32,29 @@ void Output::paintGL(Int32 currentBuffer)
         exposedRegion[1].addRect(rect(true));
     }
 
+    printf("CURRENT BUFFER %i\n",currentBuffer);
     LOpenGL *p = painter();
+    //p->clearScreen();
+
+    /*
+    p->clearScreen();
+    LRegion test;
+    test.addRect(LRect(100,100,100,100));
+    test.addRect(LRect(101,100,200,100));
+    test.addRect(LRect(102,100,600,100));
+
+
+    test.addRect(LRect(304,300,1000,100));
+    test.addRect(LRect(404,600,1000,100));
+
+    test.addRect(LRect(0,600,10,10));
+
+    for(const LRect &d : test.rects())
+    {
+        p->drawColor(d,1,0,0,0.5);
+    }
+    return;
+    */
 
     // Prev buffer index
     Int32 prevBuffer = 1 - currentBuffer;
@@ -47,7 +81,7 @@ void Output::paintGL(Int32 currentBuffer)
             continue;
 
         // Calc rect
-        LRect r = LRect(s->pos(true),s->size()) ;
+        LRect r = LRect(s->pos(true),s->size());
 
         // Check if pos or size changed (since 2 frames before)
         bool rectChanged = r != s->rct[currentBuffer];
@@ -63,7 +97,7 @@ void Output::paintGL(Int32 currentBuffer)
             // Damages the entire surface
             s->dmgT.addRect(r);
 
-            // Add exposed rect
+            // Add exposed rect (new rect - old rect)
             LRegion exposed;
             exposed.addRect(s->rct[currentBuffer]);
 
@@ -79,12 +113,15 @@ void Output::paintGL(Int32 currentBuffer)
             s->changedOrder[currentBuffer] = false;
 
             s->rct[currentBuffer] = r;
+
         }
         else
         {
+
             // If only changed from prev to current
-            if(s->textureChanged() && !s->chg[prevBuffer])
+            if(s->chg[currentBuffer] && !s->chg[prevBuffer])
             {
+                printf("A\n");
                 // Store current damages for next frame
                 s->dmg[currentBuffer] = s->damages();
 
@@ -93,29 +130,35 @@ void Output::paintGL(Int32 currentBuffer)
                 s->dmgT.offset(s->pos(true));
             }
             // If changed from prev to current but also from (prev prev) to prev
-            else if(s->textureChanged() && s->chg[prevBuffer])
+            else if(s->chg[currentBuffer] && s->chg[prevBuffer])
             {
+                printf("B\n");
+
                 // Store current damages for next frame
                 s->dmg[currentBuffer] = s->damages();
 
                 // Use the current damages plus the prev damages as total damage
                 s->dmgT = s->damages();
+
                 for(const LRect &d : s->dmg[prevBuffer].rects())
                     s->dmgT.addRect(d);
+
                 s->dmgT.offset(s->pos(true));
+
             }
             // If nothing has changed
-            else if(s->textureChanged() && s->chg[prevBuffer])
+            else if(!s->chg[currentBuffer] && !s->chg[prevBuffer])
             {
+                printf("C\n");
+
                 // Empty damages for next frame
                 s->dmg[currentBuffer].clear();
 
-                // Empty current total damages
-                s->dmgT.clear();
             }
             // If nothing has changed since last frame but from (prev prev) to prev
-            else if(!s->textureChanged() && s->chg[prevBuffer])
+            else if(!s->chg[currentBuffer] && s->chg[prevBuffer])
             {
+                printf("D\n");
                 // Empty damages for next frame
                 s->dmg[currentBuffer].clear();
 
@@ -124,11 +167,17 @@ void Output::paintGL(Int32 currentBuffer)
                 s->dmgT.offset(s->pos(true));
             }
 
-
         }
 
-        // Let the client know it can start rendering the next frame (After calling this, textureChanged() returns false until new damages)
         s->requestNextFrame();
+    }
+
+    // Add cursor to exposed
+    if(!compositor()->cursor()->hasHardwareSupport())
+    {
+        cursorRect[currentBuffer] = compositor()->cursor()->rect();
+        exposedRegion[currentBuffer].addRect(cursorRect[currentBuffer]);
+        exposedRegion[currentBuffer].addRect(cursorRect[prevBuffer]);
     }
 
     LRegion opaqueDamages;
@@ -144,63 +193,65 @@ void Output::paintGL(Int32 currentBuffer)
         if(s->roleType() == LSurface::Cursor || s->roleType() == LSurface::Undefined || s->minimized() || (fullScreen && s != fullScreen))
             continue;
 
-        s->opaqueAt = opaqueDamages;
-
-        LRegion opaqueT = s->dmgT;
-        s->transT = s->dmgT;
+        // Calc the opaque region
+        s->opaqueR = s->opaqueRegion();
+        s->opaqueR.offset(s->pos(true));
 
         // Calc the translucent region
-        LRegion transR = s->translucentRegion();
-        transR.offset(s->pos(true));
+        s->transR = s->translucentRegion();
+        s->transR.offset(s->pos(true));
 
-        // Subtract opaqueDamages
+        s->opaqueT = s->dmgT;
+
+        // Current surface rect
+        LRect &r = s->rct[currentBuffer];
+
+        // Subtract opaqueDamages (sub opaque regions from surfaces above
         for(const LRect &d : opaqueDamages.rects())
-            opaqueT.subtractRect(d);
-
-        // Check for exposed
-        LRegion exposed = exposedRegion[currentBuffer];
-        exposed.clip(LRect(s->pos(true),s->size()));
+            s->opaqueT.subtractRect(d);
 
         // Add exposed regions
-        for(const LRect &d : exposed.rects())
-            opaqueT.addRect(d);
+        for(const LRect &d : exposedRegion[currentBuffer].rects())
+            s->opaqueT.addRect(d);
+
+        s->opaqueT.clip(r);
+
+        // Calc inv trans damage
+        s->transT = s->opaqueT;
+
+        // Subtract opque region
+        for(const LRect &d : s->opaqueR.rects())
+        {
+            s->transT.subtractRect(d);
+            opaqueDamages.addRect(d);
+            exposedRegion[currentBuffer].subtractRect(d);
+        }
 
         // Subtract transparent region
-        for(const LRect &d : transR.rects())
-            opaqueT.subtractRect(d);
+        for(const LRect &d : s->transR.rects())
+            s->opaqueT.subtractRect(d);
 
-        // Subtract to exposed
-        for(const LRect &d : opaqueT.rects())
-            exposedRegion[currentBuffer].subtractRect(d);
+        s->opaqueT.clip(rect());
 
-        opaqueT.clip(rect());
-
-        // Draw opaque rects
-        for(const LRect &d : opaqueT.rects())
-        {
-            p->drawTexture(s->texture(),LRect(d.topLeft()-s->pos(true)-rect().topLeft(),d.bottomRight())*s->bufferScale(),LRect(d.topLeft()-rect().topLeft(),d.bottomRight()));
-
-            // Add the opaque rects
-            opaqueDamages.addRect(d);
-        }
-
-        LRegion opaqueR = s->opaqueRegion();
-        opaqueR.offset(s->pos(true));
-
-        // Mark opaque rects
-        for(const LRect &d : opaqueR.rects())
-        {
-            // Add the opaque rects
-            opaqueDamages.addRect(d);
-
-            s->transT.subtractRect(d);
-        }
-
-        // Add to exposed
+        // Add damaged transparency to exposed
         for(const LRect &d : s->transT.rects())
             exposedRegion[currentBuffer].addRect(d);
 
+
+        // Draw opaque rects
+        for(const LRect &d : s->opaqueT.rects())
+        {
+
+            p->drawTexture(s->texture(),LRect(d.topLeft()-s->pos(true)-rect().topLeft(),d.bottomRight())*s->bufferScale(),LRect(d.topLeft()-rect().topLeft(),d.bottomRight()));
+
+            //printf("(%i,%i,%i,%i)\n",d.x(),d.y(),d.w(),d.h());
+            //paintRandom(d,painter());
+        }
+
+        //printf("TOTAL RECTS %lu\n",s->opaqueT.rects().size());
+
     }
+
 
     exposedRegion[currentBuffer].clip(rect());
 
@@ -210,11 +261,15 @@ void Output::paintGL(Int32 currentBuffer)
         for(const LRect &d : exposedRegion[currentBuffer].rects())
         {
             p->drawTexture(backgroundTexture,d*getOutputScale(),d);
+            //paintRandom(d,painter());
         }
     }
 
+
     // Render translucent damages from back to front
     glEnable(GL_BLEND);
+
+    LRegion totalRendered;
 
     for(Surface *s : surfaces)
     {
@@ -222,28 +277,32 @@ void Output::paintGL(Int32 currentBuffer)
         if(s->roleType() == LSurface::Cursor || s->roleType() == LSurface::Undefined || s->minimized() || (fullScreen && s != fullScreen))
             continue;
 
-        LRegion transT = exposedRegion[currentBuffer];
-        transT.clip(s->rct[currentBuffer]);
+        LRect &r = s->rct[currentBuffer];
 
-        for(const LRect &d : transT.rects())
+        s->transT = exposedRegion[currentBuffer];
+
+        s->transT.clip(r);
+
+        for(const LRect &d : totalRendered.rects())
             s->transT.addRect(d);
 
-        for(const LRect &d : s->opaqueAt.rects())
+        for(const LRect &d : s->opaqueR.rects())
             s->transT.subtractRect(d);
 
-        s->transT.clip(rect());
+        s->transT.clip(r);
 
         // Draw opaque rects
         for(const LRect &d : s->transT.rects())
-        {
             p->drawTexture(s->texture(),LRect(d.topLeft()-s->pos(true)-rect().topLeft(),d.bottomRight())*s->bufferScale(),LRect(d.topLeft()-rect().topLeft(),d.bottomRight()));
-        }
+
+        for(const LRect &d : s->opaqueT.rects())
+            totalRendered.addRect(d);
+
     }
 
-
-
-
-
-
     exposedRegion[currentBuffer].clear();
+
+    //Int32 f = LTime::ms() - t;
+
+    //printf("Time %i\n",f);
 }

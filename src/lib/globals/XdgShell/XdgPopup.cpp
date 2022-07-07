@@ -19,7 +19,7 @@ void Extensions::XdgShell::Popup::destroy_resource(wl_resource *resource)
     {
         lPopup->surface()->imp()->current.type = LSurface::Undefined;
         lPopup->surface()->imp()->m_role = nullptr;
-        lPopup->surface()->typeChangeRequest();
+        lPopup->surface()->roleChanged();
     }
 
     // Notify

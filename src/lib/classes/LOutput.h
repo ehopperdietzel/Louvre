@@ -42,8 +42,6 @@ public:
 
     virtual void initializeGL();
     virtual void paintGL(Int32 currentBuffer);
-    virtual void plugged();
-    virtual void unplugged();
 
     LCompositor *compositor();
 

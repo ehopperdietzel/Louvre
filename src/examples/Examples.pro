@@ -1,4 +1,7 @@
 TEMPLATE = subdirs
-SUBDIRS = 01-Minimal/Minimal.pro
+SUBDIRS = Minimal/Minimal.pro \
+          Damages/Damages.pro \
+          Region/Region.pro \
+          Empty/Empty.pro
 
 

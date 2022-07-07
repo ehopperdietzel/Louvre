@@ -16,7 +16,7 @@ LOutputManager::~LOutputManager()
     delete m_imp;
 }
 
-void LOutputManager::connectedOutputRequest(LOutput *connectedOutput)
+void LOutputManager::pluggedOutputRequest(LOutput *connectedOutput)
 {
     if(!compositor()->outputs().empty())
     {
@@ -26,7 +26,7 @@ void LOutputManager::connectedOutputRequest(LOutput *connectedOutput)
     compositor()->addOutput(connectedOutput);
 }
 
-void LOutputManager::disonnectedOutputRequest(LOutput *disconnectedOutput)
+void LOutputManager::unpluggedOutputRequest(LOutput *disconnectedOutput)
 {
     compositor()->removeOutput(disconnectedOutput);
 }

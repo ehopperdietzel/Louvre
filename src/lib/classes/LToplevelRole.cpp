@@ -109,7 +109,7 @@ void LToplevelRole::appIdChanged()
 
 }
 
-void LToplevelRole::geometryChangeRequest()
+void LToplevelRole::geometryChanged()
 {
 
 }
@@ -189,6 +189,16 @@ void LToplevelRole::fullscreenChanged()
 }
 
 void LToplevelRole::activatedChanged()
+{
+
+}
+
+void LToplevelRole::maxSizeChanged()
+{
+
+}
+
+void LToplevelRole::minSizeChanged()
 {
 
 }

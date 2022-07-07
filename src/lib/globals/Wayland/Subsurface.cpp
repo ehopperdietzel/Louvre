@@ -16,12 +16,12 @@ void Louvre::Globals::Subsurface::resource_destroy(wl_resource *resource)
         {
             lSubsurface->surface()->parent()->imp()->m_children.remove(lSubsurface->surface());
             lSubsurface->surface()->imp()->m_parent = nullptr;
-            lSubsurface->surface()->parentChangeRequest();
+            lSubsurface->surface()->parentChanged();
         }
 
         lSubsurface->surface()->imp()->m_role = nullptr;
         lSubsurface->surface()->imp()->current.type = LSurface::Undefined;
-        lSubsurface->surface()->typeChangeRequest();
+        lSubsurface->surface()->roleChanged();
     }
 
     delete lSubsurface;

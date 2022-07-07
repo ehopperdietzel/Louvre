@@ -36,12 +36,12 @@ void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
         {
             lToplevel->surface()->parent()->imp()->m_children.remove(lToplevel->surface());
             lToplevel->surface()->imp()->m_parent = nullptr;
-            lToplevel->surface()->parentChangeRequest();
+            lToplevel->surface()->parentChanged();
         }
 
         lToplevel->surface()->imp()->current.type = LSurface::Undefined;
         lToplevel->surface()->imp()->m_role = nullptr;
-        lToplevel->surface()->typeChangeRequest();
+        lToplevel->surface()->roleChanged();
     }
 
     delete lToplevel;
@@ -68,7 +68,7 @@ void Extensions::XdgShell::Toplevel::set_parent (wl_client *, wl_resource *resou
         lToplevel->surface()->parent()->imp()->m_children.push_front(lToplevel->surface());
     }
 
-    lToplevel->surface()->parentChangeRequest();
+    lToplevel->surface()->parentChanged();
 }
 
 void Extensions::XdgShell::Toplevel::set_title (wl_client *, wl_resource *resource, const char *title)

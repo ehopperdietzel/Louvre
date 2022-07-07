@@ -5,6 +5,7 @@
 #include <LPointF.h>
 #include <LPoint.h>
 #include <LTexture.h>
+#include <LRect.h>
 
 class Louvre::LCursor
 {
@@ -36,6 +37,8 @@ public:
     LCompositor *compositor() const;
     LOutput *output() const;
 
+    const LRect &rect() const {return m_rect;}
+
 private:
 
     struct LCursorData
@@ -47,6 +50,7 @@ private:
     void loadDefaultCursors();
 
     LCursorData m_cursors[1];
+    LRect m_rect;
 
     enum LLastCursorType
     {

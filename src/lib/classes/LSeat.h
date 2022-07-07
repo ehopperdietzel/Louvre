@@ -41,7 +41,7 @@ protected:
     friend class Globals::Pointer;
 
     /* Libinput events */
-    virtual void libinputEvent(libinput_event *ev){(void)ev;}
+    virtual void libinputEvent(libinput_event *ev);
 
 private:
 

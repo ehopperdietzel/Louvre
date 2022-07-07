@@ -61,8 +61,8 @@ void Globals::Subcompositor::get_subsurface(wl_client *client, wl_resource *reso
 
     lSurface->imp()->current.type = LSurface::Subsurface;
     lSurface->imp()->pending.type = LSurface::Undefined;
-    lSurface->typeChangeRequest();
-    lSurface->parentChangeRequest();
+    lSurface->roleChanged();
+    lSurface->parentChanged();
 
     printf("SUBSURFACE CREATED.\n");
 }

@@ -38,6 +38,17 @@ LCompositor::~LCompositor()
     delete m_imp;
 }
 
+void LCompositor::initialize()
+{
+    if(outputManager()->outputs()->empty())
+    {
+        printf("No outputs avaliable.\n");
+        exit(1);
+    }
+
+    addOutput(outputManager()->outputs()->front());
+}
+
 LOutputManager *LCompositor::createOutputManagerRequest()
 {
     return new LOutputManager(this);

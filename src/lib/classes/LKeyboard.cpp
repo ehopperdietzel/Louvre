@@ -366,5 +366,9 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
         {
             compositor()->cursor()->output()->sc = true;
         }
+        else if(sym == XKB_KEY_Down)
+        {
+            compositor()->repaintAllOutputs();
+        }
     }
 }

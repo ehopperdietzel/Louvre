@@ -16,6 +16,12 @@ public:
         UInt32 group;
     };
 
+    enum LKeyState : UChar8
+    {
+        Released = 0,
+        Pressed = 1
+    };
+
     LKeyboard(LSeat *seat);
     virtual ~LKeyboard();
     LSeat *seat() const;

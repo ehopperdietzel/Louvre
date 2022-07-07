@@ -12,7 +12,11 @@ public:
     LRegion dmg[2];
     LRegion dmgT;
     LRegion transT;
-    LRegion opaqueAt;
+    LRegion opaqueT;
+
+    LRegion opaqueR;
+    LRegion transR;
+
     bool chg[2];
     LRect rct[2];
 

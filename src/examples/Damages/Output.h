@@ -19,6 +19,7 @@ public:
     // Regions exposed when surfaces pos or size change
     LRegion exposedRegion[2];
     bool fullRefresh = true;
+    LRect cursorRect[2];
 };
 
 #endif // OUTPUT_H

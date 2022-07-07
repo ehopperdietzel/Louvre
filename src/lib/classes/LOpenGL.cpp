@@ -225,7 +225,6 @@ void LOpenGL::drawTexture(LTexture *texture, const LRect &src, const LRect &dst)
     glUniform2f(texSizeUniform,texture->size().w(), texture->size().h());
     glUniform4f(srcRectUniform,src.x(), src.y(), src.w(), src.h());
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
     /*
     glEnable(GL_BLEND);
     float r = float(rand() % 10000)/10000.f;
@@ -242,6 +241,7 @@ void LOpenGL::drawColor(const LRect &dst, Float32 r, Float32 g, Float32 b, Float
     glUniform4f(colorUniform,r,g,b,a);
     glUniform1i(modeUniform,1);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
 }
 
 void LOpenGL::setViewport(const LRect &rect)

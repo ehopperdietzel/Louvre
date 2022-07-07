@@ -31,7 +31,7 @@ LOutput::~LOutput()
     delete m_imp;
 }
 
-LTexture *background;
+//LTexture *background;
 
 void LOutput::initializeGL()
 {
@@ -41,7 +41,7 @@ void LOutput::initializeGL()
     damage[0].addRect(rect());
     damage[1].addRect(rect());
 
-    background = LOpenGL::loadTexture("wallpaper.png");
+    //background = LOpenGL::loadTexture("wallpaper.png");
 
     //compositor()->cursor()->setCursor(LCursor::Arrow);
 
@@ -155,7 +155,8 @@ void LOutput::paintGL(Int32 currentBuffer)
     glDisable(GL_BLEND);
 
     for(const LRect &r : backgroundDamage.rects())
-        GL->drawTexture(background,LRect(r.topLeft()-backgroundPos,r.bottomRight())*getOutputScale(),LRect(r.topLeft()-backgroundPos,r.bottomRight()));
+        GL->drawColor(r,0.1,0.4,0.8,1);
+        //GL->drawTexture(background,LRect(r.topLeft()-backgroundPos,r.bottomRight())*getOutputScale(),LRect(r.topLeft()-backgroundPos,r.bottomRight()));
 
 
     //glDisable(GL_BLEND);
@@ -443,18 +444,6 @@ void LOutput::paintGL(Int32 currentBuffer)
     }
 }
 
-void LOutput::plugged()
-{
-
-}
-
-void LOutput::unplugged()
-{
-
-}
-
-
-
 
 LCompositor *LOutput::compositor()
 {
@@ -514,6 +503,7 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
     output->m_imp->initialize();
     output->repaint();
 
+    /*
     itimerspec ts;
     ts.it_interval.tv_sec = 0;
     ts.it_interval.tv_nsec = 0;
@@ -521,8 +511,9 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
 
     ts.it_value.tv_nsec = 1000000000/output->refreshRate;
     timerfd_settime(output->m_imp->timerPoll.fd, 0, &ts, NULL);
+    */
 
-    Int32 currentBuffer = 0;
+    output->imp()->m_currentBuffer = 0;
 
     while(true)
     {
@@ -545,8 +536,8 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
         // Let the user do his painting
         output->m_imp->m_compositor->imp()->m_renderMutex.lock();
 
-        output->paintGL(currentBuffer);
-        currentBuffer = 1 - currentBuffer;
+        output->paintGL(output->imp()->m_currentBuffer );
+        output->imp()->m_currentBuffer = 1 - output->imp()->m_currentBuffer;
 
         if(!output->compositor()->cursor()->hasHardwareSupport())
             output->compositor()->cursor()->paint();
@@ -554,8 +545,7 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
         output->m_imp->m_compositor->imp()->m_renderMutex.unlock();
 
         // Tell the input loop to process events
-        LWayland::forceUpdate();
-
+        //LWayland::forceUpdate();
 
         // Wait for the next frame
         //poll(&output->imp()->timerPoll,1,-1);

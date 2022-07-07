@@ -48,10 +48,10 @@ public:
     /* Requests */
 
     // wl_surface
-    virtual void typeChangeRequest();
-    virtual void parentChangeRequest();
-    virtual void bufferScaleChangeRequest(){};
-    virtual void bufferSizeChangeRequest();
+    virtual void roleChanged();
+    virtual void parentChanged();
+    virtual void bufferScaleChanged();
+    virtual void bufferSizeChanged();
     virtual void opaqueRegionChanged();
     virtual void inputRegionChanged();
 

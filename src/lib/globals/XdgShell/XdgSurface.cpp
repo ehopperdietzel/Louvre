@@ -129,7 +129,7 @@ void Extensions::XdgShell::Surface::get_popup(wl_client *client, wl_resource *re
     lSurface->imp()->m_role = lPopup;
     lSurface->imp()->m_parent = lParent;
     lParent->imp()->m_children.push_back(lSurface);
-    lSurface->parentChangeRequest();
+    lSurface->parentChanged();
 
 }
 void Extensions::XdgShell::Surface::set_window_geometry(wl_client *, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
@@ -139,7 +139,7 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *, wl_resource
     if(surface->roleType() == LSurface::Toplevel)
     {
         surface->toplevel()->m_windowGeometry = LRect(x, y, width, height);
-        surface->toplevel()->geometryChangeRequest();
+        surface->toplevel()->geometryChanged();
     }
     else if(surface->roleType() == LSurface::Popup)
     {

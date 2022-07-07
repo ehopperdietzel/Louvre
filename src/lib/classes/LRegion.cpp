@@ -18,6 +18,27 @@ void LRegion::clear()
     m_rects.clear();
 }
 
+void check(list<LRect>&adds)
+{
+    return;
+    for(const LRect &i : adds)
+    {
+        for(const LRect &j : adds)
+        {
+            if(i == j)
+                continue;
+
+            if(i.containsPoint(j.topLeft(),false) || i.containsPoint(j.topLeft()+j.bottomRight(),false) || i.containsPoint(LPoint(j.x()+j.w(),j.y()),false) || i.containsPoint(LPoint(j.x(),j.y()+j.h()),false))
+            {
+                printf("INTERSECTION\n");
+                printf("\t(%i,%i,%i,%i)\n",i.x(),i.y(),i.w(),i.h());
+                printf("\t(%i,%i,%i,%i)\n",j.x(),j.y(),j.w(),j.h());
+                printf("------------\n");
+                exit(0);
+            }
+        }
+    }
+}
 void LRegion::addRect(const LRect &rect)
 {
     if(rect.w() == 0 || rect.h() == 0)
@@ -35,6 +56,7 @@ void LRegion::addRect(const LRect &rect)
     std::list<LRect>adds;
     adds.push_back(rect);
 
+    // Loop all curent rects in region
     for(std::list<LRect>::iterator i = m_rects.begin(); i != m_rects.end(); i++)
     {
         loopA:
@@ -42,22 +64,23 @@ void LRegion::addRect(const LRect &rect)
         if(i == m_rects.end())
             break;
 
-        LRect &r = *i;
-
-        rx0 = r.x();
-        ry0 = r.y();
-        rx1 = rx0 + r.w();
-        ry1 = ry0 + r.h();
-
+        // Loop all rects to add
         for(std::list<LRect>::iterator j = adds.begin(); j != adds.end(); j++)
         {
             loopB:
 
+            // Stores the coords of the current rect
+            LRect &r = *i;
+            rx0 = r.x();
+            ry0 = r.y();
+            rx1 = rx0 + r.w();
+            ry1 = ry0 + r.h();
+
             if(j == adds.end())
                 break;
 
+            // Stores the coords of the rect to add
             LRect &add = *j;
-
             x0 = add.x();
             y0 = add.y();
             x1 = x0 + add.w();
@@ -72,7 +95,9 @@ void LRegion::addRect(const LRect &rect)
 
             // Case 2: If the new rect doesnt intersect the current one
             if(x0 >= rx1 || x1 <= rx0 || y0 >= ry1 || y1 <= ry0)
+            {
                continue;
+            }
 
             // Case 3: If the new rect contains the current one
             if(x0 <= rx0 && x1 >= rx1 && y0 <= ry0 && y1 >= ry1)
@@ -91,6 +116,7 @@ void LRegion::addRect(const LRect &rect)
                     add.setW(x1 - rx0);
                     i = m_rects.erase(i);
                     goto loopA;
+
                 }
 
                 // L extendes left side
@@ -123,6 +149,7 @@ void LRegion::addRect(const LRect &rect)
                 }
             }
 
+
             // Case 5 LR:
             if(y0 >= ry0 && y0 < ry1 && y1 <= ry1 && y1 > ry0)
             {
@@ -135,7 +162,7 @@ void LRegion::addRect(const LRect &rect)
                 }
 
                 // L extendes left side
-                if(x1 > rx0 && x0 < rx0 && x1 <= rx1)
+                if(x0 < rx0  && x1 > rx0 && x1 <= rx1)
                 {
                     add.setW(rx0 - x0);
                     continue;
@@ -146,7 +173,7 @@ void LRegion::addRect(const LRect &rect)
             if(x0 >= rx0 && x0 < rx1 && x1 <= rx1 && x1 > rx0)
             {
                 // B extends bottom side
-                if(y0 < ry1 && y0 > ry0 && y1 >= ry1)
+                if(y0 < ry1 && y0 >= ry0 && y1 >= ry1)
                 {
                     add.setY(ry1);
                     add.setH(y1 - ry1);
@@ -154,7 +181,7 @@ void LRegion::addRect(const LRect &rect)
                 }
 
                 // T extendes top side
-                if(y1 > ry0 && y0 <= ry0 && y1 < ry1)
+                if(y1 > ry0 && y0 < ry0 && y1 <= ry1)
                 {
                     add.setH(ry0 - y0);
                     continue;
@@ -164,14 +191,14 @@ void LRegion::addRect(const LRect &rect)
             // Case 6 LR:
             if(y0 >= ry0 && y1 <= ry1)
             {
-                if(x0 <= rx0 && x1 >= rx1)
+                if(x0 < rx0 && x1 > rx1)
                 {
+
                     // R
                     adds.push_front(LRect(rx1,add.y(),x1-rx1,add.h()));
 
                     // L
                     add.setW(rx0-x0);
-
                     continue;
                 }
             }
@@ -179,8 +206,9 @@ void LRegion::addRect(const LRect &rect)
             // Case 6 TB:
             if(x0 >= rx0 && x1 <= rx1)
             {
-                if(y0 <= ry0 && y1 >= ry1)
+                if(y0 < ry0 && y1 > ry1)
                 {
+
                     // B
                     adds.push_front(LRect(add.x(),ry1,add.w(),y1 - ry1));
 
@@ -197,19 +225,16 @@ void LRegion::addRect(const LRect &rect)
                 // R
                 if(x0 > rx0 && x0 < rx1 && x1 >= rx1)
                 {
-                    // L
-                    adds.push_front(LRect(rx0,ry0,x0-rx0,r.h()));
-                    i = m_rects.erase(i);
-                    goto loopA;
+                    r.setW(x0-rx0);
+                    continue;
                 }
 
                 // L
                 if(x0 <= rx0 && x1 > rx0 && x1 < rx1)
                 {
-                    // R
-                    adds.push_front(LRect(x1,ry0,rx1-x1,r.h()));
-                    i = m_rects.erase(i);
-                    goto loopA;
+                    r.setX(x1);
+                    r.setW(rx1-x1);
+                    continue;
                 }
             }
 
@@ -219,19 +244,17 @@ void LRegion::addRect(const LRect &rect)
                 // B
                 if(y0 > ry0 && y0 < ry1 && y1 >= ry1)
                 {
-                    // T
-                    adds.push_front(LRect(rx0,ry0,r.w(),y0-ry0));
-                    i = m_rects.erase(i);
-                    goto loopA;
+                    r.setH(y0-ry0);
+                    continue;
                 }
 
                 // T
                 if(y0 <= ry0 && y1 > ry0 && y1 < ry1)
                 {
-                    // B
-                    adds.push_front(LRect(rx0,y1,r.w(),ry1-y1));
-                    i = m_rects.erase(i);
-                    goto loopA;
+                   // B
+                   r.setY(y1);
+                   r.setH(ry1-y1);
+                   continue;
                 }
             }
 
@@ -291,8 +314,9 @@ void LRegion::addRect(const LRect &rect)
         }
     }
 
-    for(LRect &a : adds)
+    for(const LRect &a : adds)
         m_rects.push_back(a);
+
 }
 
 void LRegion::subtractRect(const LRect &rect)

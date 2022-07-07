@@ -11,8 +11,6 @@ public:
     LToplevelRole(wl_resource *toplevel, LSurface *surface);
     virtual ~LToplevelRole();
 
-    const LPoint &rolePos() const override;
-
     enum Edge : UInt32
     {
         Top = 1,
@@ -42,7 +40,7 @@ public:
     };
 
     // Requests
-    virtual void pong(UInt32 serial);
+    const LPoint &rolePos() const override;
     virtual void startMoveRequest();
     virtual void startResizeRequest(Edge edge);
     virtual void configureRequest();
@@ -54,16 +52,15 @@ public:
     virtual void showWindowMenuRequest(Int32 x, Int32 y);
 
     // State change notification
+    virtual void pong(UInt32 serial);
     virtual void maximizeChanged();
     virtual void fullscreenChanged();
     virtual void activatedChanged();
-    virtual void maxSizeChanged(){};
-    virtual void minSizeChanged(){};
+    virtual void maxSizeChanged();
+    virtual void minSizeChanged();
     virtual void titleChanged();
     virtual void appIdChanged();
-
-    // xdg_shell
-    virtual void geometryChangeRequest();
+    virtual void geometryChanged();
 
     // Events
     void ping(UInt32 serial);

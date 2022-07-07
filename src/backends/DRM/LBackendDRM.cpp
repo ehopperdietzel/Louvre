@@ -505,7 +505,7 @@ void manageOutputs(bool notify)
             printf("New output with id: %i and vrefresh: %i, w: %i h: %i \n",crtc_id,defaultMode->vrefresh,defaultMode->hdisplay,defaultMode->vdisplay);
 
             if(notify)
-                lDevice.lCompositor->outputManager()->connectedOutputRequest(newOutput);
+                lDevice.lCompositor->outputManager()->pluggedOutputRequest(newOutput);
 
         }
         else
@@ -519,7 +519,7 @@ void manageOutputs(bool notify)
                 {
                     printf("OUTPUT DISCONNECTED.\n");
                     outputs.erase(it);
-                    lDevice.lCompositor->outputManager()->disonnectedOutputRequest(output);
+                    lDevice.lCompositor->outputManager()->unpluggedOutputRequest(output);
                     destroyOutput(output);
                     break;
                 }

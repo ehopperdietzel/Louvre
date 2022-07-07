@@ -259,6 +259,11 @@ LToplevelRole::Edge LPointer::resizingToplevelEdge() const
     return m_resizingToplevelEdge;
 }
 
+UInt32 LPointer::lastPointerEnterEventSerial() const
+{
+    return m_lastPointerEnterEventSerial;
+}
+
 #if LOUVRE_SEAT_VERSION >= 5
 
 void LPointer::sendAxisEvent(double x, double y, UInt32 source)
@@ -381,9 +386,10 @@ void LPointer::sendEnterEvent(LSurface *surface, const LPoint &point)
         return;
 
     // Send focus event
-    surface->client()->imp()->m_lastPointerEnterEventSerial = LWayland::nextSerial();
+    m_lastPointerEnterEventSerial = LWayland::nextSerial();
+    surface->client()->imp()->m_lastPointerEnterEventSerial = m_lastPointerEnterEventSerial;
     wl_pointer_send_enter(surface->client()->pointerResource(),
-                          surface->client()->lastPointerEnterEventSerial(),
+                          m_lastPointerEnterEventSerial,
                           surface->resource(),
                           wl_fixed_from_double(point.x()),
                           wl_fixed_from_double(point.y()));
@@ -443,6 +449,8 @@ void LPointer::pointerMoveEvent(float /*dx*/, float /*dy*/)
         else
         {
             setFocus(surface);
+            cursor()->setCursor(LCursor::Arrow);
+            cursor()->setVisible(true);
         }
     }
 

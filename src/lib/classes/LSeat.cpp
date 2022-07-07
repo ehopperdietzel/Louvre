@@ -114,6 +114,11 @@ LKeyboard *LSeat::keyboard() const
     return m_keyboard;
 }
 
+void LSeat::libinputEvent(libinput_event */*ev*/)
+{
+
+}
+
 void LSeat::processInput()
 {
     int ret = libinput_dispatch(m_li);

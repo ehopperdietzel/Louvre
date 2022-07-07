@@ -79,6 +79,11 @@ public:
     const LSize &resizingToplevelInitSize() const;
     LToplevelRole::Edge resizingToplevelEdge() const;
 
+    // Serials
+    UInt32 lastPointerEnterEventSerial() const;
+    //UInt32 lastPointerLeaveEventSerial() const;
+    //UInt32 lastPointerButtonEventSerial() const;
+
     // Axis
 #if LOUVRE_SEAT_VERSION >= 5
     void sendAxisEvent(double x, double y, UInt32 source);
@@ -117,6 +122,10 @@ private:
     LSize                m_resizingToplevelInitSize;
     LSize                m_resizingToplevelInitWindowSize;
     LToplevelRole::Edge  m_resizingToplevelEdge;
+
+    UInt32               m_lastPointerEnterEventSerial      = 0;
+    UInt32               m_lastPointerLeaveEventSerial      = 0;
+    UInt32               m_lastPointerButtonEventSerial     = 0;
 
     // Axis
 #if LOUVRE_SEAT_VERSION >= 5
