@@ -32,13 +32,16 @@ public:
     LBaseSurfaceRole *m_role = nullptr;
 
     LTexture *m_texture = nullptr;
+
     list<LSurface*>m_children;
+    list<LSurface*>pendingChildren;
 
     // Buffer
     void setBufferScale(Int32 scale);
 
     LClient     *m_client         = nullptr;
     LSurface    *m_parent         = nullptr;
+    LSurface    *pendingParent    = nullptr;
 
     wl_resource *m_resource       = nullptr;
 
@@ -58,6 +61,12 @@ public:
     bool m_opaqueRegionChanged = false;
     bool m_inputRegionChanged = true;
     bool m_damagesChanged = false;
+
+    // Indicates if the surface should be mapped (has a not null buffer)
+    bool mapped = false;
+
+    // Indicates if the surface attached a buffer before commmit
+    bool attachedBuffer = false;
 
 };
 

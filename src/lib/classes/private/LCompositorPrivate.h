@@ -15,6 +15,8 @@ public:
     std::thread::id m_threadId;
     mutex m_renderMutex;
 
+    void riseChildren(LSurface *surface);
+
     // Clients
     list<LClient*>m_clients;
 
@@ -40,5 +42,6 @@ public:
     LGraphicBackend *m_backend = nullptr;
 
 };
+
 
 #endif // LCOMPOSITORPRIVATE_H

@@ -38,8 +38,8 @@ LOpenGL::LOpenGL()
         {\
           if(mode == 0)\
           {\
-            float x = (srcRect.x)/texSize.x + v_texcoord.x*srcRect.z/texSize.x;\
-            float y = (srcRect.y + srcRect.w - (v_texcoord.y*srcRect.w))/texSize.y;\
+            float x = (srcRect.x + v_texcoord.x * srcRect.z)/texSize.x;\
+            float y = (srcRect.y + (1.0 - v_texcoord.y)*srcRect.w)/texSize.y;\
             gl_FragColor = texture2D(tex,vec2(x,y));\
           }\
           else\
@@ -78,6 +78,8 @@ LOpenGL::LOpenGL()
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_SCISSOR_TEST);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
 
     // Set blend mode
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

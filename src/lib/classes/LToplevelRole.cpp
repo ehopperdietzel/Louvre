@@ -1,5 +1,5 @@
 #include "LToplevelRole.h"
-
+#include <LBaseSurfaceRolePrivate.h>
 #include <LSurface.h>
 #include <string.h>
 #include <LCompositor.h>
@@ -50,8 +50,8 @@ LToplevelRole::~LToplevelRole()
 
 const LPoint &LToplevelRole::rolePos() const
 {
-    m_rolePos = surface()->pos() -m_windowGeometry.topLeft();
-    return m_rolePos;
+    baseImp()->rolePos = surface()->pos() -m_windowGeometry.topLeft();
+    return baseImp()->rolePos;
 }
 
 void LToplevelRole::pong(UInt32)

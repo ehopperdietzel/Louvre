@@ -56,6 +56,8 @@ void Extensions::XdgShell::Toplevel::set_parent (wl_client *, wl_resource *resou
 {
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
 
+    printf("TOPLEVEL SET PARENT\n");
+
     if(parent == NULL)
     {
         if(lToplevel->surface()->parent())
@@ -65,7 +67,7 @@ void Extensions::XdgShell::Toplevel::set_parent (wl_client *, wl_resource *resou
     else
     {
         lToplevel->surface()->imp()->m_parent = ((LToplevelRole*)wl_resource_get_user_data(parent))->surface();
-        lToplevel->surface()->parent()->imp()->m_children.push_front(lToplevel->surface());
+        lToplevel->surface()->parent()->imp()->m_children.push_back(lToplevel->surface());
     }
 
     lToplevel->surface()->parentChanged();

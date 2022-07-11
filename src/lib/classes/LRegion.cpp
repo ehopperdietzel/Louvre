@@ -2,9 +2,17 @@
 #include <stdio.h>
 using namespace Louvre;
 
+//FILE *fptr;
+//bool opened = false;
 LRegion::LRegion()
 {
-
+/*
+    if(!opened)
+    {
+        fptr = fopen("damages2.txt","w");
+        opened = true;
+    }
+*/
 }
 
 void LRegion::copy(const LRegion &region)
@@ -53,6 +61,8 @@ void LRegion::addRect(const LRect &rect)
     Int32 rx1;
     Int32 ry1;
 
+    bool A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,FnH,EnG,FnI,QnO,TnS,RnKnS,VnInO,QnJnW,TnNnU;
+
     std::list<LRect>adds;
     adds.push_back(rect);
 
@@ -86,75 +96,41 @@ void LRegion::addRect(const LRect &rect)
             x1 = x0 + add.w();
             y1 = y0 + add.h();
 
+            A = x0 >= rx1;
+            B = x1 <= rx0;
+            C = y0 >= ry1;
+            D = y1 <= ry0;
+
+            // Case 2: If the new rect doesnt intersect the current one
+            if(A || B || C || D)
+               continue;
+
+            E = x0 >= rx0;
+            F = y0 >= ry0;
+            G = x1 <= rx1;
+            H = y1 <= ry1;
+            FnH = F && H;
+            EnG = E && G;
+
             // Case 1: If the new rect is contained in another
-            if(x0 >= rx0 && y0 >= ry0 && x1 <= rx1 && y1 <= ry1)
+            if(EnG && FnH)
             {
                 j = adds.erase(j);
                 goto loopB;
             }
 
-            // Case 2: If the new rect doesnt intersect the current one
-            if(x0 >= rx1 || x1 <= rx0 || y0 >= ry1 || y1 <= ry0)
-            {
-               continue;
-            }
-
-            // Case 3: If the new rect contains the current one
-            if(x0 <= rx0 && x1 >= rx1 && y0 <= ry0 && y1 >= ry1)
-            {
-                i = m_rects.erase(i);
-                goto loopA;
-            }
-
-            // Case 4 LR:
-            if(y0 == ry0 && y1 == ry1)
-            {
-                // R extends right side
-                if(x0 < rx1 && x1 > rx1)
-                {
-                    add.setX(rx0);
-                    add.setW(x1 - rx0);
-                    i = m_rects.erase(i);
-                    goto loopA;
-
-                }
-
-                // L extendes left side
-                if(x1 > rx0 && x0 < rx0)
-                {
-                    add.setW(rx1 - x0);
-                    i = m_rects.erase(i);
-                    goto loopA;
-                }
-            }
-
-            // Case 4 TB:
-            if(x0 == rx0 && x1 == rx1)
-            {
-                // B extends bottom side
-                if(y0 < ry1 && y1 > ry1)
-                {
-                    add.setY(ry0);
-                    add.setH(y1 - ry0);
-                    i = m_rects.erase(i);
-                    goto loopA;
-                }
-
-                // T extendes top side
-                if(y1 > ry0 && y0 < ry0)
-                {
-                    add.setH(ry1 - y0);
-                    i = m_rects.erase(i);
-                    goto loopA;
-                }
-            }
-
+            I = y0 < ry1;
+            J = y1 > ry0;
+            K = x0 < rx1;
+            L = x1 > rx1;
+            M = x0 < rx0;
+            N = x1 > rx0;
 
             // Case 5 LR:
-            if(y0 >= ry0 && y0 < ry1 && y1 <= ry1 && y1 > ry0)
+            if((FnI = I && F) && H && J)
             {
                 // R extends right side
-                if(x0 < rx1 && x0 >= rx0 && x1 > rx1)
+                if(K && E && L)
                 {
                     add.setX(rx1);
                     add.setW(x1 - rx1);
@@ -162,18 +138,22 @@ void LRegion::addRect(const LRect &rect)
                 }
 
                 // L extendes left side
-                if(x0 < rx0  && x1 > rx0 && x1 <= rx1)
+                if(M && N && G)
                 {
                     add.setW(rx0 - x0);
                     continue;
                 }
             }
 
+            O = y1 >= ry1;
+            P = y0 < ry0;
+
             // Case 5 TB:
-            if(x0 >= rx0 && x0 < rx1 && x1 <= rx1 && x1 > rx0)
+            if(E && K && G && N)
             {
+
                 // B extends bottom side
-                if(y0 < ry1 && y0 >= ry0 && y1 >= ry1)
+                if(FnI && O)
                 {
                     add.setY(ry1);
                     add.setH(y1 - ry1);
@@ -181,19 +161,137 @@ void LRegion::addRect(const LRect &rect)
                 }
 
                 // T extendes top side
-                if(y1 > ry0 && y0 < ry0 && y1 <= ry1)
+                if(J && P && H)
                 {
                     add.setH(ry0 - y0);
                     continue;
                 }
             }
 
-            // Case 6 LR:
-            if(y0 >= ry0 && y1 <= ry1)
+            Q = y0 <= ry0;
+            R = x0 > rx0;
+            S = x1 >= rx1;
+            T = x0 <= rx0;
+            U = x1 < rx1;
+            RnKnS = R && K && S;
+            TnNnU = T && N && U;
+
+            // Case 7 LR:
+            if((QnO = Q && O))
             {
-                if(x0 < rx0 && x1 > rx1)
+                // R
+                if(RnKnS)
+                {
+                    r.setW(x0-rx0);
+                    continue;
+                }
+
+                // L
+                if(TnNnU)
+                {
+                    r.setX(x1);
+                    r.setW(rx1-x1);
+                    continue;
+                }
+            }
+
+            V = y0 > ry0;
+            W = y1 < ry1;
+            TnS = T && S;
+            VnInO = V && I && O;
+
+            // B
+            if(VnInO)
+            {
+                // Case 7 TB:
+                if(TnS)
+                {
+                    r.setH(y0-ry0);
+                    continue;
+                }
+
+
+                // Case 8 TR BR
+                if(RnKnS)
                 {
 
+                    // R
+                    adds.push_front(LRect(rx1,y0,x1-rx1,ry1-y0));
+
+                    // B
+                    add.setY(ry1);
+                    add.setH(y1-ry1);
+                    continue;
+                }
+
+                // Case 8 TL BL
+                if(TnNnU)
+                {
+
+                    // L
+                    adds.push_front(LRect(x0,y0,rx0-x0,ry1-y0));
+
+                    // B
+                    add.setY(ry1);
+                    add.setH(y1-ry1);
+                    continue;
+                }
+
+            }
+
+            QnJnW = Q && J && W;
+
+            // T
+            if(QnJnW)
+            {
+                // Case 7 TB:
+                if(TnS)
+                {
+                   // B
+                   r.setY(y1);
+                   r.setH(ry1-y1);
+                   continue;
+                }
+
+                // Case 8 TR BR
+                if(RnKnS)
+                {
+
+                    // R
+                    adds.push_front(LRect(rx1,ry0,x1-rx1,y1-ry0));
+
+                    // T
+                    add.setH(ry0-y0);
+                    continue;
+                }
+
+                // Case 8 TL BL
+                if(TnNnU)
+                {
+
+                    // L
+                    adds.push_front(LRect(x0,ry0,rx0-x0,y1-ry0));
+
+                    // T
+                    add.setH(ry0-y0);
+                    continue;
+                }
+
+            }
+
+
+            // Case 3: If the new rect contains the current one
+            if(TnS && QnO)
+            {
+                i = m_rects.erase(i);
+                goto loopA;
+            }
+
+            // Case 6 LR:
+            if(FnH)
+            {
+                if(M && L)
+                {
                     // R
                     adds.push_front(LRect(rx1,add.y(),x1-rx1,add.h()));
 
@@ -203,10 +301,12 @@ void LRegion::addRect(const LRect &rect)
                 }
             }
 
+            X = y1 > ry1;
+
             // Case 6 TB:
-            if(x0 >= rx0 && x1 <= rx1)
+            if(EnG)
             {
-                if(y0 < ry0 && y1 > ry1)
+                if(P && X)
                 {
 
                     // B
@@ -219,98 +319,50 @@ void LRegion::addRect(const LRect &rect)
                 }
             }
 
-            // Case 7 LR:
-            if(y0 <= ry0 && y1 >= ry1)
+            // Case 4 LR:
+            if(y0 == ry0 && y1 == ry1)
             {
-                // R
-                if(x0 > rx0 && x0 < rx1 && x1 >= rx1)
+                // R extends right side
+                if(K && L)
                 {
-                    r.setW(x0-rx0);
-                    continue;
+                    add.setX(rx0);
+                    add.setW(x1 - rx0);
+                    i = m_rects.erase(i);
+                    goto loopA;
+
                 }
 
-                // L
-                if(x0 <= rx0 && x1 > rx0 && x1 < rx1)
+                // L extendes left side
+                if(N && M)
                 {
-                    r.setX(x1);
-                    r.setW(rx1-x1);
-                    continue;
+                    add.setW(rx1 - x0);
+                    i = m_rects.erase(i);
+                    goto loopA;
                 }
             }
 
-            // Case 7 TB:
-            if(x0 <= rx0 && x1 >= rx1)
+            // Case 4 TB:
+            if(x0 == rx0 && x1 == rx1)
             {
-                // B
-                if(y0 > ry0 && y0 < ry1 && y1 >= ry1)
+                // B extends bottom side
+                if(I && X)
                 {
-                    r.setH(y0-ry0);
-                    continue;
+                    add.setY(ry0);
+                    add.setH(y1 - ry0);
+                    i = m_rects.erase(i);
+                    goto loopA;
                 }
 
-                // T
-                if(y0 <= ry0 && y1 > ry0 && y1 < ry1)
+                // T extendes top side
+                if(J && P)
                 {
-                   // B
-                   r.setY(y1);
-                   r.setH(ry1-y1);
-                   continue;
+                    add.setH(ry1 - y0);
+                    i = m_rects.erase(i);
+                    goto loopA;
                 }
             }
 
-            // Case 8 TR BR
-            if(x0 > rx0 && x0 < rx1 && x1 >= rx1)
-            {
-                // B
-                if(y0 < ry1 && y0 > ry0 && y1 >= ry1)
-                {
-                    // R
-                    adds.push_front(LRect(rx1,y0,x1-rx1,ry1-y0));
 
-                    // B
-                    add.setY(ry1);
-                    add.setH(y1-ry1);
-                    continue;
-                }
-
-                // T
-                if(y0 <= ry0 && y1 > ry0 && y1 < ry1)
-                {
-                    // R
-                    adds.push_front(LRect(rx1,ry0,x1-rx1,y1-ry0));
-
-                    // T
-                    add.setH(ry0-y0);
-                    continue;
-                }
-            }
-
-            // Case 8 TL BL
-            if(x0 <= rx0 && x1 > rx0 && x1 < rx1)
-            {
-                // B
-                if(y0 < ry1 && y0 > ry0 && y1 >= ry1)
-                {
-                    // L
-                    adds.push_front(LRect(x0,y0,rx0-x0,ry1-y0));
-
-                    // B
-                    add.setY(ry1);
-                    add.setH(y1-ry1);
-                    continue;
-                }
-
-                // T
-                if(y0 <= ry0 && y1 > ry0 && y1 < ry1)
-                {
-                    // L
-                    adds.push_front(LRect(x0,ry0,rx0-x0,y1-ry0));
-
-                    // T
-                    add.setH(ry0-y0);
-                    continue;
-                }
-            }
         }
     }
 
@@ -349,11 +401,15 @@ void LRegion::subtractRect(const LRect &rect)
 
         // Case 1: No intersection
         if(x0 >= rx1 || x1 <= rx0 || y0 >= ry1 || y1 <= ry0)
+        {
+           //fprintf(fptr,"%d\n",1);
            continue;
+        }
 
         // Case 2: If the new rect contains the current one
         if(x0 <= rx0 && x1 >= rx1 && y0 <= ry0 && y1 >= ry1)
         {
+            //fprintf(fptr,"%d\n",2);
             i = m_rects.erase(i);
             goto loopA;
         }
@@ -361,18 +417,20 @@ void LRegion::subtractRect(const LRect &rect)
         // Case 3 LR:
         if(y0 <= ry0 && y1 >= ry1)
         {
-            // R
-            if(x0 >= rx0 && x0 < rx1 && x1 > rx1)
-            {
-                r.setW(x0-rx0);
-                continue;
-            }
-
             // L
             if(x0 <= rx0 && x1 > rx0 && x1 < rx1)
             {
+                //fprintf(fptr,"%dL\n",3);
                 r.setX(x1);
                 r.setW(rx1 - x1);
+                continue;
+            }
+
+            // R
+            if(x0 >= rx0 && x0 < rx1 && x1 > rx1)
+            {
+                //fprintf(fptr,"%dR\n",3);
+                r.setW(x0-rx0);
                 continue;
             }
         }
@@ -380,103 +438,29 @@ void LRegion::subtractRect(const LRect &rect)
         // Case 3 TB:
         if(x0 <= rx0 && x1 >= rx1)
         {
-            // B
-            if(y0 > ry0 && y0 < ry1 && y1 >= ry1)
-            {
-                r.setH(y0-ry0);
-                continue;
-            }
-
             // T
             if(y0 <= ry0 && y1 > ry0 && y1 < ry1)
             {
+                //fprintf(fptr,"%dT\n",3);
                 r.setY(y1);
                 r.setH(ry1 - y1);
                 continue;
             }
-        }
 
-        // Case 4 LR:
-        if(y0 > ry0 && y1 < ry1)
-        {
-            // R
-            if(x0 > rx0 && x0 < rx1 && x1 >= rx1)
-            {
-                // T
-                m_rects.push_front(LRect(rx0,ry0,r.w(),y0-ry0));
-
-                // B
-                m_rects.push_front(LRect(rx0,y1,r.w(),ry1 - y1));
-
-                // C
-                r.setY(y0);
-                r.setW(x0-rx0);
-                r.setH(rect.h());
-
-                continue;
-            }
-
-            // L
-            if(x0 <= rx0 && x1 > rx0 && x1 < rx1)
-            {
-                // T
-                m_rects.push_front(LRect(rx0,ry0,r.w(),y0-ry0));
-
-                // B
-                m_rects.push_front(LRect(rx0,y1,r.w(),ry1 - y1));
-
-                // C
-                r.setY(y0);
-                r.setX(x1);
-                r.setW(rx1 - x1);
-                r.setH(rect.h());
-
-                continue;
-            }
-        }
-
-        // Case 4 TB:
-        if(x0 > rx0 && x1 < rx1)
-        {
             // B
             if(y0 > ry0 && y0 < ry1 && y1 >= ry1)
             {
-                // L
-                m_rects.push_front(LRect(rx0,ry0,x0-rx0,r.h()));
-
-                // R
-                m_rects.push_front(LRect(x1,ry0,rx1-x1,r.h()));
-
-                // C
-                r.setX(x0);
-                r.setW(rect.w());
+                //fprintf(fptr,"%dB\n",3);
                 r.setH(y0-ry0);
-
                 continue;
             }
 
-            // T
-            if(y0 <= ry0 && y1 > ry0 && y1 < ry1)
-            {
-                // L
-                m_rects.push_front(LRect(rx0,ry0,x0-rx0,r.h()));
-
-                // R
-                m_rects.push_front(LRect(x1,ry0,rx1-x1,r.h()));
-
-                // C
-                r.setY(y1);
-                r.setX(x0);
-                r.setW(rect.w());
-                r.setH(ry1-y1);
-
-                continue;
-            }
         }
 
         // Case 5
         if(x0 > rx0 && x0 < rx1 && x1 > rx0 && x1 < rx1 && y0 > ry0 && y0 < ry1 && y1 > ry0 && y1 < ry1 )
         {
+            //fprintf(fptr,"%d\n",5);
             // L
             m_rects.push_front(LRect(rx0,ry0,x0-rx0,r.h()));
 
@@ -495,12 +479,69 @@ void LRegion::subtractRect(const LRect &rect)
             return;
         }
 
+        // Case 4 LR:
+        if(y0 > ry0 && y1 < ry1)
+        {
+            // L
+            if(x0 <= rx0 && x1 > rx0 && x1 < rx1)
+            {
+                //fprintf(fptr,"%dL\n",4);
+                // T
+                m_rects.push_front(LRect(rx0,ry0,r.w(),y0-ry0));
+
+                // B
+                m_rects.push_front(LRect(rx0,y1,r.w(),ry1 - y1));
+
+                // C
+                r.setY(y0);
+                r.setX(x1);
+                r.setW(rx1 - x1);
+                r.setH(rect.h());
+
+                continue;
+            }
+
+            // R
+            if(x0 > rx0 && x0 < rx1 && x1 >= rx1)
+            {
+                //fprintf(fptr,"%dR\n",4);
+
+                // T
+                m_rects.push_front(LRect(rx0,ry0,r.w(),y0-ry0));
+
+                // B
+                m_rects.push_front(LRect(rx0,y1,r.w(),ry1 - y1));
+
+                // C
+                r.setY(y0);
+                r.setW(x0-rx0);
+                r.setH(rect.h());
+
+                continue;
+            }
+
+        }
+
         // Case 6 BR TR
         if(x0 > rx0 && x0 <rx1 && x1 >= rx1)
         {
+            // TR
+            if(y0 <= ry0 && y1 > ry0 && y1 < ry1)
+            {
+                //fprintf(fptr,"%dTR\n",6);
+                // T
+                m_rects.push_front(LRect(rx0,ry0,x0-rx0,y1-ry0));
+
+                // B
+                r.setY(y1);
+                r.setH(ry1-y1);
+                continue;
+            }
+
             // BR
             if(y0 > ry0 && y0 < ry1 && y1 >= ry1)
             {
+                //fprintf(fptr,"%dBR\n",6);
                 // T
                 m_rects.push_front(LRect(rx0,ry0,r.w(),y0-ry0));
 
@@ -511,18 +552,51 @@ void LRegion::subtractRect(const LRect &rect)
                 continue;
             }
 
-            // TR
+        }
+
+        // Case 4 TB:
+        if(x0 > rx0 && x1 < rx1)
+        {
+            // T
             if(y0 <= ry0 && y1 > ry0 && y1 < ry1)
             {
-                // T
-                m_rects.push_front(LRect(rx0,ry0,x0-rx0,y1-ry0));
+                //fprintf(fptr,"%dT\n",4);
+                // L
+                m_rects.push_front(LRect(rx0,ry0,x0-rx0,r.h()));
 
-                // B
+                // R
+                m_rects.push_front(LRect(x1,ry0,rx1-x1,r.h()));
+
+                // C
                 r.setY(y1);
+                r.setX(x0);
+                r.setW(rect.w());
                 r.setH(ry1-y1);
+
+                continue;
+            }
+
+            // B
+            if(y0 > ry0 && y0 < ry1 && y1 >= ry1)
+            {
+                //fprintf(fptr,"%dB\n",4);
+                // L
+                m_rects.push_front(LRect(rx0,ry0,x0-rx0,r.h()));
+
+                // R
+                m_rects.push_front(LRect(x1,ry0,rx1-x1,r.h()));
+
+                // C
+                r.setX(x0);
+                r.setW(rect.w());
+                r.setH(y0-ry0);
+
                 continue;
             }
         }
+
+
+
 
         // Case 6 BL TL
         if(x0 <= rx0 && x1 > rx0 && x1 < rx1)
@@ -530,6 +604,7 @@ void LRegion::subtractRect(const LRect &rect)
             // BL
             if(y0 > ry0 && y0 < ry1 && y1 >= ry1)
             {
+                //fprintf(fptr,"%dBL\n",6);
                 // T
                 m_rects.push_front(LRect(rx0,ry0,r.w(),y0-ry0));
 
@@ -544,6 +619,7 @@ void LRegion::subtractRect(const LRect &rect)
             // TR
             if(y0 <= ry0 && y1 > ry0 && y1 < ry1)
             {
+                //fprintf(fptr,"%dTR\n",6);
                 // T
                 m_rects.push_front(LRect(x1,ry0,rx1-x1,y1-ry0));
 
@@ -554,9 +630,21 @@ void LRegion::subtractRect(const LRect &rect)
             }
         }
 
+        // Case 7 Horizontal
+        if(y0 > ry0 && y0 < ry1 && y1 > ry0 && y1 < ry1 && x0 <= rx0 && x1 >= rx1)
+        {
+            //fprintf(fptr,"%dH\n",7);
+            // B
+            m_rects.push_front(LRect(rx0,y1,r.w(),ry1-y1));
+
+            // T
+            r.setH(y0-ry0);
+        }
+
         // Case 7 Vertical
         if(x0 > rx0 && x0 < rx1 && x1 > rx0 && x1 < rx1 && y0 <= ry0 && y1 >= ry1)
         {
+            //fprintf(fptr,"%dV\n",7);
             // R
             m_rects.push_front(LRect(x1,ry0,rx1-x1,r.h()));
 
@@ -564,15 +652,6 @@ void LRegion::subtractRect(const LRect &rect)
             r.setW(x0-rx0);
         }
 
-        // Case 7 Horizontal
-        if(y0 > ry0 && y0 < ry1 && y1 > ry0 && y1 < ry1 && x0 <= rx0 && x1 >= rx1)
-        {
-            // B
-            m_rects.push_front(LRect(rx0,y1,r.w(),ry1-y1));
-
-            // T
-            r.setH(y0-ry0);
-        }
     }
 
 }
@@ -701,8 +780,8 @@ void LRegion::clip(const LRect &rect)
         }
     }
 
-    if(m_rects.size() > 1)
-        simplify();
+    //if(m_rects.size() > 1)
+        //simplify();
 }
 
 const list<LRect> &LRegion::rects() const

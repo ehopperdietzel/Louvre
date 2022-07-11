@@ -1,6 +1,7 @@
 #include "LPopupRole.h"
 #include <LRect.h>
 #include <LSurfacePrivate.h>
+#include <LBaseSurfaceRolePrivate.h>
 #include <LWayland.h>
 #include <LPositioner.h>
 #include <LCompositor.h>
@@ -26,8 +27,8 @@ LPopupRole::~LPopupRole()
 
 const LPoint &LPopupRole::rolePos() const
 {
-    m_rolePos = surface()->pos() - m_windowGeometry.topLeft();
-    return m_rolePos;
+    baseImp()->rolePos = surface()->pos() - m_windowGeometry.topLeft();
+    return baseImp()->rolePos;
 }
 
 void LPopupRole::pong(UInt32)

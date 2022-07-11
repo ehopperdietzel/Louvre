@@ -6,7 +6,7 @@
 #include <list>
 
 #define LOUVRE_TB_H 44
-#define LOUBRE_DEBUG 0
+#define LOUBRE_DEBUG 1
 
 
 // Globals versions
@@ -16,7 +16,6 @@
 #define LOUVRE_SUBCOMPOSITOR_VERSION 1
 #define LOUVRE_DATA_DEVICE_MANAGER_VERSION 3
 #define LOUVRE_XDG_SHELL_VERSION 2
-
 
 namespace Louvre
 {
@@ -61,6 +60,8 @@ namespace Louvre
     // Types
     typedef uint32_t        UInt32;
     typedef int32_t         Int32;
+    typedef int16_t         Int16;
+    typedef uint16_t        UInt16;
     typedef uint64_t        UInt64;
     typedef int64_t         Int64;
     typedef float           Float32;

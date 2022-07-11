@@ -8,6 +8,7 @@ class Louvre::LBaseSurfaceRole
 {
 public:
     LBaseSurfaceRole(wl_resource *resource, LSurface *surface);
+    virtual ~LBaseSurfaceRole();
     virtual const LPoint &rolePos() const = 0;
     UInt32 roleId();
     LCompositor *compositor() const;
@@ -15,13 +16,11 @@ public:
     LSeat *seat() const;
     wl_resource *resource() const;
 
-protected:
-    friend class Globals::Surface;
-    mutable LPoint m_rolePos;
-    UInt32 m_roleId = 0;
-    wl_resource *m_resource = nullptr;
-    LSurface *m_surface = nullptr;
-    LCompositor *m_compositor = nullptr;
+    class LBaseSurfaceRolePrivate;
+    LBaseSurfaceRolePrivate *baseImp() const;
+
+private:
+    LBaseSurfaceRolePrivate *m_baseImp = nullptr;
 };
 
 #endif // LBASESURFACEROLE_H

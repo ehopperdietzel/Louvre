@@ -803,7 +803,7 @@ void LBackend::initializeCursor(LOutput *output)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glEGLImageTargetTexture2DOES(GL_TEXTURE_2D,image);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data->cursorTexture, 0);
-    data->cursorBoHandleU32 = gbm_bo_get_handle(data->cursor_bo).u32;
+    data->cursorBoHandleU32 = gbm_bo_get_handle(data->cursor_bo).s32;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -821,14 +821,13 @@ void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
     glBindFramebuffer(GL_FRAMEBUFFER, data->cursoFramebuffer);
     output->painter()->scaleCursor(texture,LRect(0,0,texture->size().w(),-texture->size().h()),LRect(0,0,size.w(),size.h()));
 
+    if(std::this_thread::get_id() == output->compositor()->mainThreadId())
+        glFlush();
+
     if(!data->cursorVisible)
         drmModeSetCursor(data->deviceFd, data->crtc_id, data->cursorBoHandleU32, 64, 64);
 
-    // Goes back to main framebuffer
-    //if(std::this_thread::get_id() != output->compositor()->mainThreadId())
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    glFlush();
 
 }
 

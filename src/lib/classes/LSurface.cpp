@@ -94,6 +94,11 @@ void LSurface::parentChanged()
 
 }
 
+void LSurface::mappingChanged()
+{
+
+}
+
 void LSurface::bufferScaleChanged()
 {
 
@@ -241,6 +246,14 @@ void LSurface::requestNextFrame()
         m_imp->m_frameCallback = nullptr;
         wl_client_flush(client()->client());
     }
+}
+
+bool LSurface::mapped() const
+{
+    if(roleType() == Subsurface)
+        return m_imp->mapped && parent()->mapped();
+
+    return m_imp->mapped;
 }
 
 wl_resource *LSurface::resource() const

@@ -57,6 +57,7 @@ void Output::paintGL(Int32 currentBuffer)
     return;
     */
 
+
     // Prev buffer index
     Int32 prevBuffer = 1 - currentBuffer;
 
@@ -70,7 +71,6 @@ void Output::paintGL(Int32 currentBuffer)
         if(s->toplevel() && s->toplevel()->fullscreen())
         {
             fullScreen = s;
-            s->requestNextFrame();
             break;
         }
     }
@@ -170,6 +170,8 @@ void Output::paintGL(Int32 currentBuffer)
             }
 
         }
+
+         s->requestNextFrame();
     }
 
     // Add cursor to exposed
@@ -237,8 +239,6 @@ void Output::paintGL(Int32 currentBuffer)
             exposedRegion[currentBuffer].subtractRect(d);
         }
 
-
-
         // Subtract transparent region
         for(const LRect &d : s->transR.rects())
             s->opaqueT.subtractRect(d);
@@ -254,7 +254,7 @@ void Output::paintGL(Int32 currentBuffer)
         for(const LRect &d : s->opaqueT.rects())
         {
 
-            p->drawTexture(s->texture(),LRect(d.topLeft()-s->pos(true)-rect().topLeft(),d.bottomRight())*s->bufferScale(),LRect(d.topLeft()-rect().topLeft(),d.bottomRight()));
+            p->drawTexture(s->texture(),LRect(d.topLeft() - s->pos(true),d.bottomRight())*s->bufferScale(),d);
 
             //printf("(%i,%i,%i,%i)\n",d.x(),d.y(),d.w(),d.h());
             //paintRandom(d,painter());
@@ -305,7 +305,7 @@ void Output::paintGL(Int32 currentBuffer)
 
         // Draw opaque rects
         for(const LRect &d : s->transT.rects())
-            p->drawTexture(s->texture(),LRect(d.topLeft()-s->pos(true)-rect().topLeft(),d.bottomRight())*s->bufferScale(),LRect(d.topLeft()-rect().topLeft(),d.bottomRight()));
+            p->drawTexture(s->texture(),LRect(d.topLeft() - s->pos(true),d.bottomRight())*s->bufferScale(),d);
 
         for(const LRect &d : s->opaqueT.rects())
             totalRendered.addRect(d);

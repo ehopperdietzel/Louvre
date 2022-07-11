@@ -50,6 +50,7 @@ public:
     // wl_surface
     virtual void roleChanged();
     virtual void parentChanged();
+    virtual void mappingChanged();
     virtual void bufferScaleChanged();
     virtual void bufferSizeChanged();
     virtual void opaqueRegionChanged();
@@ -84,6 +85,7 @@ public:
     bool isDamaged() const;
     bool textureChanged() const;
     void requestNextFrame();
+    bool mapped() const;
 
     // References
     wl_resource *resource() const;

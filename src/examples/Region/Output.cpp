@@ -17,6 +17,29 @@ void Output::paintGL(Int32 currentBuffer)
 {
     painter()->clearScreen();
 
+    glEnable(GL_BLEND);
+
+    Int32 x = rand() % 1200;
+    Int32 y = rand() % 1200;
+    Int32 w = rand() % 1200 + 20;
+    Int32 h = rand() % 1200 + 20;
+
+    if(rand() % 10 < 8)
+        region.addRect(LRect(x,y,w,h));
+    else
+        region.subtractRect(LRect(x,y,w,h));
+
+    for(const LRect &r : region.rects())
+    {
+        float R = 0.3f + float(rand() % 1000)/2000.f;
+        float G = 0.3f + float(rand() % 1000)/2000.f;
+        float B = 0.5f + float(rand() % 1000)/2000.f;
+        painter()->drawColor(r,1,0,0,0.5);
+    }
+
+    repaint();
+    return;
+
     // Add entire screen
     if(i == 0)
     {

@@ -17,7 +17,7 @@ LCursor::LCursor(LOutput *output)
     setOutput(output);
     //compositor()->imp()->m_backend->initializeCursor(output);
     m_x11Texture = new LTexture();
-    setSize(LPoint(24,24));
+    setSize(LPoint(25,25));
     loadDefaultCursors();
 }
 
@@ -189,7 +189,7 @@ LOutput *LCursor::output() const
 
 void LCursor::loadDefaultCursors()
 {
-    XcursorImage *cursor =  XcursorLibraryLoadImage("arrow",m_cursorTheme,64);
+    XcursorImage *cursor =  XcursorLibraryLoadImage("arrow",m_cursorTheme,48);
     m_cursors[0].texture = new LTexture(1);
     m_cursors[0].texture->setData(cursor->width,cursor->height,cursor->pixels,GL_RGBA,GL_UNSIGNED_BYTE);
     m_cursors[0].hotspot.setX(cursor->xhot);

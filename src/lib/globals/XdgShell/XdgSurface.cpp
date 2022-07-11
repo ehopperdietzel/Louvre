@@ -59,6 +59,8 @@ void Extensions::XdgShell::Surface::get_toplevel(wl_client *client, wl_resource 
 {
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
 
+    printf("CREATE TOPLEVEL\n");
+
     if(lSurface->imp()->pending.buffer != nullptr || lSurface->imp()->current.buffer != nullptr)
     {
         wl_resource_post_error(resource,XDG_SURFACE_ERROR_ALREADY_CONSTRUCTED,"Given wl_surface already has a buffer attached.");

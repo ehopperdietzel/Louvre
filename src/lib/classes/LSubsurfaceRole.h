@@ -2,7 +2,6 @@
 #define LSUBSURFACEROLE_H
 
 #include <LBaseSurfaceRole.h>
-#include <LPoint.h>
 
 class Louvre::LSubsurfaceRole : public LBaseSurfaceRole
 {
@@ -14,17 +13,17 @@ public:
 
     virtual void localPosChangedRequest();
     virtual void syncModeChangedRequest();
+    virtual void placedAbove(LSurface *sibiling);
+    virtual void placedBelow(LSurface *sibiling);
 
     bool isSynced() const;
     const LPoint &localPos() const;
 
-private:
-    friend class Globals::Surface;
-    friend class Globals::Subsurface;
+    class LSubsurfaceRolePrivate;
+    LSubsurfaceRolePrivate *imp() const;
 
-    bool m_parentIsCommiting = false;
-    bool m_isSynced = true;
-    LPoint m_localPos;
+private:
+    LSubsurfaceRolePrivate *m_imp = nullptr;
 
 };
 

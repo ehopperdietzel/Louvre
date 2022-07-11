@@ -17,7 +17,8 @@
 
 #include <LToplevelRole.h>
 #include <LCursor.h>
-#include <LSubsurfaceRole.h>
+#include <LSubsurfaceRolePrivate.h>
+#include <LBaseSurfaceRolePrivate.h>
 #include <LTime.h>
 #include <LCursorRole.h>
 #include <LPointer.h>
@@ -69,17 +70,23 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
         child->parentChanged();
     }
 
+    for(LSurface *child : surface->imp()->pendingChildren)
+    {
+        child->imp()->pendingParent = nullptr;
+    }
+
     // Parent
     if(surface->parent())
         surface->parent()->imp()->m_children.remove(surface);
 
-    if(surface->toplevel())
-        surface->toplevel()->m_surface = nullptr;
-    else if(surface->popup())
-        surface->popup()->m_surface = nullptr;
+    if(surface->imp()->pendingParent)
+        surface->imp()->pendingParent->imp()->pendingChildren.remove(surface);
 
 
-    surface->imp()->m_role = nullptr;
+    if(surface->role())
+        surface->role()->baseImp()->surface = nullptr;
+
+    // surface->imp()->m_role = nullptr;
 
     // Remove surface from its client list
     surface->client()->imp()->m_surfaces.remove(surface);
@@ -98,6 +105,7 @@ void Globals::Surface::attach(wl_client *, wl_resource *resource, wl_resource *b
 {
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
     lSurface->imp()->pending.buffer = buffer;
+    lSurface->imp()->attachedBuffer = true;
 
     if(lSurface->cursor())
         lSurface->cursor()->m_pendingHotspotOffset = LPoint(x,y);
@@ -129,6 +137,36 @@ void Globals::Surface::destroy(wl_client *, wl_resource *resource)
     wl_resource_destroy(resource);
 }
 
+void insertSurfaceAfter(list<LSurface*>&surfaces,LSurface *prevSurface, LSurface *surfaceToInsert)
+{
+    for(list<LSurface*>::iterator it = surfaces.begin(); it != surfaces.end(); it++)
+    {
+        if((*it) == prevSurface)
+        {
+            surfaces.remove(surfaceToInsert);
+
+            if(it++ == surfaces.end())
+                surfaces.push_back(surfaceToInsert);
+            else
+                surfaces.insert((it++),surfaceToInsert);
+
+        }
+    }
+}
+
+void insertSurfaceBefore(list<LSurface*>&surfaces,LSurface *nextSurface, LSurface *surfaceToInsert)
+{
+    for(list<LSurface*>::iterator it = surfaces.begin(); it != surfaces.end(); ++it)
+    {
+        if((*it) == nextSurface)
+        {
+            surfaces.remove(surfaceToInsert);
+            surfaces.insert(it,surfaceToInsert);
+            return;
+        }
+    }
+}
+
 void Globals::Surface::commit(wl_client *, wl_resource *resource)
 {
     /* Client tells the server that the current buffer is ready to be drawn.
@@ -141,58 +179,120 @@ void Globals::Surface::commit(wl_client *, wl_resource *resource)
 
 void Globals::Surface::apply_commit(LSurface *surface)
 {
-
-    // Wait for parent commit if is subsurface in sync mode
-    if(surface->roleType() == LSurface::Subsurface && surface->subsurface()->isSynced())
+    // Adds pending children
+    while(!surface->imp()->pendingChildren.empty())
     {
-        if(!surface->subsurface()->m_parentIsCommiting)
-            return;
+        LSurface *child = surface->imp()->pendingChildren.front();
+        surface->imp()->pendingChildren.pop_front();
+
+        if(surface->children().empty())
+            surface->compositor()->insertSurfaceAfter(surface,child);
         else
-            surface->subsurface()->m_parentIsCommiting = false;
+            surface->compositor()->insertSurfaceAfter(surface->children().back(),child);
+
+        surface->imp()->m_children.push_back(child);
+        child->imp()->m_parent = surface;
+        child->parentChanged();
     }
 
-    /*
-     *     if(surface->roleType() == LSurface::Subsurface)
+    // Update children subsurfaces positions and order
+    for(LSurface *child : surface->children())
     {
-        if(surface->subsurface()->isSynced())
+        if(child->subsurface())
         {
-            if(!surface->subsurface()->m_parentIsCommiting)
-                return;
-            else
-                surface->subsurface()->m_parentIsCommiting = false;
-        }
-        else
-        {
-            if(!surface->subsurface()->m_parentIsCommiting)
-                return;
+            if(child->subsurface()->imp()->hasPendingLocalPos)
+            {
+                child->subsurface()->imp()->hasPendingLocalPos = false;
+                child->subsurface()->imp()->localPos = child->subsurface()->imp()->pendingLocalPos;
+                child->subsurface()->localPosChangedRequest();
+            }
+
+            if(child->subsurface()->imp()->pendingPlaceAbove)
+            {
+                child->compositor()->insertSurfaceAfter(child->subsurface()->imp()->pendingPlaceAbove,child);
+                insertSurfaceAfter(surface->imp()->m_children,child->subsurface()->imp()->pendingPlaceAbove,child);
+                child->subsurface()->placedAbove(child->subsurface()->imp()->pendingPlaceAbove);
+                child->subsurface()->imp()->pendingPlaceAbove = nullptr;
+            }
+
+            if(child->subsurface()->imp()->pendingPlaceBelow)
+            {
+                child->compositor()->insertSurfaceBefore(child->subsurface()->imp()->pendingPlaceBelow,child);
+                insertSurfaceBefore(surface->imp()->m_children,child->subsurface()->imp()->pendingPlaceBelow,child);
+                child->subsurface()->placedBelow(child->subsurface()->imp()->pendingPlaceBelow);
+                child->subsurface()->imp()->pendingPlaceBelow = nullptr;
+            }
         }
     }
-*/
 
-    // Makes the pending buffer the current buffer
-    surface->imp()->current.buffer = surface->imp()->pending.buffer;
-    surface->imp()->pending.buffer = nullptr;
-
-    // If the buffer is empty
-    if(!surface->imp()->current.buffer)
+    // If no buffer was attached
+    if(!surface->imp()->attachedBuffer)
     {
         if(surface->imp()->pending.type == LSurface::Toplevel)
         {
-            surface->imp()->m_role->m_roleId = surface->imp()->pending.type;
+            surface->imp()->m_role->baseImp()->roleId = surface->imp()->pending.type;
             surface->imp()->pending.type = LSurface::Undefined;
             surface->toplevel()->configureRequest();
         }
         else if(surface->imp()->pending.type == LSurface::Popup)
         {
-            surface->imp()->m_role->m_roleId = surface->imp()->pending.type;
+            surface->imp()->m_role->baseImp()->roleId = surface->imp()->pending.type;
             surface->imp()->pending.type = LSurface::Undefined;
             surface->popup()->configureRequest();
         }
-        else if(surface->imp()->pending.type == LSurface::Subsurface)
+        return;
+    }
+
+    // Makes the pending buffer the current buffer
+    surface->imp()->current.buffer = surface->imp()->pending.buffer;
+    surface->imp()->pending.buffer = nullptr;
+
+    // Mark as no buffer attached again
+    surface->imp()->attachedBuffer = false;
+
+    // If the buffer is empty
+    if(!surface->imp()->current.buffer)
+    {
+        // If the surface was mapped
+        if(surface->mapped())
         {
+            surface->imp()->mapped = false;
+
+            // Notify mapping state gange
+            surface->mappingChanged();
 
         }
         return;
+    }
+    else
+    {
+        // If the surface was not mapped
+        if(!surface->mapped())
+        {
+            surface->imp()->mapped = true;
+
+            // Notify mapping state gange
+            surface->mappingChanged();
+        }
+    }
+
+    // Subsurface commit called from the parent commit if synced
+    if(surface->subsurface() && surface->subsurface()->isSynced())
+    {
+        if(surface->subsurface()->imp()->parentIsCommiting)
+            surface->subsurface()->imp()->parentIsCommiting = false;
+        else
+            return;
+    }
+
+    // Apply cached commit to subsurfaces
+    for(LSurface *s : surface->children())
+    {
+        if(s->subsurface() && s->subsurface()->isSynced())
+        {
+            s->subsurface()->imp()->parentIsCommiting = true;
+            apply_commit(s);
+        }
     }
 
     surface->imp()->m_isDamaged = true;
@@ -316,36 +416,6 @@ void Globals::Surface::apply_commit(LSurface *surface)
         }
     }
 
-
-
-
-    // Apply cached commit to subsurfaces
-    for(LSurface *s : surface->children())
-    {
-        if(s->roleType() == LSurface::Subsurface && s->subsurface()->isSynced())
-        {
-            s->subsurface()->m_parentIsCommiting = true;
-            apply_commit(s);
-        }
-
-        /*
-         *         if(s->roleType() == LSurface::Subsurface)
-        {
-            if(s->subsurface()->isSynced())
-            {
-                s->subsurface()->m_parentIsCommiting = true;
-                apply_commit(s);
-            }
-            else
-            {
-                if(!s->subsurface()->m_parentIsCommiting)
-                {
-                    s->subsurface()->m_parentIsCommiting = true;
-                    apply_commit(s);
-                }
-            }
-        }*/
-    }
 
 
     // FALTA ENVIAR EVENTO

@@ -53,9 +53,8 @@ void Globals::Subcompositor::get_subsurface(wl_client *client, wl_resource *reso
     lSurface->imp()->m_role = lSubsurface;
 
     LSurface *lParent = (LSurface*)wl_resource_get_user_data(parent);
-    lCompositor->insertSurfaceAfter(lParent,lSurface);
-    lParent->imp()->m_children.push_back(lSurface);
-    lSurface->imp()->m_parent = lParent;
+    lParent->imp()->pendingChildren.push_back(lSurface);
+    lSurface->imp()->pendingParent = lParent;
 
     wl_resource_set_implementation(subsurface, &subsurface_implementation, lSubsurface, &Subsurface::resource_destroy);
 

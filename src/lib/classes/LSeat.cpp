@@ -148,7 +148,7 @@ void LSeat::processInput()
                 pointer()->pointerMoveEvent(x,y);
 
             if(compositor()->cursor())
-                compositor()->cursor()->move(x,y);
+                compositor()->cursor()->move(x*(1.+abs(x*0.025)),y*(1.+abs(y*0.025)));
         }
         else if(eventType == LIBINPUT_EVENT_POINTER_BUTTON)
         {

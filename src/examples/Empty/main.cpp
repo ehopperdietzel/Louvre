@@ -12,7 +12,6 @@ int main(int, char *[])
     //signal(SIGINT,intHandler);
 
     // Backend
-    //const char *backendPath = "./libLBackendDRM.so";
     const char *backendPath = "./libLBackendX11.so";
 
     // Start the compositor

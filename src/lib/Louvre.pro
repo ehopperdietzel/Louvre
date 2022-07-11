@@ -54,6 +54,7 @@ HEADERS += \
     classes/LTime.h \
     classes/LToplevelRole.h \
     classes/LWayland.h \
+    classes/private/LBaseSurfaceRolePrivate.h \
     classes/private/LClientPrivate.h \
     classes/private/LCompositorPrivate.h \
     classes/private/LDataDevicePrivate.h \
@@ -62,6 +63,7 @@ HEADERS += \
     classes/private/LOutputManagerPrivate.h \
     classes/private/LOutputModePrivate.h \
     classes/private/LOutputPrivate.h \
+    classes/private/LSubsurfaceRolePrivate.h \
     classes/private/LSurfacePrivate.h \
     globals/Viewporter/Viewporter.h \
     globals/Viewporter/viewporter.h \

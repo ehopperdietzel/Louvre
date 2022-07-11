@@ -15,7 +15,7 @@
 #include <LSubsurfaceRole.h>
 #include <LPointer.h>
 #include <LKeyboard.h>
-
+#include <LSurfacePrivate.h>
 #include <dlfcn.h>
 
 using namespace Louvre;
@@ -159,14 +159,26 @@ void LCompositor::start()
     LWayland::runLoop();
 }
 
-void LCompositor::riseSurface(LSurface *surface)
+void LCompositor::LCompositorPrivate::riseChildren(LSurface *surface)
 {
-    m_imp->m_surfaces.remove(surface);
-    m_imp->m_surfaces.push_back(surface);
+    m_surfaces.remove(surface);
+    m_surfaces.push_back(surface);
 
     // Rise its children
     for(LSurface *children : surface->children())
-        riseSurface(children);
+        riseChildren(children);
+}
+
+void LCompositor::riseSurface(LSurface *surface)
+{
+
+    if(surface->subsurface())
+    {
+        riseSurface(surface->parent());
+        return;
+    }
+
+    m_imp->riseChildren(surface);
 }
 
 bool LCompositor::loadBackend(const char *backendPath)
