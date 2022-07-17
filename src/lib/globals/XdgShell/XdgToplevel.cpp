@@ -3,7 +3,7 @@
 #include <LSurfacePrivate.h>
 #include <LCompositor.h>
 #include <xdg-shell.h>
-#include <LToplevelRole.h>
+#include <LToplevelRolePrivate.h>
 #include <LSeat.h>
 #include <LPointer.h>
 
@@ -41,6 +41,8 @@ void Extensions::XdgShell::Toplevel::destroy_resource(wl_resource *resource)
 
         lToplevel->surface()->imp()->current.type = LSurface::Undefined;
         lToplevel->surface()->imp()->m_role = nullptr;
+        lToplevel->surface()->imp()->mapped = false;
+        lToplevel->surface()->mappingChanged();
         lToplevel->surface()->roleChanged();
     }
 
@@ -60,62 +62,102 @@ void Extensions::XdgShell::Toplevel::set_parent (wl_client *, wl_resource *resou
 
     if(parent == NULL)
     {
+        removeParent:
         if(lToplevel->surface()->parent())
+        {
             lToplevel->surface()->parent()->imp()->m_children.remove(lToplevel->surface());
-        lToplevel->surface()->imp()->m_parent = nullptr;
+            lToplevel->surface()->imp()->m_parent = nullptr;
+            lToplevel->surface()->parentChanged();
+        }
     }
     else
     {
-        lToplevel->surface()->imp()->m_parent = ((LToplevelRole*)wl_resource_get_user_data(parent))->surface();
-        lToplevel->surface()->parent()->imp()->m_children.push_back(lToplevel->surface());
+        LSurface *lParent = ((LToplevelRole*)wl_resource_get_user_data(parent))->surface();
+
+        if(lParent->mapped())
+        {
+            lToplevel->surface()->imp()->m_parent = lParent;
+            lToplevel->surface()->parent()->imp()->m_children.push_back(lToplevel->surface());
+            lToplevel->surface()->parentChanged();
+        }
+        // Setting a parent that is not mapped is equal to set a null parent
+        else
+        {
+            goto removeParent;
+        }
     }
 
-    lToplevel->surface()->parentChanged();
+
 }
 
 void Extensions::XdgShell::Toplevel::set_title (wl_client *, wl_resource *resource, const char *title)
 {
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->setTitle(title);
+    lToplevel->imp()->setTitle(title);
 }
 
 void Extensions::XdgShell::Toplevel::set_app_id (wl_client *, wl_resource *resource, const char *app_id)
 {
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->setAppId(app_id);
+    lToplevel->imp()->setAppId(app_id);
 }
 
-void Extensions::XdgShell::Toplevel::show_window_menu (wl_client *client, wl_resource *resource, wl_resource *seat, UInt32 serial, Int32 x, Int32 y)
-{
-    /* TODO */
-}
-
-void Extensions::XdgShell::Toplevel::move(wl_client *, wl_resource *resource, wl_resource */*seat*/, UInt32 /*serial*/)
+void Extensions::XdgShell::Toplevel::show_window_menu (wl_client *, wl_resource *resource, wl_resource */*seat*/, UInt32 serial, Int32 x, Int32 y)
 {
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->startMoveRequest();
+
+    if(serial == lToplevel->surface()->client()->lastPointerButtonEventSerial() || serial == lToplevel->surface()->client()->lastKeyboardKeyEventSerial())
+        lToplevel->showWindowMenuRequest(x,y);
+
 }
 
-void Extensions::XdgShell::Toplevel::resize(wl_client *, wl_resource *resource, wl_resource */*seat*/, UInt32 /*serial*/, UInt32 edges)
+void Extensions::XdgShell::Toplevel::move(wl_client *, wl_resource *resource, wl_resource */*seat*/, UInt32 serial)
 {
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->startResizeRequest((LToplevelRole::Edge)edges);
+    if(serial == lToplevel->surface()->client()->lastPointerButtonEventSerial() || serial == lToplevel->surface()->client()->lastKeyboardKeyEventSerial())
+        lToplevel->startMoveRequest();
+}
+
+void Extensions::XdgShell::Toplevel::resize(wl_client *, wl_resource *resource, wl_resource */*seat*/, UInt32 serial, UInt32 edges)
+{
+    if(edges < 0 || edges > 10)
+    {
+        wl_resource_post_error(resource, XDG_TOPLEVEL_ERROR_INVALID_RESIZE_EDGE, "provided value is not a valid variant of the resize_edge enum.");
+        return;
+    }
+
+    LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
+    if(serial == lToplevel->surface()->client()->lastPointerButtonEventSerial() || serial == lToplevel->surface()->client()->lastKeyboardKeyEventSerial())
+        lToplevel->startResizeRequest((LToplevelRole::Edge)edges);
 }
 
 void Extensions::XdgShell::Toplevel::set_max_size (wl_client *, wl_resource *resource, Int32 width, Int32 height)
 {
+    if(width < 0 || height < 0)
+    {
+        // Error enum not defined in protocol
+        wl_resource_post_error(resource, XDG_TOPLEVEL_ERROR_INVALID_RESIZE_EDGE, "invalid toplevel max size");
+        return;
+    }
+
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->m_maxSize.setW(width);
-    lToplevel->m_maxSize.setH(height);
-    lToplevel->maxSizeChanged();
+    lToplevel->imp()->pendingMaxSize.setW(width);
+    lToplevel->imp()->pendingMaxSize.setH(height);
+    lToplevel->imp()->hasPendingMaxSize = true;
 }
 
 void Extensions::XdgShell::Toplevel::set_min_size (wl_client *, wl_resource *resource, Int32 width, Int32 height)
 {
+    if(width < 0 || height < 0)
+    {
+        // Error enum not defined in protocol
+        wl_resource_post_error(resource, XDG_TOPLEVEL_ERROR_INVALID_RESIZE_EDGE, "invalid toplevel min size");
+        return;
+    }
     LToplevelRole *lToplevel = (LToplevelRole*)wl_resource_get_user_data(resource);
-    lToplevel->m_minSize.setW(width);
-    lToplevel->m_minSize.setH(height);
-    lToplevel->minSizeChanged();
+    lToplevel->imp()->pendingMinSize.setW(width);
+    lToplevel->imp()->pendingMinSize.setH(height);
+    lToplevel->imp()->hasPendingMinSize = true;
 }
 
 void Extensions::XdgShell::Toplevel::set_maximized (wl_client *, wl_resource *resource)

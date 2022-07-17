@@ -38,8 +38,8 @@ LOpenGL::LOpenGL()
         {\
           if(mode == 0)\
           {\
-            float x = (srcRect.x + v_texcoord.x * srcRect.z)/texSize.x;\
-            float y = (srcRect.y + (1.0 - v_texcoord.y)*srcRect.w)/texSize.y;\
+            float x = (srcRect.x)/texSize.x + v_texcoord.x*srcRect.z/texSize.x;\
+            float y = (srcRect.y + srcRect.w - (v_texcoord.y*srcRect.w))/texSize.y;\
             gl_FragColor = texture2D(tex,vec2(x,y));\
           }\
           else\
@@ -242,6 +242,8 @@ void LOpenGL::drawColor(const LRect &dst, Float32 r, Float32 g, Float32 b, Float
     setViewport(dst);
     glUniform4f(colorUniform,r,g,b,a);
     glUniform1i(modeUniform,1);
+    //glClearColor(r,g,b,a);
+    //glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 }

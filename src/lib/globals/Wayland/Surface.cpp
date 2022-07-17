@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <sys/eventfd.h>
 
-#include <LToplevelRole.h>
+#include <LToplevelRolePrivate.h>
 #include <LCursor.h>
 #include <LSubsurfaceRolePrivate.h>
 #include <LBaseSurfaceRolePrivate.h>
@@ -250,7 +250,7 @@ void Globals::Surface::apply_commit(LSurface *surface)
     // Mark as no buffer attached again
     surface->imp()->attachedBuffer = false;
 
-    // If the buffer is empty
+    // If the buffer is null
     if(!surface->imp()->current.buffer)
     {
         // If the surface was mapped
@@ -260,6 +260,36 @@ void Globals::Surface::apply_commit(LSurface *surface)
 
             // Notify mapping state gange
             surface->mappingChanged();
+
+            // If is toplevel update its children
+            if(surface->toplevel())
+            {
+                // If surface has parent
+                if(surface->parent())
+                {
+                    // Add its children to the parent
+                    for(LSurface *child : surface->children())
+                    {
+                        surface->parent()->imp()->m_children.push_back(child);
+                        child->imp()->m_parent = surface->parent();
+                        child->parentChanged();
+                    }
+
+                    surface->parent()->imp()->m_children.remove(surface);
+                    surface->imp()->m_parent = nullptr;
+                    surface->parentChanged();
+                }
+                // Unsets children
+                else
+                {
+                    for(LSurface *child : surface->children())
+                    {
+                        child->imp()->m_parent = nullptr;
+                        child->parentChanged();
+                    }
+                }
+
+            }
 
         }
         return;
@@ -276,6 +306,9 @@ void Globals::Surface::apply_commit(LSurface *surface)
         }
     }
 
+    /***********************************
+     *********** SUBSURFACES ***********
+     ***********************************/
     // Subsurface commit called from the parent commit if synced
     if(surface->subsurface() && surface->subsurface()->isSynced())
     {
@@ -300,6 +333,9 @@ void Globals::Surface::apply_commit(LSurface *surface)
     // Convert the buffer to OpenGL texture
     surface->imp()->m_bufferToTexture();
 
+    /**************************************
+     *********** CURSOR SURFACE ***********
+     **************************************/
     // Notify that the cursor changed content
     if(surface->cursor() && surface->compositor()->cursor()->texture() == surface->texture())
     {
@@ -391,28 +427,44 @@ void Globals::Surface::apply_commit(LSurface *surface)
     {
         LToplevelRole *lToplevel = surface->toplevel();
 
-        if(lToplevel->m_pendingConf.set)
+        // Max size update
+        if(lToplevel->imp()->hasPendingMaxSize)
         {
-            UChar8 prevState = lToplevel->m_stateFlags;
-            lToplevel->m_stateFlags = lToplevel->m_sentConf.flags;
+            lToplevel->imp()->hasPendingMaxSize = false;
+            lToplevel->imp()->maxSize = lToplevel->imp()->pendingMaxSize;
+            lToplevel->maxSizeChanged();
+        }
 
-            if((prevState & LToplevelRole::Maximized) != (lToplevel->m_sentConf.flags & LToplevelRole::Maximized))
+        // Min size update
+        if(lToplevel->imp()->hasPendingMinSize)
+        {
+            lToplevel->imp()->hasPendingMinSize = false;
+            lToplevel->imp()->minSize = lToplevel->imp()->pendingMinSize;
+            lToplevel->minSizeChanged();
+        }
+
+        if(lToplevel->imp()->pendingConf.set)
+        {
+            UChar8 prevState = lToplevel->imp()->stateFlags;
+            lToplevel->imp()->stateFlags = lToplevel->imp()->sentConf.flags;
+
+            if((prevState & LToplevelRole::Maximized) != (lToplevel->imp()->sentConf.flags & LToplevelRole::Maximized))
                 lToplevel->maximizeChanged();
-            if((prevState & LToplevelRole::Fullscreen) != (lToplevel->m_sentConf.flags & LToplevelRole::Fullscreen))
+            if((prevState & LToplevelRole::Fullscreen) != (lToplevel->imp()->sentConf.flags & LToplevelRole::Fullscreen))
                 lToplevel->fullscreenChanged();
 
-            if(lToplevel->m_sentConf.flags & LToplevelRole::Activated)
+            if(lToplevel->imp()->sentConf.flags & LToplevelRole::Activated)
             {
                 if(lToplevel->seat()->activeTopLevel() && lToplevel->seat()->activeTopLevel() != lToplevel)
-                    lToplevel->seat()->activeTopLevel()->configure(lToplevel->seat()->activeTopLevel()->m_currentConf.flags & ~LToplevelRole::Activated);
+                    lToplevel->seat()->activeTopLevel()->configure(lToplevel->seat()->activeTopLevel()->imp()->currentConf.flags & ~LToplevelRole::Activated);
 
                 lToplevel->seat()->m_activeTopLevel = lToplevel;
             }
 
-            if((prevState & LToplevelRole::Activated) != (lToplevel->m_sentConf.flags & LToplevelRole::Activated))
+            if((prevState & LToplevelRole::Activated) != (lToplevel->imp()->sentConf.flags & LToplevelRole::Activated))
                 lToplevel->activatedChanged();
 
-            lToplevel->m_pendingConf.set = false;
+            lToplevel->imp()->pendingConf.set = false;
         }
     }
 

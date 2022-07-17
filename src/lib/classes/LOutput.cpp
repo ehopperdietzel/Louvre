@@ -535,6 +535,9 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
         // Let the user do his painting
         output->m_imp->m_compositor->imp()->m_renderMutex.lock();
 
+        // Tell the input loop to process events after mutex is released
+        LWayland::forceUpdate();
+
         output->paintGL(output->imp()->m_currentBuffer );
         output->imp()->m_currentBuffer = 1 - output->imp()->m_currentBuffer;
 
@@ -543,8 +546,7 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
 
         output->m_imp->m_compositor->imp()->m_renderMutex.unlock();
 
-        // Tell the input loop to process events
-        LWayland::forceUpdate();
+
 
         if(!output->compositor()->cursor()->hasHardwareSupport())
         {

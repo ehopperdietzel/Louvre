@@ -312,7 +312,7 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
             if (fork()==0)
             {
                 setsid();
-                system("google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland");
+                system("google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland --disable-gpu-driver-bug-workarounds --enable-native-gpu-memory-buffers");
                 exit(0);
             }
         }
@@ -365,6 +365,7 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
         else if(sym == XKB_KEY_F9)
         {
             compositor()->cursor()->output()->sc = true;
+            compositor()->repaintAllOutputs();
         }
         else if(sym == XKB_KEY_Down)
         {

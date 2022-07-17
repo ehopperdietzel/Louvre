@@ -79,35 +79,14 @@ public:
     bool fullscreen() const;
     bool activated() const;
     States state() const;
+
+    class LToplevelRolePrivate;
+    LToplevelRolePrivate *imp() const;
 private:
-    friend class LWayland;
-    friend class Globals::Surface;
-    friend class Extensions::XdgShell::Surface;
-    friend class Extensions::XdgShell::Toplevel;
 
-    struct TopLevelConfiguration
-    {
-        bool set = false;
-        LSize size = LSize();
-        UChar8 flags = Deactivated;
-        UInt32 serial = 0;
-    };
+    LToplevelRolePrivate *m_imp = nullptr;
 
-    UChar8 m_stateFlags = Deactivated;
-    TopLevelConfiguration m_currentConf;
-    TopLevelConfiguration m_sentConf;
-    TopLevelConfiguration m_pendingConf;
 
-    void dispachLastConfiguration();
-
-    LSize m_minSize;
-    LSize m_maxSize;
-    LRect m_windowGeometry;
-
-    void setAppId(const char *appId);
-    void setTitle(const char *title);
-    char *m_appId = nullptr;
-    char *m_title = nullptr;
 
 };
 

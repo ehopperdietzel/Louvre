@@ -20,6 +20,8 @@ public:
     LRegion exposedRegion[2];
     bool fullRefresh = true;
     LRect cursorRect[2];
+
+    bool first[2];
 };
 
 #endif // OUTPUT_H

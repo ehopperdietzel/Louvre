@@ -6,12 +6,15 @@
 #include <unistd.h>
 #include <LTime.h>
 #include <LCursor.h>
+#include <SOIL/SOIL.h>
 
 Output::Output():LOutput(){}
 
 void Output::initializeGL()
 {
     backgroundTexture = LOpenGL::loadTexture("wallpaper.png");
+    first[0] = true;
+    first[1] = true;
 }
 
 void paintRandom(const LRect &r,LOpenGL *p)
@@ -19,7 +22,7 @@ void paintRandom(const LRect &r,LOpenGL *p)
     float R = float(rand()%1000)/1000.f;
     float G = float(rand()%1000)/1000.f;
     float B = float(rand()%1000)/1000.f;
-    p->drawColor(r,R,G,B,0.5);
+    p->drawColor(r,1,0,0,0.5);
 }
 void Output::paintGL(Int32 currentBuffer)
 {
@@ -32,31 +35,7 @@ void Output::paintGL(Int32 currentBuffer)
         exposedRegion[1].addRect(rect(true));
     }
 
-    //printf("CURRENT BUFFER %i\n",currentBuffer);
     LOpenGL *p = painter();
-
-    //p->clearScreen();
-
-    /*
-    p->clearScreen();
-    LRegion test;
-    test.addRect(LRect(100,100,100,100));
-    test.addRect(LRect(101,100,200,100));
-    test.addRect(LRect(102,100,600,100));
-
-
-    test.addRect(LRect(304,300,1000,100));
-    test.addRect(LRect(404,600,1000,100));
-
-    test.addRect(LRect(0,600,10,10));
-
-    for(const LRect &d : test.rects())
-    {
-        p->drawColor(d,1,0,0,0.5);
-    }
-    return;
-    */
-
 
     // Prev buffer index
     Int32 prevBuffer = 1 - currentBuffer;
@@ -262,6 +241,7 @@ void Output::paintGL(Int32 currentBuffer)
 
         //printf("TOTAL RECTS %lu\n",s->opaqueT.rects().size());
 
+
     }
 
 
@@ -273,6 +253,7 @@ void Output::paintGL(Int32 currentBuffer)
         for(const LRect &d : exposedRegion[currentBuffer].rects())
         {
             p->drawTexture(backgroundTexture,d*getOutputScale(),d);
+            //p->drawColor(d,0.3,0.3,0.7,1);
             //paintRandom(d,painter());
         }
     }
@@ -282,6 +263,7 @@ void Output::paintGL(Int32 currentBuffer)
     glEnable(GL_BLEND);
 
     LRegion totalRendered;
+
 
     for(Surface *s : surfaces)
     {
@@ -313,6 +295,19 @@ void Output::paintGL(Int32 currentBuffer)
         //if(!s->transT.rects().empty() || !s->opaqueT.rects().empty())
 
 
+    }  
+
+    if(first[currentBuffer])
+    {
+        p->drawColor(LRect(0,0,rect().w(),LOUVRE_TB_H/getOutputScale()),1,1,1,0.75);
+        first[currentBuffer] = false;
+    }
+    else if(!fullScreen)
+    {
+        exposedRegion[currentBuffer].subtractRect(LRect(0,LOUVRE_TB_H/getOutputScale(),rect().w(),rect().h()));
+
+        for(const LRect &d : exposedRegion[currentBuffer].rects())
+            p->drawColor(d,1,1,1,0.75);
     }
 
     exposedRegion[currentBuffer].clear();
@@ -320,4 +315,15 @@ void Output::paintGL(Int32 currentBuffer)
     //Int32 f = LTime::ms() - t;
 
     //printf("Time %i\n",f);
+
+    if(sc)
+    {
+        sc = false;
+        UChar8 *pix = new UChar8[2880*1800*4];
+        glReadPixels(0,0,2880,1800,GL_RGBA,GL_UNSIGNED_BYTE,pix);
+
+        SOIL_save_image("/home/eduardo/Desktop/sh.bmp",SOIL_SAVE_TYPE_BMP,2880,1800,4,pix);
+
+        delete []pix;
+    }
 }

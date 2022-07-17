@@ -54,9 +54,11 @@ HEADERS += \
     classes/LTime.h \
     classes/LToplevelRole.h \
     classes/LWayland.h \
+    classes/LX11Cursor.h \
     classes/private/LBaseSurfaceRolePrivate.h \
     classes/private/LClientPrivate.h \
     classes/private/LCompositorPrivate.h \
+    classes/private/LCursorPrivate.h \
     classes/private/LDataDevicePrivate.h \
     classes/private/LDataOfferPrivate.h \
     classes/private/LDataSourcePrivate.h \
@@ -65,6 +67,7 @@ HEADERS += \
     classes/private/LOutputPrivate.h \
     classes/private/LSubsurfaceRolePrivate.h \
     classes/private/LSurfacePrivate.h \
+    classes/private/LToplevelRolePrivate.h \
     globals/Viewporter/Viewporter.h \
     globals/Viewporter/viewporter.h \
     globals/Wayland/Compositor.h \
@@ -114,6 +117,8 @@ SOURCES += \
     classes/LTime.cpp \
     classes/LToplevelRole.cpp \
     classes/LWayland.cpp \
+    classes/LX11Cursor.cpp \
+    classes/default/LToplevelRoleDefault.cpp \
     globals/Viewporter/Viewporter.cpp \
     globals/Viewporter/viewporter.c \
     globals/Wayland/Compositor.cpp \

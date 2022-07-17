@@ -5,7 +5,7 @@
 #include <LSurfacePrivate.h>
 #include <LCompositor.h>
 #include <LPositioner.h>
-#include <LToplevelRole.h>
+#include <LToplevelRolePrivate.h>
 #include <LPopupRole.h>
 
 using namespace Louvre;
@@ -140,7 +140,7 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *, wl_resource
 
     if(surface->roleType() == LSurface::Toplevel)
     {
-        surface->toplevel()->m_windowGeometry = LRect(x, y, width, height);
+        surface->toplevel()->imp()->windowGeometry = LRect(x, y, width, height);
         surface->toplevel()->geometryChanged();
     }
     else if(surface->roleType() == LSurface::Popup)
@@ -164,10 +164,10 @@ void Extensions::XdgShell::Surface::ack_configure(wl_client *, wl_resource *reso
     {
         LToplevelRole *topLevel = surface->toplevel();
 
-        if(topLevel->m_sentConf.serial == serial)
+        if(topLevel->imp()->sentConf.serial == serial)
         {
-            topLevel->m_pendingConf = topLevel->m_sentConf;
-            topLevel->m_pendingConf.set = true;
+            topLevel->imp()->pendingConf = topLevel->imp()->sentConf;
+            topLevel->imp()->pendingConf.set = true;
         }
     }
     else if(surface->roleType() == LSurface::Popup)

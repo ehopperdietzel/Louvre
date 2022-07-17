@@ -1,0 +1,39 @@
+xdg_wm_base::destroy -> OK
+xdg_wm_base::create_positioner -> OK
+xdg_wm_base::get_xdg_surface -> OK
+xdg_wm_base::pong -> OK
+xdg_wm_base::ping -> OK
+
+xdg_positioner::destroy -> OK ???
+xdg_positioner::set_size -> OK
+xdg_positioner::set_anchor_rect -> OK ???
+xdg_positioner::set_anchor -> OK
+xdg_positioner::set_gravity -> OK
+xdg_positioner::set_constraint_adjustment -> OK
+xdg_positioner::set_offset -> OK
+# Since 3
+xdg_positioner::set_reactive -> OK ???
+xdg_positioner::set_parent_size -> OK ???
+xdg_positioner::set_parent_configure
+
+xdg_surface::destroy -> Falta verificar que el rol se destruya primero.
+xdg_surface::get_toplevel -> Falta validar condiciones
+xdg_surface::get_popup -> Falta validar padre null
+xdg_surface::set_window_geometry -> Aplicar en commit y revisar cuando no se establece
+xdg_surface::ack_configure -> Falta verificar
+xdg_surface::configure-> OK
+
+
+# Check if mapped before sending events (resize) to the user
+xdg_toplevel::destroy -> OK
+xdg_toplevel::set_parent -> OK
+xdg_toplevel::set_title -> OK
+xdg_toplevel::set_app_id -> OK
+xdg_toplevel::show_window_menu -> OK
+xdg_toplevel::move -> OK
+xdg_toplevel::resize -> OK
+xdg_toplevel::set_max_size -> OK (check if min size is greater than max size)
+xdg_toplevel::set_min_size -> OK
+xdg_toplevel::set_maximized -> OK
+xdg_toplevel::unset_maximized -> OK
+xdg_toplevel::set_fullscreen -> OK

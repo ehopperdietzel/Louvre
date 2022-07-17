@@ -11,6 +11,7 @@ QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE *= -O3
 
 LIBS += -L$$PWD/../../build -lLouvre -lGLESv2
+LIBS += -lSOIL
 INCLUDEPATH += /usr/include/drm
 INCLUDEPATH += ../../lib/
 INCLUDEPATH += ../../lib/classes/

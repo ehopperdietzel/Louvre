@@ -71,6 +71,7 @@ struct DRM
     EGLImage cursorEGLImage;
     GLuint cursorTexture;
     GLuint cursoFramebuffer = 0;
+    UChar8 cursorBuffer[64*64*4];
     bool cursorVisible = false;
     bool cursorInitialized = false;
 };
@@ -791,7 +792,7 @@ void LBackend::initializeCursor(LOutput *output)
     // Cursor
     PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR = (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress ("eglCreateImageKHR");
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress ("glEGLImageTargetTexture2DOES");
-    EGLImage image = eglCreateImageKHR(data->gl.display,data->gl.context,EGL_NATIVE_PIXMAP_KHR,data->cursor_bo,NULL);
+    data->cursorEGLImage = eglCreateImageKHR(data->gl.display,data->gl.context,EGL_NATIVE_PIXMAP_KHR,data->cursor_bo,NULL);
 
     glGenFramebuffers(1, &data->cursoFramebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, data->cursoFramebuffer);
@@ -801,7 +802,7 @@ void LBackend::initializeCursor(LOutput *output)
     glBindTexture(GL_TEXTURE_2D, data->cursorTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D,image);
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D,data->cursorEGLImage);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data->cursorTexture, 0);
     data->cursorBoHandleU32 = gbm_bo_get_handle(data->cursor_bo).s32;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -819,15 +820,18 @@ void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, data->cursoFramebuffer);
-    output->painter()->scaleCursor(texture,LRect(0,0,texture->size().w(),-texture->size().h()),LRect(0,0,size.w(),size.h()));
+    output->painter()->scaleCursor(texture,LRect(0,0,texture->size().w(),-texture->size().h()),LRect(LPoint(),size));
+
+    //glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,data->cursorBuffer);
+    //gbm_bo_write(data->cursor_bo,data->cursorBuffer,64*64*4);
+
+    if(!data->cursorVisible)
+        drmModeSetCursor(data->deviceFd, data->crtc_id, gbm_bo_get_handle(data->cursor_bo).s32, 64, 64);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     if(std::this_thread::get_id() == output->compositor()->mainThreadId())
         glFlush();
-
-    if(!data->cursorVisible)
-        drmModeSetCursor(data->deviceFd, data->crtc_id, data->cursorBoHandleU32, 64, 64);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
 

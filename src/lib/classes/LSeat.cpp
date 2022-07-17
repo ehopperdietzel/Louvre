@@ -143,12 +143,13 @@ void LSeat::processInput()
 
             double x = libinput_event_pointer_get_dx(pointerEvent);
             double y = libinput_event_pointer_get_dy(pointerEvent);
+            double speed = 0.6;
 
             if(pointer())
                 pointer()->pointerMoveEvent(x,y);
 
             if(compositor()->cursor())
-                compositor()->cursor()->move(x*(1.+abs(x*0.025)),y*(1.+abs(y*0.025)));
+                compositor()->cursor()->move(x*speed,y*speed);
         }
         else if(eventType == LIBINPUT_EVENT_POINTER_BUTTON)
         {

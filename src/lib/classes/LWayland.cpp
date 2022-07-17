@@ -20,7 +20,7 @@
 #include <LSurface.h>
 #include <LOutput.h>
 #include <LSeat.h>
-#include <LToplevelRole.h>
+#include <LToplevelRolePrivate.h>
 
 using namespace std;
 using namespace Louvre;
@@ -122,7 +122,7 @@ LOutput *LWayland::mainOutput()
 
 void LWayland::forceUpdate()
 {
-    if(!updated)
+    //if(!updated)
         eventfd_write(compositor->imp()->libinputFd,1);
 }
 
@@ -266,7 +266,7 @@ void LWayland::runLoop()
         for(LSurface *surface : compositor->surfaces())
         {
             if(surface != nullptr && surface->roleType() == LSurface::Toplevel)
-                surface->toplevel()->dispachLastConfiguration();
+                surface->toplevel()->imp()->dispachLastConfiguration();
         }
 
         flushClients();
@@ -274,7 +274,6 @@ void LWayland::runLoop()
         compositor->imp()->m_renderMutex.unlock();
 
     }
-    //wl_display_run(display);
 }
 
 void LWayland::clientConnectionEvent(wl_listener *listener, void *data)

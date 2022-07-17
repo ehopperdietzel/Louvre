@@ -43,7 +43,7 @@ void Louvre::Globals::Output::bind(wl_client *client, void *data, UInt32 version
         output->rect(false).h(),
         60);
 
-    wl_output_send_scale(resource, compositor->outputs().front()->getOutputScale());
+    wl_output_send_scale(resource, int(round(compositor->outputs().front()->getOutputScale())));
     wl_output_send_done(resource);
 
     /*

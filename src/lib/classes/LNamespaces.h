@@ -5,7 +5,7 @@
 #include <libinput.h>
 #include <list>
 
-#define LOUVRE_TB_H 44
+#define LOUVRE_TB_H 48
 #define LOUBRE_DEBUG 1
 
 
@@ -50,6 +50,7 @@ namespace Louvre
     class LPointer;
     class LKeyboard;
     class LCursor;
+    class LX11Cursor;
 
     // Utils
     class LTime;
