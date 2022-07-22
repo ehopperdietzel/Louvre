@@ -8,42 +8,52 @@ class Louvre::LPositioner
 {
 public:
     LPositioner(LClient *client);
+    ~LPositioner();
 
-    enum class LAnchor : UChar8
+    struct Anchor
     {
-        LNone        = 0,
-        LTop         = 1,
-        LBottom      = 2,
-        LLeft        = 3,
-        LRight       = 4,
-        LTopLeft     = 5,
-        LBottomLeft  = 6,
-        LTopRight    = 7,
-        LBottomRight = 8
+        enum : UInt32
+        {
+            NoAnchor    = 0,
+            Top         = 1,
+            Bottom      = 2,
+            Left        = 3,
+            Right       = 4,
+            TopLeft     = 5,
+            BottomLeft  = 6,
+            TopRight    = 7,
+            BottomRight = 8
+        };
     };
 
-    enum class LGravity : UChar8
+    struct Gravity
     {
-        LNone        = 0,
-        LTop         = 1,
-        LBottom      = 2,
-        LLeft        = 3,
-        LRight       = 4,
-        LTopLeft     = 5,
-        LBottomLeft  = 6,
-        LTopRight    = 7,
-        LBottomRight = 8
+        enum : UInt32
+        {
+            NoGravity   = 0,
+            Top         = 1,
+            Bottom      = 2,
+            Left        = 3,
+            Right       = 4,
+            TopLeft     = 5,
+            BottomLeft  = 6,
+            TopRight    = 7,
+            BottomRight = 8
+        };
     };
 
-    enum class LConstraintAdjustment : UChar8
+    struct ConstraintAdjustment
     {
-        LNone    = 0,
-        LSlideX  = 1,
-        LSlideY  = 2,
-        LFlipX   = 4,
-        LFlipY   = 8,
-        LResizeX = 16,
-        LResizeY = 32
+        enum : UInt32
+        {
+            NoAdjustment    = 0,
+            SlideX          = 1,
+            SlideY          = 2,
+            FlipX           = 4,
+            FlipY           = 8,
+            ResizeX         = 16,
+            ResizeY         = 32
+        };
     };
 
     LClient *client() const;
@@ -51,8 +61,8 @@ public:
 
     const LSize &size() const;
     const LRect &anchorRect() const;
-    LAnchor anchor() const;
-    LGravity gravity() const;
+    UInt32 anchor() const;
+    UInt32 gravity() const;
     const LPoint &offset() const;
 
 #if LOUVRE_XDG_WM_BASE_VERSION >=3
@@ -63,31 +73,15 @@ public:
 
     LPoint calculatePopupPosition(const LRect &outputRect, const LPoint &parentPosition);
 
-    LConstraintAdjustment constraintAdjustment() const;
+    UInt32 constraintAdjustment() const;
 
+    class LPositionerPrivate;
+    LPositionerPrivate *imp() const;
 private:
-    friend class Louvre::Extensions::XdgShell::WmBase;
-    friend class Louvre::Extensions::XdgShell::Popup;
-    friend class Louvre::Extensions::XdgShell::Positioner;
 
-    wl_resource *m_resource = nullptr;
-    LClient *m_client = nullptr;
+    LPositionerPrivate *m_imp = nullptr;
 
-    LSize m_size;
-    LRect m_anchorRect;
-    LPoint m_offset;
 
-    LAnchor m_anchor = LAnchor::LNone;
-    LGravity m_gravity = LGravity::LNone;
-    LConstraintAdjustment m_constraintAdjustment = LConstraintAdjustment::LNone;
-
-    LSurface *m_linkedSurface = nullptr;
-
-#if LOUVRE_XDG_WM_BASE_VERSION >=3
-    bool m_isReactive = false;
-    LSize m_parentSize;
-    UInt32 m_parentConfigureSerial;
-#endif
 
 };
 

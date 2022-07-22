@@ -1,6 +1,6 @@
 #include "XdgPositioner.h"
 #include <stdio.h>
-#include <LPositioner.h>
+#include <LPositionerPrivate.h>
 #include <LSurface.h>
 #include <xdg-shell.h>
 
@@ -25,8 +25,8 @@ void Louvre::Extensions::XdgShell::Positioner::set_size(wl_client *, wl_resource
     }
 
     LPositioner *positioner = (LPositioner*)wl_resource_get_user_data(resource);
-    positioner->m_size.setW(width);
-    positioner->m_size.setH(height);
+    positioner->imp()->size.setW(width);
+    positioner->imp()->size.setH(height);
 }
 
 void Louvre::Extensions::XdgShell::Positioner::set_anchor_rect(wl_client *, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
@@ -38,34 +38,34 @@ void Louvre::Extensions::XdgShell::Positioner::set_anchor_rect(wl_client *, wl_r
     }
 
     LPositioner *positioner = (LPositioner*)wl_resource_get_user_data(resource);
-    positioner->m_anchorRect.setX(x);
-    positioner->m_anchorRect.setY(y);
-    positioner->m_anchorRect.setW(width);
-    positioner->m_anchorRect.setH(height);
+    positioner->imp()->anchorRect.setX(x);
+    positioner->imp()->anchorRect.setY(y);
+    positioner->imp()->anchorRect.setW(width);
+    positioner->imp()->anchorRect.setH(height);
 }
 
 void Louvre::Extensions::XdgShell::Positioner::set_anchor(wl_client *, wl_resource *resource, UInt32 anchor)
 {
     LPositioner *positioner = (LPositioner*)wl_resource_get_user_data(resource);
-    positioner->m_anchor = (LPositioner::LAnchor)anchor;
+    positioner->imp()->anchor = anchor;
 }
 
 void Louvre::Extensions::XdgShell::Positioner::set_gravity(wl_client *, wl_resource *resource, UInt32 gravity)
 {
     LPositioner *positioner = (LPositioner*)wl_resource_get_user_data(resource);
-    positioner->m_gravity = (LPositioner::LGravity)gravity;
+    positioner->imp()->gravity = gravity;
 }
 
 void Louvre::Extensions::XdgShell::Positioner::set_constraint_adjustment(wl_client *, wl_resource *resource, UInt32 constraintAdjustment)
 {
     LPositioner *positioner = (LPositioner*)wl_resource_get_user_data(resource);
-    positioner->m_constraintAdjustment = (LPositioner::LConstraintAdjustment)constraintAdjustment;
+    positioner->imp()->constraintAdjustment = constraintAdjustment;
 }
 
 void Louvre::Extensions::XdgShell::Positioner::set_offset(wl_client *, wl_resource *resource, Int32 x, Int32 y)
 {
     LPositioner *positioner = (LPositioner*)wl_resource_get_user_data(resource);
-    positioner->m_offset = LPoint(x,y);
+    positioner->imp()->offset = LPoint(x,y);
 }
 
 #if LOUVRE_XDG_WM_BASE_VERSION >=3
@@ -73,13 +73,13 @@ void Louvre::Extensions::XdgShell::Positioner::set_offset(wl_client *, wl_resour
     void Louvre::Extensions::XdgShell::Positioner::set_reactive(wl_client *, wl_resource *resource)
     {
         LPositioner *positioner = (LPositioner*)wl_resource_get_user_data(resource);
-        positioner->m_isReactive = true;
+        positioner->imp()->isReactive = true;
     }
 
     void Louvre::Extensions::XdgShell::Positioner::set_parent_size(wl_client *, wl_resource *resource, Int32 parentWidth, Int32 parentHeight)
     {
         LPositioner *positioner = (LPositioner*)wl_resource_get_user_data(resource);
-        positioner->m_parentSize = LSize(parentWidth,parentHeight);
+        positioner->imp()->parentSize = LSize(parentWidth,parentHeight);
     }
 
     void Louvre::Extensions::XdgShell::Positioner::set_parent_configure(wl_client *, wl_resource *resource, UInt32 serial)

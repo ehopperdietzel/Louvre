@@ -118,6 +118,7 @@ void LCompositor::destroySurfaceRequest(LSurface *surface)
         cursor()->setCursor(LCursor::Arrow);
         seat()->pointer()->setCursorSurface(nullptr);
     }
+
 }
 
 void LCompositor::destroyToplevelRequest(LToplevelRole *toplevel)
@@ -128,7 +129,13 @@ void LCompositor::destroyToplevelRequest(LToplevelRole *toplevel)
 
 void LCompositor::destroyPopupRequest(LPopupRole *popup)
 {
-    (void)popup;
+    // Return implicit grab to parent
+    if(popup->surface()->parent() && (popup->surface() == seat()->keyboard()->focusSurface() || popup->surface() == seat()->pointer()->focusSurface()))
+    {
+        seat()->keyboard()->setFocus(popup->surface()->parent());
+        seat()->pointer()->setFocus(popup->surface()->parent());
+    }
+
     repaintAllOutputs();
 }
 

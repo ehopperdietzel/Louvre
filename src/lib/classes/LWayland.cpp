@@ -248,12 +248,14 @@ void LWayland::bindEGLDisplay(EGLDisplay eglDisplay)
     eglBindWaylandDisplayWL(eglDisplay, display);
 }
 
-pollfd fds[1];
+pollfd fds[0];
 
 void LWayland::runLoop()
 {
     fds[0].events = WL_EVENT_READABLE | WL_EVENT_WRITABLE;
     fds[0].fd = wayland_fd;
+    //fds[1].events = POLLIN;
+    //fds[1].fd = compositor->imp()->libinputFd;
 
     while(true)
     {

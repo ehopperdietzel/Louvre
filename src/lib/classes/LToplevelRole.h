@@ -39,6 +39,25 @@ public:
     #endif
     };
 
+    #if LOUVRE_XDG_WM_BASE_VERSION >= 5
+
+    struct WmCapabilities
+    {
+        enum : UChar8
+        {
+            WindowMenu = 1,
+            Maximimize = 2,
+            Fullscreen = 4,
+            Minimize = 8
+        };
+    };
+
+
+    UChar8 wmCapabilities() const;
+    void setWmCapabilities(UChar8 capabilitiesFlags);
+
+    #endif
+
     // Requests
     const LPoint &rolePos() const override;
     virtual void startMoveRequest();
@@ -67,6 +86,12 @@ public:
     void configure(UChar8 stateFlags);
     void configure(const LSize &size, UChar8 stateFlags);
     void configure(Int32 width, Int32 height, UChar8 stateFlags);
+    void close();
+
+    #if LOUVRE_XDG_WM_BASE_VERSION >= 4
+    void configureBounds(const LSize &bounds);
+    const LSize &bounds() const;
+    #endif
 
     const LRect &windowGeometry() const;
     LSize calculateResizeRect(const LPoint &cursorPosDelta, const LSize &initialSize, Edge edge);

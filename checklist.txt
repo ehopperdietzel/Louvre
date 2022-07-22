@@ -1,3 +1,5 @@
+(!) Use enum class instead of enum
+
 xdg_wm_base::destroy -> OK
 xdg_wm_base::create_positioner -> OK
 xdg_wm_base::get_xdg_surface -> OK
@@ -23,7 +25,7 @@ xdg_surface::set_window_geometry -> Aplicar en commit y revisar cuando no se est
 xdg_surface::ack_configure -> Falta verificar
 xdg_surface::configure-> OK
 
-
+Reqs
 # Check if mapped before sending events (resize) to the user
 xdg_toplevel::destroy -> OK
 xdg_toplevel::set_parent -> OK
@@ -37,3 +39,17 @@ xdg_toplevel::set_min_size -> OK
 xdg_toplevel::set_maximized -> OK
 xdg_toplevel::unset_maximized -> OK
 xdg_toplevel::set_fullscreen -> OK
+xdg_toplevel::unset_fullscreen -> OK
+xdg_toplevel::set_minimized -> OK
+
+Evs
+xdg_toplevel::configure -> OK ?? (Add option to allow multiple active toplevels)
+xdg_toplevel::close -> OK
+# Since 4
+xdg_toplevel::configure_bounds -> OK
+# Since 5
+xdg_toplevel::wm_capabilities -> OK
+
+xdg_popup::destroy -> OK (Ignore destroy order because Google Chrome)
+xdg_popup::grab -> OK
+

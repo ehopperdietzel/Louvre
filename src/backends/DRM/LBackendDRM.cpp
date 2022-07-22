@@ -826,12 +826,12 @@ void LBackend::setCursor(LOutput *output, LTexture *texture, const LSizeF &size)
     //gbm_bo_write(data->cursor_bo,data->cursorBuffer,64*64*4);
 
     if(!data->cursorVisible)
-        drmModeSetCursor(data->deviceFd, data->crtc_id, gbm_bo_get_handle(data->cursor_bo).s32, 64, 64);
+        drmModeSetCursor(data->deviceFd, data->crtc_id, gbm_bo_get_handle(data->cursor_bo).u32, 64, 64);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     if(std::this_thread::get_id() == output->compositor()->mainThreadId())
-        glFlush();
+        glFinish();
 
 }
 

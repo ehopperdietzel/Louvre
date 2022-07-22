@@ -3,7 +3,7 @@
 #include <LCompositor.h>
 #include <XdgSurface.h>
 #include <XdgPositioner.h>
-#include <LPositioner.h>
+#include <LPositionerPrivate.h>
 #include <LToplevelRole.h>
 #include <LPopupRole.h>
 
@@ -85,10 +85,10 @@ void Extensions::XdgShell::WmBase::create_positioner(wl_client *client, wl_resou
     LPositioner *lPositioner = new LPositioner(lClient);
 
     // Creates the XDG_POSITIONER resource
-    lPositioner->m_resource = wl_resource_create(client, &xdg_positioner_interface, version, id);
+    lPositioner->imp()->resource = wl_resource_create(client, &xdg_positioner_interface, version, id);
 
     // Binds resource to the XDG_POSITIONER interface and destructor
-    wl_resource_set_implementation(lPositioner->m_resource, &xdg_positioner_implementation, lPositioner, &Louvre::Extensions::XdgShell::Positioner::destroy_resource);
+    wl_resource_set_implementation(lPositioner->resource(), &xdg_positioner_implementation, lPositioner, &Louvre::Extensions::XdgShell::Positioner::destroy_resource);
 
 }
 

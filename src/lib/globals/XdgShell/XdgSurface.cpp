@@ -6,7 +6,7 @@
 #include <LCompositor.h>
 #include <LPositioner.h>
 #include <LToplevelRolePrivate.h>
-#include <LPopupRole.h>
+#include <LPopupRolePrivate.h>
 
 using namespace Louvre;
 
@@ -25,10 +25,7 @@ static struct xdg_toplevel_interface xdg_toplevel_implementation =
     .unset_maximized = &Extensions::XdgShell::Toplevel::unset_maximized,
     .set_fullscreen = &Extensions::XdgShell::Toplevel::set_fullscreen,
     .unset_fullscreen = &Extensions::XdgShell::Toplevel::unset_fullscreen,
-    .set_minimized = &Extensions::XdgShell::Toplevel::set_minimized,
-#if LOUVRE_XDG_WM_BASE_VERSION >= 4
-    .configure_bounds = &Extensions::XdgShell::Toplevel::configure_bounds
-#endif
+    .set_minimized = &Extensions::XdgShell::Toplevel::set_minimized
 };
 
 static struct xdg_popup_interface xdg_popup_implementation =
@@ -145,7 +142,7 @@ void Extensions::XdgShell::Surface::set_window_geometry(wl_client *, wl_resource
     }
     else if(surface->roleType() == LSurface::Popup)
     {
-        surface->popup()->m_windowGeometry = LRect(x, y, width, height);
+        surface->popup()->imp()->windowGeometry = LRect(x, y, width, height);
         surface->popup()->geometryChanged();
     }
     else

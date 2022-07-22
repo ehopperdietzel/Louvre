@@ -4,7 +4,7 @@
 
 Output::Output() : LOutput()
 {
-    setOutputScale(2);
+    setOutputScale(1);
 }
 
 void Output::paintGL(Int32 currentBuffer)

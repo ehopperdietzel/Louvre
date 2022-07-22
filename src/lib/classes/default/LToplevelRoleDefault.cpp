@@ -52,6 +52,8 @@ void LToplevelRole::startResizeRequest(Edge edge)
 
 void LToplevelRole::configureRequest()
 {
+    setWmCapabilities(WmCapabilities::WindowMenu | WmCapabilities::Minimize | WmCapabilities::Maximimize | WmCapabilities::Fullscreen);
+    configureBounds(compositor()->outputs().front()->rect().bottomRight());
     configure(Activated);
 }
 

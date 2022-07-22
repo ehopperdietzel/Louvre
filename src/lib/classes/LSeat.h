@@ -33,6 +33,8 @@ public:
     LPointer *pointer() const;
     LKeyboard *keyboard() const;
 
+    void processInput();
+
 protected:
 
     friend class LSurface;
@@ -65,7 +67,7 @@ private:
     udev                *m_udev                     = nullptr;
     libinput_interface   m_libinputInterface;
 
-    void processInput();
+
     static int openRestricted(const char *path, int flags, void *userData);
     static void closeRestricted(int fd, void *userData);
 

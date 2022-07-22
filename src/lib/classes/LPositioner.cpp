@@ -1,70 +1,77 @@
-#include "LPositioner.h"
 #include <LClient.h>
 #include <LCompositor.h>
+#include <LPositionerPrivate.h>
 
 using namespace Louvre;
 
 LPositioner::LPositioner(LClient *client)
 {
-    m_client = client;
+    m_imp = new LPositionerPrivate();
+    m_imp->client = client;
+}
+
+LPositioner::~LPositioner()
+{
+    delete m_imp;
 }
 
 LClient *LPositioner::client() const
 {
-    return m_client;
+    return m_imp->client;
 }
 
 wl_resource *LPositioner::resource() const
 {
-    return m_resource;
+    return m_imp->resource;
 }
 
 const LSize &LPositioner::size() const
 {
-    return m_size;
+    return m_imp->size;
 }
 
 const LRect &LPositioner::anchorRect() const
 {
-    return m_anchorRect;
+    return m_imp->anchorRect;
 }
 
-LPositioner::LAnchor LPositioner::anchor() const
+UInt32 LPositioner::anchor() const
 {
-    return m_anchor;
+    return m_imp->anchor;
 }
 
-LPositioner::LGravity LPositioner::gravity() const
+UInt32 LPositioner::gravity() const
 {
-    return m_gravity;
+    return m_imp->gravity;
 }
 
 const LPoint &LPositioner::offset() const
 {
-    return m_offset;
+    return m_imp->offset;
 }
 
 #if LOUVRE_XDG_WM_BASE_VERSION >=3
 
     bool LPositioner::isReactive() const
     {
-        return m_isReactive;
+        return m_imp->isReactive;
     }
 
     const LSize &LPositioner::parentSize() const
     {
-        return m_parentSize;
+        return m_imp->parentSize;
     }
 
     UInt32 LPositioner::parentConfigureSerial() const
     {
-        return m_parentConfigureSerial;
+        return m_imp->parentConfigureSerial;
     }
 
 #endif
 
 LPoint LPositioner::calculatePopupPosition(const LRect &outputRect, const LPoint &parentPosition)
 {
+    /*
     // TODO use output rect + constrains
     (void)outputRect;
 
@@ -75,7 +82,7 @@ LPoint LPositioner::calculatePopupPosition(const LRect &outputRect, const LPoint
 
     switch(anchor())
     {
-        case LAnchor::LNone:
+        case Anchor::None:
         {
             anchorPos = anchorRect().bottomRight()/2;
         }break;
@@ -158,10 +165,17 @@ LPoint LPositioner::calculatePopupPosition(const LRect &outputRect, const LPoint
     }
 
     return parentPos + anchorRect().topLeft() + anchorPos - popupOrigin + offset();
+    */
+    return LPoint();
 }
 
-LPositioner::LConstraintAdjustment LPositioner::constraintAdjustment() const
+UInt32 LPositioner::constraintAdjustment() const
 {
-    return m_constraintAdjustment;
+    return m_imp->constraintAdjustment;
+}
+
+LPositioner::LPositionerPrivate *LPositioner::imp() const
+{
+    return m_imp;
 }
 

@@ -33,18 +33,14 @@ public:
     const LRect &windowGeometry() const;
     LPositioner *positioner() const;
 
+    class LPopupRolePrivate;
+
+    LPopupRolePrivate *imp() const;
+
 private:
-    friend class Globals::Surface;
-    friend class Extensions::XdgShell::Surface;
-    friend class Extensions::XdgShell::Popup;
+    LPopupRolePrivate *m_imp = nullptr;
 
-    LRect m_windowGeometry;
 
-#if LOUVRE_XDG_WM_BASE_VERSION >= 3
-    UInt32 m_repositionSerial = 0;
-#endif
-
-    LPositioner *m_positioner = nullptr;
 
 
 };

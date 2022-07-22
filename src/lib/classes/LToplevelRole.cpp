@@ -40,6 +40,7 @@ LToplevelRole::LToplevelRole(wl_resource *toplevel, LSurface *surface) : LBaseSu
     m_imp->minSize = LSize();
     m_imp->maxSize = LSize();
     m_imp->windowGeometry = LRect();
+
 }
 
 LToplevelRole::~LToplevelRole()
@@ -48,6 +49,58 @@ LToplevelRole::~LToplevelRole()
     delete []m_imp->title;
     delete m_imp;
 }
+
+UChar8 LToplevelRole::wmCapabilities() const
+{
+    return m_imp->wmCapabilities;
+}
+
+#if LOUVRE_XDG_WM_BASE_VERSION >= 5
+void LToplevelRole::setWmCapabilities(UChar8 capabilitiesFlags)
+{
+    if(wl_resource_get_version(resource()) < 5)
+        return;
+
+    m_imp->wmCapabilities = capabilitiesFlags;
+
+    wl_array dummy;
+    wl_array_init(&dummy);
+    UInt32 index = 0;
+
+    if(m_imp->wmCapabilities & WmCapabilities::WindowMenu)
+    {
+        wl_array_add(&dummy, sizeof(UInt32));
+        UInt32 *s = (UInt32*)dummy.data;
+        s[index] = XDG_TOPLEVEL_WM_CAPABILITIES_WINDOW_MENU;
+        index++;
+    }
+    if(m_imp->wmCapabilities & WmCapabilities::Maximimize)
+    {
+        wl_array_add(&dummy, sizeof(UInt32));
+        UInt32 *s = (UInt32*)dummy.data;
+        s[index] = XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE;
+        index++;
+    }
+    if(m_imp->wmCapabilities & WmCapabilities::Fullscreen)
+    {
+        wl_array_add(&dummy, sizeof(UInt32));
+        UInt32 *s = (UInt32*)dummy.data;
+        s[index] = XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN;
+        index++;
+    }
+    if(m_imp->wmCapabilities & WmCapabilities::Minimize)
+    {
+        wl_array_add(&dummy, sizeof(UInt32));
+        UInt32 *s = (UInt32*)dummy.data;
+        s[index] = XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE;
+        index++;
+    }
+
+    xdg_toplevel_send_wm_capabilities(resource(), &dummy);
+    wl_array_release(&dummy);
+    configure(state());
+}
+#endif
 
 void LToplevelRole::ping(UInt32 serial)
 {
@@ -106,6 +159,28 @@ void LToplevelRole::configure(Int32 width, Int32 height, UChar8 stateFlags)
     m_imp->currentConf.size = LSize(width,height);
     m_imp->currentConf.flags = stateFlags;
 }
+
+void LToplevelRole::close()
+{
+    xdg_toplevel_send_close(resource());
+}
+
+
+#if LOUVRE_XDG_WM_BASE_VERSION >= 4
+    void LToplevelRole::configureBounds(const LSize &bounds)
+    {
+        if(wl_resource_get_version(resource()) <= 4)
+            return;
+        m_imp->bounds = bounds;
+        xdg_toplevel_send_configure_bounds(resource(),bounds.w(),bounds.h());
+        configure(state());
+    }
+
+    const LSize &LToplevelRole::bounds() const
+    {
+        return m_imp->bounds;
+    }
+#endif
 
 void LToplevelRole::configure(const LSize &size, UChar8 stateFlags)
 {

@@ -37,6 +37,14 @@ public:
     char *appId = nullptr;
     char *title = nullptr;
 
+    #if LOUVRE_XDG_WM_BASE_VERSION >= 4
+    LSize bounds;
+    #endif
+
+    #if LOUVRE_XDG_WM_BASE_VERSION >= 5
+    UChar8 wmCapabilities = 0;
+    #endif
+
 };
 
 #endif // LTOPLEVELROLEPRIVATE_H

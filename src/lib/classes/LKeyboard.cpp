@@ -364,8 +364,13 @@ void LKeyboard::keyEvent(UInt32 keyCode, UInt32 keyState)
         }
         else if(sym == XKB_KEY_F9)
         {
-            compositor()->cursor()->output()->sc = true;
-            compositor()->repaintAllOutputs();
+            for(LSurface *surf : compositor()->surfaces())
+            {
+                if(surf->toplevel())
+                    surf->toplevel()->close();
+            }
+            //compositor()->cursor()->output()->sc = true;
+            //compositor()->repaintAllOutputs();
         }
         else if(sym == XKB_KEY_Down)
         {

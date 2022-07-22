@@ -33,6 +33,9 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     // Get surface
     LSurface *surface = (LSurface*)wl_resource_get_user_data(resource);
 
+    // Notify from client
+    surface->compositor()->destroySurfaceRequest(surface);
+
     // Clear keyboard focus
     if(surface->seat()->keyboard()->focusSurface() == surface)
         surface->seat()->keyboard()->m_keyboardFocusSurface = nullptr;
@@ -94,8 +97,6 @@ void Globals::Surface::resource_destroy(wl_resource *resource)
     // Remove the surface from the compositor list
     surface->compositor()->imp()->m_surfaces.remove(surface);
 
-    // Notify from client
-    surface->compositor()->destroySurfaceRequest(surface);
 
     delete surface;
 }
@@ -482,6 +483,12 @@ void Globals::Surface::apply_commit(LSurface *surface)
 void Globals::Surface::damage(wl_client *, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
+
+    y-=2;
+    x-=2;
+    width+=4;
+    height+=4;
+
     lSurface->imp()->pending.damages.push_back(LRect(x, y, width, height));
     //surface->texture()->pendingDamages.push_back(LRect(x, y, width, height)*surface->bufferScale());
     lSurface->imp()->m_damagesChanged = true;
@@ -490,6 +497,12 @@ void Globals::Surface::damage(wl_client *, wl_resource *resource, Int32 x, Int32
 void Globals::Surface::damage_buffer(wl_client *, wl_resource *resource, Int32 x, Int32 y, Int32 width, Int32 height)
 {
     LSurface *lSurface = (LSurface*)wl_resource_get_user_data(resource);
+
+    y-=2;
+    x-=2;
+    width+=4;
+    height+=4;
+
     lSurface->imp()->pending.bufferDamages.push_back(LRect(x, y, width, height));
     //surface->texture()->pendingDamages.push_back(LRect(x, y, width, height));
     lSurface->imp()->m_damagesChanged = true;

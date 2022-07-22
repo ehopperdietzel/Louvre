@@ -65,6 +65,8 @@ HEADERS += \
     classes/private/LOutputManagerPrivate.h \
     classes/private/LOutputModePrivate.h \
     classes/private/LOutputPrivate.h \
+    classes/private/LPopupRolePrivate.h \
+    classes/private/LPositionerPrivate.h \
     classes/private/LSubsurfaceRolePrivate.h \
     classes/private/LSurfacePrivate.h \
     classes/private/LToplevelRolePrivate.h \

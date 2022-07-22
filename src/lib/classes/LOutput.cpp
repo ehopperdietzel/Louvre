@@ -17,6 +17,7 @@
 #include <LToplevelRole.h>
 #include <SOIL/SOIL.h>
 #include <LRegion.h>
+#include <LSeat.h>
 
 using namespace Louvre;
 
@@ -543,6 +544,7 @@ void LOutput::LOutputPrivate::startRenderLoop(void *data)
 
         if(!output->compositor()->cursor()->hasHardwareSupport())
             output->compositor()->cursor()->paint();
+
 
         output->m_imp->m_compositor->imp()->m_renderMutex.unlock();
 

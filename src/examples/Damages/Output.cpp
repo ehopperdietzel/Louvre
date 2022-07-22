@@ -314,7 +314,13 @@ void Output::paintGL(Int32 currentBuffer)
 
     //Int32 f = LTime::ms() - t;
 
-    //printf("Time %i\n",f);
+    /*
+    UChar8 pix[600*1000*4];
+    glReadPixels(0,600,1000,600,GL_RGBA,GL_UNSIGNED_BYTE,pix);
+    LTexture *tex = new LTexture();
+    tex->setData(1000,600,pix,GL_RGBA,GL_UNSIGNED_BYTE);
+    p->drawTexture(tex,LRect(0,0,1000,600), LRect(400,400,200,200));
+    */
 
     if(sc)
     {
