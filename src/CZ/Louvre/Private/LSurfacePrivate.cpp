@@ -501,11 +501,15 @@ bool LSurface::LSurfacePrivate::updateDimensions(Int32 widthB, Int32 heightB) no
                 return false;
             }
 
-            if (roundf((srcRect.x() + srcRect.width()) * Float32(current.scale)) > sizeB.width() || roundf((srcRect.y() + srcRect.height()) * Float32(current.scale)) > sizeB.height())
+            const auto vpWidth { roundf((srcRect.x() + srcRect.width()) * Float32(current.scale)) };
+            const auto vpHeight { roundf((srcRect.y() + srcRect.height()) * Float32(current.scale)) };
+
+            if (vpWidth > sizeB.width() || vpHeight > sizeB.height())
             {
                 surfaceResource->viewportRes()->postError(
                     WP_VIEWPORT_ERROR_OUT_OF_BUFFER,
-                    "Source rectangle extends outside of the content area rect.");
+                    "Source rectangle size ({},{}) extends outside of buffer size ({},{}).",
+                        vpWidth, vpHeight, sizeB.width(), sizeB.height());
                 return false;
             }
 

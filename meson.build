@@ -35,10 +35,10 @@ install_data(
 # -------------- DEPENDENCIES --------------
 
 pkg                 = import('pkgconfig')
-cz_core_dep         = dependency('cz-core')
-cz_skia_dep         = dependency('cz-skia')
+cz_core_dep         = dependency('cz-core', fallback:['cz-core', 'cz_core_dep'])
+cz_skia_dep         = dependency('cz-skia', fallback:['cz-skia', 'cz_skia_dep'])
 cz_srm_dep          = dependency('cz-srm', fallback:['cz-srm', 'cz_srm_dep'])
-cz_ream_dep         = dependency('cz-ream')
+cz_ream_dep         = dependency('cz-ream', fallback:['cz-ream', 'cz_ream_dep'])
 wayland_server_dep  = dependency('wayland-server', version: '>= 1.20.0')
 wayland_client_dep  = dependency('wayland-client')
 gl_dep              = dependency('gl', version: '>= 1.2')

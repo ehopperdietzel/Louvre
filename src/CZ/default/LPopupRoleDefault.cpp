@@ -87,7 +87,16 @@ void LPopupRole::stateChanged(CZBitset<Changes> changes, const State &prev)
 void LPopupRole::configureRequest()
 {
     // Ensure the Popup stays within the boundaries of the current output where the cursor is positioned
-    setBounds(cursor()->output() != nullptr ? cursor()->output()->rect() : SkIRect::MakeEmpty());
+    if (cursor()->output())
+    {
+        setBounds(cursor()->output()->rect());
+        surface()->sendOutputEnterEvent(cursor()->output());
+    }
+    else
+    {
+        setBounds(SkIRect::MakeEmpty());
+    }
+
     configureRect(calculateUnconstrainedRect());
 }
 //! [configureRequest]
