@@ -59,9 +59,7 @@ void LKeyboard::keyEvent(const CZKeyboardKeyEvent &event)
 
         if (event.code == KEY_F1 && !mods)
         {
-            if (LLauncher::launch("kitty") < 0)
-                if (LLauncher::launch("foot") < 0)
-                    LLauncher::launch("gnome-terminal");
+            LLauncher::launch("foot");
         }
         else if (L_CTRL && (sym == XKB_KEY_q || sym == XKB_KEY_Q))
         {
